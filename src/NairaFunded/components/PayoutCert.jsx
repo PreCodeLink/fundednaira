@@ -2,11 +2,11 @@ import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
 // import images properly
-import payout1 from "../assest/payout1.png";
-import payout2 from "../assest/payout2.png";
-import payout3 from "../assest/payout3.png";
-import payout4 from "../assest/payout4.png";
-import payout5 from "../assest/payout5.png";
+import payout1 from "../assets/payout1.png";
+import payout2 from "../assets/payout2.png";
+import payout3 from "../assets/payout3.png";
+import payout4 from "../assets/payout4.png";
+import payout5 from "../assets/payout5.png";
 
 const PayoutSlider = () => {
   const sliderRef = useRef();
