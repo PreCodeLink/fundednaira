@@ -6,7 +6,7 @@ import payout1 from "../assets/payout1.png";
 import payout2 from "../assets/payout2.png";
 import payout3 from "../assets/payout3.png";
 import payout4 from "../assets/payout4.png";
-import payout5 from "../assets/payout5.png";
+import payout5 from "../assets/Payout5.png";
 
 const PayoutSlider = () => {
   const sliderRef = useRef();
