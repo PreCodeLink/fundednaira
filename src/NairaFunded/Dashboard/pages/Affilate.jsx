@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const Affiliate = () => {
   const navigate = useNavigate();
-  const API_BASE = "https://fundednaira.ng/api/dashboard";
+  const API_BASE = "https://api.fundednaira.ng/api/dashboard";
 
   const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(true);

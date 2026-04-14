@@ -31,7 +31,7 @@ const Payments = () => {
     try {
       setLoading(true);
 
-      const res = await fetch("https://fundednaira.ng/api/admin/get-payments.php");
+      const res = await fetch("https://api.fundednaira.ng/api/admin/get-payments.php");
       const text = await res.text();
       console.log("payments raw response:", text);
 

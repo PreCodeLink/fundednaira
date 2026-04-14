@@ -32,7 +32,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    fetch("https://fundednaira.ng/api/admin/dashboard.php")
+    fetch("https://api.fundednaira.ng/api/admin/dashboard.php")
       .then((res) => res.text())
       .then((text) => {
         let data;

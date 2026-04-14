@@ -12,7 +12,7 @@ const AdminAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API = "https://fundednaira.ng/api/admin/login.php";
+  const API = "https://api.fundednaira.ng/api/admin/login.php";
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

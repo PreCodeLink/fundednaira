@@ -24,7 +24,7 @@ const PaymentCallback = () => {
     const checkPayment = async () => {
       try {
         const res = await fetch(
-          `http://localhost/FundedNaira/api/payments/verify-payment.php?reference=${encodeURIComponent(reference)}`
+          `https://api.fundednaira.ng/api/payments/verify-payment.php?reference=${encodeURIComponent(reference)}`
         );
 
         const text = await res.text();

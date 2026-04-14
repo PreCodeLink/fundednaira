@@ -292,7 +292,7 @@ const Accounts = () => {
         requested_phase: String(requestedPhase),
       };
 
-      const res = await fetch("https://fundednaira.ng/api/dashboard/request-phase.php", {
+      const res = await fetch("https://api.fundednaira.ng/api/dashboard/request-phase.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

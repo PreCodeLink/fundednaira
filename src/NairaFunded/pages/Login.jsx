@@ -14,7 +14,7 @@ const Login = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const API_BASE = "https://fundednaira.ng/api/user";
+  const API_BASE = "https://api.fundednaira.ng/api/user";
 
   const handleChange = (e) => {
     setFormData((prev) => ({

@@ -13,7 +13,7 @@ const Pricing = () => {
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch("https://fundednaira.ng/api/dashboard/get-plans.php");
+      const res = await fetch("https://api.fundednaira.ng/api/dashboard/get-plans.php");
       const data = await res.json();
       setPlans(Array.isArray(data) ? data : []);
     } catch (error) {

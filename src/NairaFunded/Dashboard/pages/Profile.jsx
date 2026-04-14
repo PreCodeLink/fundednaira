@@ -5,7 +5,7 @@ import Sidebar from "../companent/Sidebar";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const API_BASE = "https://fundednaira.ng/api/dashboard";
+  const API_BASE = "https://api.fundednaira.ng/api/dashboard";
 
   const [user, setUser] = useState({
     id: "",

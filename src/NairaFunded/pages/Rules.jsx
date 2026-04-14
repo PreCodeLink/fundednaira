@@ -23,12 +23,17 @@ const Rules = () => {
     {
       icon: <FaShieldAlt />,
       title: "Maximum Drawdown",
-      desc: "Your total drawdown must not exceed 20% of the account balance at any time. Proper risk management is required throughout the challenge.",
+      desc: "Your total drawdown must not exceed 10% of the account balance at any time. Proper risk management is required throughout the challenge.",
     },
     {
       icon: <FaPercent />,
       title: "Profit Split",
       desc: "Eligible funded traders can earn up to 80% profit split based on the account structure and payout terms.",
+    },
+    {
+      icon: <FaClock />,
+      title: "Minimum Trading Days",
+      desc: "A minimum of 5 trading days is required before a trader can qualify for the next stage or a funded account.",
     },
     {
       icon: <FaNewspaper />,

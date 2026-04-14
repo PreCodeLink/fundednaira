@@ -72,7 +72,7 @@ const AccountPlans = () => {
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch("https://fundednaira.ng/api/admin/get-plans.php");
+      const res = await fetch("https://api.fundednaira.ng/api/admin/get-plans.php");
       const data = await res.json();
       setPlans(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -99,7 +99,7 @@ const AccountPlans = () => {
     }
 
     try {
-      const res = await fetch("https://fundednaira.ng/api/admin/add-plan.php", {
+      const res = await fetch("https://api.fundednaira.ng/api/admin/add-plan.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -145,7 +145,7 @@ const AccountPlans = () => {
     }
 
     try {
-      const res = await fetch("https://fundednaira.ng/api/admin/update-plan.php", {
+      const res = await fetch("https://api.fundednaira.ng/api/admin/update-plan.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,7 +171,7 @@ const AccountPlans = () => {
 
   const deletePlan = async (id) => {
     try {
-      const res = await fetch("https://fundednaira.ng/api/admin/delete-plan.php", {
+      const res = await fetch("https://api.fundednaira.ng/api/admin/delete-plan.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

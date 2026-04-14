@@ -50,7 +50,7 @@ const Dashboard = () => {
     setUser(savedUser);
 
     fetch(
-      `https://fundednaira.ng/api/dashboard/dashboard.php?user_id=${savedUser.id}`
+      `https://api.fundednaira.ng/api/dashboard/dashboard.php?user_id=${savedUser.id}`
     )
       .then((res) => res.text())
       .then((text) => {
@@ -105,7 +105,7 @@ const Dashboard = () => {
       <div className="flex pt-16">
         <Sidebar />
 
-        <div className="flex-1 min-h-screen bg-[#0B0F19] w-full max-w-md mx-auto text-white p-4 md:p-6 space-y-6">
+        <div className="flex-1 min-h-screen bg-[#0B0F19] text-white p-4 md:p-6 space-y-6 w-full max-w-md mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h1 className="text-xl md:text-2xl font-bold">Dashboard</h1>
           </div>

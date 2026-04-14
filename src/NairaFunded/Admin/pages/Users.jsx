@@ -3,7 +3,7 @@ import AdminLayout from "../Layout";
 import { Search } from "lucide-react";
 
 const AdminUsers = () => {
-  const API_BASE = "https://fundednaira.ng/api/admin";
+  const API_BASE = "https://api.fundednaira.ng/api/admin";
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");

@@ -39,7 +39,7 @@ const Navbar = () => {
       return;
     }
 
-    fetch(`https://fundednaira.ng/api/dashboard/index.php?user_id=${userId}`)
+    fetch(`https://api.fundednaira.ng/api/dashboard/index.php?user_id=${userId}`)
       .then((res) => res.text())
       .then((text) => {
         let data;
