@@ -220,7 +220,7 @@ const Accounts = () => {
 
     try {
       const res = await fetch(
-        `https://fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
+        `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
       );
 
       const text = await res.text();
@@ -239,7 +239,7 @@ const Accounts = () => {
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch("https://fundednaira.ng/api/dashboard/get-plans.php");
+      const res = await fetch("https://api.fundednaira.ng/api/dashboard/get-plans.php");
       const data = await res.json();
       setPlans(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -335,7 +335,7 @@ const Accounts = () => {
     try {
       setBuyingPlanId(plan.id);
 
-      const res = await fetch("https://fundednaira.ng/api/payments/initialize-payment.php", {
+      const res = await fetch("https://api.fundednaira.ng/api/payments/initialize-payment.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
