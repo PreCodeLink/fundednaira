@@ -20,7 +20,7 @@ const PhaseModal = ({ data, onClose, onUpdated }) => {
         setLoadingDetails(true);
 
         const res = await fetch(
-          `http://localhost/FundedNaira/api/admin/get-phase-request-account-details.php?account_id=${data.account_id}`
+          `https://api.fundednaira.ng/api/admin/get-phase-request-account-details.php?account_id=${data.account_id}`
         );
 
         const text = await res.text();
@@ -69,7 +69,7 @@ const PhaseModal = ({ data, onClose, onUpdated }) => {
       console.log("PHASE ACTION PAYLOAD:", payload);
 
       const res = await fetch(
-        "http://localhost/FundedNaira/api/admin/update-phase-request.php",
+        "https://api.fundednaira.ng/api/admin/update-phase-request.php",
         {
           method: "POST",
           headers: {
