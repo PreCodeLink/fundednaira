@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   X,
   ShieldCheck,
@@ -9,20 +10,29 @@ import {
   Wallet,
   Layers3,
   Activity,
+  FileText,
 } from "lucide-react";
 
 const AccountModal = ({
   selectedAccount,
   setSelectedAccount,
   handleSave,
-  changeStatus,
+  refreshAccounts,
 }) => {
+  const [failureReason, setFailureReason] = useState("");
+  const [loading, setLoading] = useState(false);
+
   if (!selectedAccount) return null;
 
   const status = String(selectedAccount.status || "").toLowerCase();
 
+  useEffect(() => {
+    setFailureReason(selectedAccount.failure_reason || "");
+  }, [selectedAccount]);
+
   const closeModal = () => {
     setSelectedAccount(null);
+    setFailureReason("");
   };
 
   const formatMoney = (value) => {
@@ -51,6 +61,67 @@ const AccountModal = ({
     return "bg-gray-700/20 text-gray-300 border border-gray-700/30";
   };
 
+  const changeStatus = async (newStatus, reason = "") => {
+    try {
+      setLoading(true);
+
+      const res = await fetch("https://api.fundednaira.ng/api/admin/update-account-status.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: selectedAccount.id,
+          status: newStatus,
+          reason,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Failed to update account status.");
+        return;
+      }
+
+      alert(data.message || "Status updated successfully.");
+
+      if (typeof refreshAccounts === "function") {
+        await refreshAccounts();
+      }
+
+      setSelectedAccount((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: newStatus,
+              failure_reason: newStatus === "failed" ? reason : null,
+            }
+          : null
+      );
+
+      if (newStatus !== "failed") {
+        setFailureReason("");
+      }
+
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong while updating account status.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFail = async () => {
+    if (!failureReason.trim()) {
+      alert("Please enter failure reason.");
+      return;
+    }
+
+    await changeStatus("failed", failureReason.trim());
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-4xl rounded-2xl border border-gray-800 bg-gray-900 p-6 text-white shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -69,7 +140,6 @@ const AccountModal = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* LEFT COLUMN */}
           <div className="space-y-4">
             <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-5">
               <div className="mb-4 flex items-center gap-3">
@@ -78,7 +148,7 @@ const AccountModal = ({
                 </div>
                 <div>
                   <p className="font-semibold text-base">
-                    {selectedAccount.user || "Unknown User"}
+                    {selectedAccount.user || selectedAccount.name || "Unknown User"}
                   </p>
                   <p className="text-sm text-gray-400">AC/{selectedAccount.id}</p>
                 </div>
@@ -106,7 +176,9 @@ const AccountModal = ({
                     <Activity size={14} />
                     Phase
                   </p>
-                  <p className="capitalize">{selectedAccount.phase || "N/A"}</p>
+                  <p className="capitalize">
+                    {selectedAccount.phase || selectedAccount.current_phase || "N/A"}
+                  </p>
                 </div>
 
                 <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
@@ -126,112 +198,105 @@ const AccountModal = ({
                 <span className="font-medium">Account Credentials</span>
               </div>
 
-              {status === "pending" ? (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Login ID"
-                    value={selectedAccount.login || ""}
-                    className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-blue-500"
-                    onChange={(e) =>
-                      setSelectedAccount({
-                        ...selectedAccount,
-                        login: e.target.value,
-                      })
-                    }
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Password"
-                    value={selectedAccount.password || ""}
-                    className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-blue-500"
-                    onChange={(e) =>
-                      setSelectedAccount({
-                        ...selectedAccount,
-                        password: e.target.value,
-                      })
-                    }
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Server"
-                    value={selectedAccount.server || ""}
-                    className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-blue-500"
-                    onChange={(e) =>
-                      setSelectedAccount({
-                        ...selectedAccount,
-                        server: e.target.value,
-                      })
-                    }
-                  />
+              <div className="space-y-3 text-sm">
+                <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                  <p className="text-gray-400 text-xs mb-1">Login</p>
+                  <p>{selectedAccount.account_login || selectedAccount.login || "Not assigned"}</p>
                 </div>
-              ) : (
-                <div className="space-y-3 text-sm">
-                  <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
-                    <p className="text-gray-400 text-xs mb-1">Login</p>
-                    <p>{selectedAccount.login || "Not assigned"}</p>
-                  </div>
 
-                  <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
-                    <p className="text-gray-400 text-xs mb-1">Password</p>
-                    <p>{selectedAccount.password || "Not assigned"}</p>
-                  </div>
-
-                  <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
-                    <p className="text-gray-400 text-xs mb-1 flex items-center gap-2">
-                      <Server size={14} />
-                      Server
-                    </p>
-                    <p>{selectedAccount.server || "Not assigned"}</p>
-                  </div>
+                <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                  <p className="text-gray-400 text-xs mb-1">Password</p>
+                  <p>
+                    {selectedAccount.account_password ||
+                      selectedAccount.password ||
+                      "Not assigned"}
+                  </p>
                 </div>
-              )}
+
+                <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                  <p className="text-gray-400 text-xs mb-1 flex items-center gap-2">
+                    <Server size={14} />
+                    Server
+                  </p>
+                  <p>{selectedAccount.server || "Not assigned"}</p>
+                </div>
+              </div>
             </div>
+
+            {status === "failed" && selectedAccount.failure_reason && (
+              <div className="rounded-2xl border border-red-800 bg-red-950/30 p-5">
+                <div className="mb-2 flex items-center gap-2 text-red-300">
+                  <FileText size={16} />
+                  <span className="font-medium">Failure Reason</span>
+                </div>
+                <p className="text-sm text-red-200">{selectedAccount.failure_reason}</p>
+              </div>
+            )}
           </div>
 
-          {/* RIGHT COLUMN */}
           <div className="space-y-4">
             {status === "active" && (
               <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-5">
                 <h3 className="mb-3 text-base font-semibold">Active Account Actions</h3>
+
                 <div className="rounded-xl border border-green-800/40 bg-green-950/20 p-4 text-sm text-green-300 mb-4">
                   This account is currently active and credentials have already been assigned.
                 </div>
 
-                <button
-                  onClick={() => changeStatus("failed")}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-medium text-white transition hover:bg-red-700"
-                >
-                  <Ban size={18} />
-                  Mark as Failed
-                </button>
+                <div className="space-y-3">
+                  <textarea
+                    placeholder="Enter reason for failure..."
+                    value={failureReason}
+                    onChange={(e) => setFailureReason(e.target.value)}
+                    className="w-full min-h-[110px] rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-red-500"
+                  />
+
+                  <button
+                    onClick={handleFail}
+                    disabled={loading}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-medium text-white transition hover:bg-red-700 disabled:opacity-60"
+                  >
+                    <Ban size={18} />
+                    {loading ? "Processing..." : "Mark as Failed"}
+                  </button>
+                </div>
               </div>
             )}
 
             {status === "pending" && (
               <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-5">
                 <h3 className="mb-3 text-base font-semibold">Pending Account Actions</h3>
+
                 <div className="rounded-xl border border-yellow-800/40 bg-yellow-950/20 p-4 text-sm text-yellow-200 mb-4">
                   Add login details, password, and server before activating this account.
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <button
                     onClick={handleSave}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-3 font-medium text-white transition hover:bg-green-700"
+                    disabled={loading}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-3 font-medium text-white transition hover:bg-green-700 disabled:opacity-60"
                   >
                     <ShieldCheck size={18} />
                     Activate Account
                   </button>
+                </div>
+
+                <div className="space-y-3 mt-4">
+                  <textarea
+                    placeholder="Enter reason for failure..."
+                    value={failureReason}
+                    onChange={(e) => setFailureReason(e.target.value)}
+                    className="w-full min-h-[110px] rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-red-500"
+                  />
 
                   <button
-                    onClick={() => changeStatus("failed")}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-medium text-white transition hover:bg-red-700"
+                    onClick={handleFail}
+                    disabled={loading}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-medium text-white transition hover:bg-red-700 disabled:opacity-60"
                   >
                     <Ban size={18} />
-                    Mark as Failed
+                    {loading ? "Processing..." : "Mark as Failed"}
                   </button>
                 </div>
               </div>
@@ -247,10 +312,11 @@ const AccountModal = ({
 
                 <button
                   onClick={() => changeStatus("active")}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-3 font-medium text-white transition hover:bg-green-700"
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-3 font-medium text-white transition hover:bg-green-700 disabled:opacity-60"
                 >
                   <RefreshCcw size={18} />
-                  Reactivate Account
+                  {loading ? "Processing..." : "Reactivate Account"}
                 </button>
               </div>
             )}
