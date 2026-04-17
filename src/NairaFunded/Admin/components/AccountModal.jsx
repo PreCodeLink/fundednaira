@@ -59,7 +59,7 @@ const AccountModal = ({
     try {
       setLoading(true);
 
-      const res = await fetch("/api/admin/update-account-status.php", {
+      const res = await fetch("https://api.fundednaira.ng/api/admin/update-account-status.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
