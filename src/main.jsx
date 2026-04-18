@@ -26,7 +26,7 @@ import PhaseRequest from "./NairaFunded/Admin/pages/PhaseRequest";
 import AdminAuth from "./NairaFunded/Admin/pages/AdminAuth";
 import Login from "./NairaFunded/pages/Login";
 import Register from "./NairaFunded/pages/Auth";
-import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminNotifications from "./NairaFunded/Admin/pages/AdminNotifications";
 import VerifyCode from "./NairaFunded/pages/VerifyCode";
 import ProtectedRoute from "./NairaFunded/ProtectedRoute";
 import ForgotPassword from "./NairaFunded/pages/ForgotPassword";
