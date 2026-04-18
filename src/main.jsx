@@ -26,6 +26,7 @@ import PhaseRequest from "./NairaFunded/Admin/pages/PhaseRequest";
 import AdminAuth from "./NairaFunded/Admin/pages/AdminAuth";
 import Login from "./NairaFunded/pages/Login";
 import Register from "./NairaFunded/pages/Auth";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 import VerifyCode from "./NairaFunded/pages/VerifyCode";
 import ProtectedRoute from "./NairaFunded/ProtectedRoute";
 import ForgotPassword from "./NairaFunded/pages/ForgotPassword";
@@ -81,6 +82,7 @@ function App() {
           <Route path="/auth/admin/accounts" element={<AdminAccountPlans />} />
           <Route path="/auth/admin/payouts" element={<AdminPayout />} />
           <Route path="/auth/admin/phase" element={<PhaseRequest />} />
+          <Route path="/auth/admin/notifications" element={<AdminNotifications />} />
         </Route>
 
         {/* Not found */}
