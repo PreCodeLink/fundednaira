@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { X, CheckCircle2, AlertCircle, Ban } from "lucide-react";
 
-const AccountModal = ({ isOpen, closeModal, selectedAccount, refreshAccounts }) => {
+const AccountModal = ({
+  isOpen,
+  closeModal,
+  selectedAccount,
+  refreshAccounts,
+  showMessage,
+}) => {
   const [loading, setLoading] = useState(false);
   const [showReasonBox, setShowReasonBox] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
@@ -9,9 +15,38 @@ const AccountModal = ({ isOpen, closeModal, selectedAccount, refreshAccounts }) 
 
   if (!isOpen || !selectedAccount) return null;
 
+  const getValue = (...values) => {
+    for (const value of values) {
+      if (value !== undefined && value !== null && value !== "") {
+        return value;
+      }
+    }
+    return "—";
+  };
+
+  const formatMoney = (value) => {
+    if (value === null || value === undefined || value === "") return "₦0";
+
+    const cleanValue = String(value).replace(/[^0-9.]/g, "");
+    const number = Number(cleanValue);
+
+    if (Number.isNaN(number)) return `₦${value}`;
+    return `₦${number.toLocaleString()}`;
+  };
+
+  const resetReasonState = () => {
+    setShowReasonBox(false);
+    setPendingStatus("");
+    setReason("");
+  };
+
   const changeStatus = async (newStatus, customReason = "") => {
     if (!selectedAccount?.id) {
-      alert("No account selected.");
+      if (showMessage) {
+        showMessage("error", "No account selected.");
+      } else {
+        alert("No account selected.");
+      }
       return;
     }
 
@@ -33,23 +68,34 @@ const AccountModal = ({ isOpen, closeModal, selectedAccount, refreshAccounts }) 
       const data = await res.json();
 
       if (!data.success) {
-        alert(data.message || "Failed to update account status.");
+        if (showMessage) {
+          showMessage("error", data.message || "Failed to update account status.");
+        } else {
+          alert(data.message || "Failed to update account status.");
+        }
         return;
       }
 
-      alert(data.message || "Status updated successfully.");
+      if (showMessage) {
+        showMessage("success", data.message || `Account marked as ${newStatus}.`);
+      } else {
+        alert(data.message || "Status updated successfully.");
+      }
 
       if (typeof refreshAccounts === "function") {
         await refreshAccounts();
       }
 
-      setShowReasonBox(false);
-      setPendingStatus("");
-      setReason("");
+      resetReasonState();
       closeModal();
     } catch (error) {
       console.error("Status update error:", error);
-      alert("Something went wrong while updating the account status.");
+
+      if (showMessage) {
+        showMessage("error", "Something went wrong while updating the account status.");
+      } else {
+        alert("Something went wrong while updating the account status.");
+      }
     } finally {
       setLoading(false);
     }
@@ -62,57 +108,109 @@ const AccountModal = ({ isOpen, closeModal, selectedAccount, refreshAccounts }) 
 
   const submitReasonAction = async () => {
     if (!reason.trim()) {
-      alert("Please enter a reason.");
+      if (showMessage) {
+        showMessage("error", "Please enter a reason.");
+      } else {
+        alert("Please enter a reason.");
+      }
       return;
     }
 
-    await changeStatus(pendingStatus, reason);
+    await changeStatus(pendingStatus, reason.trim());
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div className="w-full max-w-2xl rounded-2xl border border-gray-800 bg-gray-900 text-white shadow-2xl">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-800 px-6 py-4">
           <div>
             <h2 className="text-xl font-semibold">Account Details</h2>
             <p className="text-sm text-gray-400">Manage purchased account status</p>
           </div>
+
           <button
-            onClick={closeModal}
+            onClick={() => {
+              resetReasonState();
+              closeModal();
+            }}
             className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 space-y-6">
-          {/* Account Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoCard label="User Name" value={selectedAccount.full_name} />
-            <InfoCard label="Email" value={selectedAccount.email} />
-            <InfoCard label="Account Login" value={selectedAccount.account_login} />
-            <InfoCard label="Server" value={selectedAccount.server} />
-            <InfoCard label="Password" value={selectedAccount.account_password} />
-            <InfoCard label="Current Phase" value={selectedAccount.current_phase} />
-            <InfoCard label="Plan" value={selectedAccount.plan_size || selectedAccount.size} />
-            <InfoCard label="Status" value={selectedAccount.status} />
+        <div className="space-y-6 p-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <InfoCard
+              label="User Name"
+              value={getValue(
+                selectedAccount.full_name,
+                selectedAccount.user,
+                selectedAccount.name
+              )}
+            />
+            <InfoCard
+              label="Email"
+              value={getValue(selectedAccount.email)}
+            />
+            <InfoCard
+              label="Account Login"
+              value={getValue(
+                selectedAccount.account_login,
+                selectedAccount.login
+              )}
+            />
+            <InfoCard
+              label="Server"
+              value={getValue(selectedAccount.server)}
+            />
+            <InfoCard
+              label="Password"
+              value={getValue(
+                selectedAccount.account_password,
+                selectedAccount.password
+              )}
+            />
+            <InfoCard
+              label="Current Phase"
+              value={getValue(
+                selectedAccount.current_phase,
+                selectedAccount.phase
+              )}
+            />
+            <InfoCard
+              label="Plan"
+              value={formatMoney(
+                getValue(selectedAccount.plan_size, selectedAccount.size, 0)
+              )}
+            />
+            <InfoCard
+              label="Type"
+              value={getValue(
+                selectedAccount.type,
+                selectedAccount.plan_type
+              )}
+            />
+            <InfoCard
+              label="Status"
+              value={getValue(selectedAccount.status)}
+            />
           </div>
 
-          {/* Reason Box */}
           {showReasonBox && (
             <div className="rounded-2xl border border-yellow-600/30 bg-yellow-500/10 p-4">
               <h3 className="mb-3 font-semibold text-yellow-300">
                 Enter reason for {pendingStatus}
               </h3>
+
               <textarea
                 rows={4}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={`Write reason for ${pendingStatus} account...`}
-                className="w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-white outline-none focus:border-yellow-500 resize-none"
+                className="w-full resize-none rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-white outline-none focus:border-yellow-500"
               />
+
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   onClick={submitReasonAction}
@@ -123,11 +221,7 @@ const AccountModal = ({ isOpen, closeModal, selectedAccount, refreshAccounts }) 
                 </button>
 
                 <button
-                  onClick={() => {
-                    setShowReasonBox(false);
-                    setPendingStatus("");
-                    setReason("");
-                  }}
+                  onClick={resetReasonState}
                   className="rounded-xl border border-gray-700 px-5 py-2.5 text-gray-300 hover:bg-gray-800"
                 >
                   Cancel
@@ -136,7 +230,6 @@ const AccountModal = ({ isOpen, closeModal, selectedAccount, refreshAccounts }) 
             </div>
           )}
 
-          {/* Actions */}
           {!showReasonBox && (
             <div className="flex flex-wrap gap-3">
               <button
