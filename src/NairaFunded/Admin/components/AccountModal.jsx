@@ -51,56 +51,6 @@ const AccountModal = ({
     return "bg-gray-700/20 text-gray-300 border border-gray-700/30";
   };
 
-  const getValue = (...values) => {
-    for (const value of values) {
-      if (value !== undefined && value !== null && value !== "") {
-        return value;
-      }
-    }
-    return "";
-  };
-
-  const userName = getValue(
-    selectedAccount.user,
-    selectedAccount.full_name,
-    selectedAccount.name
-  );
-
-  const userEmail = getValue(
-    selectedAccount.email,
-    selectedAccount.user_email
-  );
-
-  const loginValue = getValue(
-    selectedAccount.login,
-    selectedAccount.account_login
-  );
-
-  const passwordValue = getValue(
-    selectedAccount.password,
-    selectedAccount.account_password
-  );
-
-  const serverValue = getValue(
-    selectedAccount.server,
-    selectedAccount.account_server
-  );
-
-  const phaseValue = getValue(
-    selectedAccount.phase,
-    selectedAccount.current_phase
-  );
-
-  const typeValue = getValue(
-    selectedAccount.type,
-    selectedAccount.plan_type
-  );
-
-  const sizeValue = getValue(
-    selectedAccount.size,
-    selectedAccount.plan_size
-  );
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-4xl rounded-2xl border border-gray-800 bg-gray-900 p-6 text-white shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -128,12 +78,9 @@ const AccountModal = ({
                 </div>
                 <div>
                   <p className="font-semibold text-base">
-                    {userName || "Unknown User"}
+                    {selectedAccount.user || "Unknown User"}
                   </p>
                   <p className="text-sm text-gray-400">AC/{selectedAccount.id}</p>
-                  {userEmail && (
-                    <p className="text-xs text-gray-500 mt-1">{userEmail}</p>
-                  )}
                 </div>
               </div>
 
@@ -143,7 +90,7 @@ const AccountModal = ({
                     <Layers3 size={14} />
                     Type
                   </p>
-                  <p>{typeValue || "N/A"}</p>
+                  <p>{selectedAccount.type || "N/A"}</p>
                 </div>
 
                 <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
@@ -151,7 +98,7 @@ const AccountModal = ({
                     <Wallet size={14} />
                     Size
                   </p>
-                  <p>{formatMoney(sizeValue)}</p>
+                  <p>{formatMoney(selectedAccount.size)}</p>
                 </div>
 
                 <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
@@ -159,7 +106,7 @@ const AccountModal = ({
                     <Activity size={14} />
                     Phase
                   </p>
-                  <p className="capitalize">{phaseValue || "N/A"}</p>
+                  <p className="capitalize">{selectedAccount.phase || "N/A"}</p>
                 </div>
 
                 <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
@@ -184,13 +131,12 @@ const AccountModal = ({
                   <input
                     type="text"
                     placeholder="Login ID"
-                    value={loginValue}
+                    value={selectedAccount.login || ""}
                     className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-blue-500"
                     onChange={(e) =>
                       setSelectedAccount({
                         ...selectedAccount,
                         login: e.target.value,
-                        account_login: e.target.value,
                       })
                     }
                   />
@@ -198,13 +144,12 @@ const AccountModal = ({
                   <input
                     type="text"
                     placeholder="Password"
-                    value={passwordValue}
+                    value={selectedAccount.password || ""}
                     className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-blue-500"
                     onChange={(e) =>
                       setSelectedAccount({
                         ...selectedAccount,
                         password: e.target.value,
-                        account_password: e.target.value,
                       })
                     }
                   />
@@ -212,13 +157,12 @@ const AccountModal = ({
                   <input
                     type="text"
                     placeholder="Server"
-                    value={serverValue}
+                    value={selectedAccount.server || ""}
                     className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-blue-500"
                     onChange={(e) =>
                       setSelectedAccount({
                         ...selectedAccount,
                         server: e.target.value,
-                        account_server: e.target.value,
                       })
                     }
                   />
@@ -227,12 +171,12 @@ const AccountModal = ({
                 <div className="space-y-3 text-sm">
                   <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
                     <p className="text-gray-400 text-xs mb-1">Login</p>
-                    <p>{loginValue || "Not assigned"}</p>
+                    <p>{selectedAccount.login || "Not assigned"}</p>
                   </div>
 
                   <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
                     <p className="text-gray-400 text-xs mb-1">Password</p>
-                    <p>{passwordValue || "Not assigned"}</p>
+                    <p>{selectedAccount.password || "Not assigned"}</p>
                   </div>
 
                   <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
@@ -240,7 +184,7 @@ const AccountModal = ({
                       <Server size={14} />
                       Server
                     </p>
-                    <p>{serverValue || "Not assigned"}</p>
+                    <p>{selectedAccount.server || "Not assigned"}</p>
                   </div>
                 </div>
               )}
