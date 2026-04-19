@@ -72,78 +72,9 @@ const Accounts = () => {
     fetchAccounts();
   }, []);
 
-  const handleSave = async () => {
-    if (!selectedAccount) return;
-
-    if (
-      !selectedAccount.login ||
-      !selectedAccount.password ||
-      !selectedAccount.server
-    ) {
-      showMessage("error", "Login, password and server are required");
-      return;
-    }
-
-    try {
-      const res = await fetch("https://api.fundednaira.ng/api/admin/update-account.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...selectedAccount,
-          status: "active",
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setSelectedAccount(null);
-        fetchAccounts();
-        showMessage("success", "Account activated successfully");
-      } else {
-        showMessage("error", data.message || "Failed to update account");
-      }
-    } catch (error) {
-      console.error(error);
-      showMessage("error", "Server error");
-    }
-  };
-
-  const changeStatus = async (status) => {
-    if (!selectedAccount) return;
-
-    try {
-      const res = await fetch("https://api.fundednaira.ng/api/admin/update-account-status.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: selectedAccount.id,
-          status,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setSelectedAccount(null);
-        fetchAccounts();
-        showMessage("success", `Account marked as ${status}`);
-      } else {
-        showMessage("error", data.message || "Failed to change status");
-      }
-    } catch (error) {
-      console.error(error);
-      showMessage("error", "Server error");
-    }
-  };
-
   const filteredAccounts = accounts.filter((acc) => {
     if (filter === "All") return true;
-    return String(acc.status).toLowerCase() === filter.toLowerCase();
+    return String(acc.status || "").toLowerCase() === filter.toLowerCase();
   });
 
   const indexOfLast = currentPage * accountsPerPage;
@@ -152,7 +83,7 @@ const Accounts = () => {
   const totalPages = Math.ceil(filteredAccounts.length / accountsPerPage);
 
   const getStatusClass = (status) => {
-    const lower = String(status).toLowerCase();
+    const lower = String(status || "").toLowerCase();
 
     if (lower === "active") {
       return "bg-green-600/20 text-green-400 border border-green-600/30";
@@ -166,7 +97,27 @@ const Accounts = () => {
       return "bg-red-600/20 text-red-400 border border-red-600/30";
     }
 
+    if (lower === "suspended") {
+      return "bg-orange-500/20 text-orange-300 border border-orange-500/30";
+    }
+
     return "bg-gray-700/20 text-gray-300 border border-gray-700/30";
+  };
+
+  const getUserName = (acc) => {
+    return acc.full_name || acc.user || acc.name || "N/A";
+  };
+
+  const getAccountType = (acc) => {
+    return acc.type || acc.plan_type || "N/A";
+  };
+
+  const getAccountSize = (acc) => {
+    return acc.size || acc.plan_size || 0;
+  };
+
+  const getAccountPhase = (acc) => {
+    return acc.phase || acc.current_phase || "N/A";
   };
 
   return (
@@ -220,6 +171,7 @@ const Accounts = () => {
             <option>All</option>
             <option>Active</option>
             <option>Pending</option>
+            <option>Suspended</option>
             <option>Failed</option>
           </select>
         </div>
@@ -235,7 +187,7 @@ const Accounts = () => {
                   <th className="text-left">Size</th>
                   <th className="text-left">Phase</th>
                   <th className="text-left">Status</th>
-                  <th className="text-right px-4">Action</th>
+                  <th className="px-4 text-right">Action</th>
                 </tr>
               </thead>
 
@@ -246,17 +198,17 @@ const Accounts = () => {
                     className="border-b border-gray-800 transition hover:bg-gray-800/70"
                   >
                     <td className="px-4 py-3">AC/{acc.id}</td>
-                    <td>{acc.user}</td>
-                    <td>{acc.type || "N/A"}</td>
-                    <td>{formatMoney(acc.size)}</td>
-                    <td className="capitalize">{acc.phase}</td>
+                    <td>{getUserName(acc)}</td>
+                    <td>{getAccountType(acc)}</td>
+                    <td>{formatMoney(getAccountSize(acc))}</td>
+                    <td className="capitalize">{getAccountPhase(acc)}</td>
                     <td>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
                           acc.status
                         )}`}
                       >
-                        {acc.status}
+                        {acc.status || "N/A"}
                       </span>
                     </td>
 
@@ -316,10 +268,11 @@ const Accounts = () => {
         </div>
 
         <AccountModal
+          isOpen={!!selectedAccount}
+          closeModal={() => setSelectedAccount(null)}
           selectedAccount={selectedAccount}
-          setSelectedAccount={setSelectedAccount}
-          handleSave={handleSave}
-          changeStatus={changeStatus}
+          refreshAccounts={fetchAccounts}
+          showMessage={showMessage}
         />
       </div>
     </AdminLayout>
