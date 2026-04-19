@@ -1,27 +1,28 @@
-import React, { useState } from "react";
-import { X, CheckCircle2, AlertCircle, Ban } from "lucide-react";
+import {
+  X,
+  ShieldCheck,
+  Ban,
+  RefreshCcw,
+  Server,
+  KeyRound,
+  UserCircle2,
+  Wallet,
+  Layers3,
+  Activity,
+} from "lucide-react";
 
 const AccountModal = ({
-  isOpen,
-  closeModal,
   selectedAccount,
-  refreshAccounts,
-  showMessage,
+  setSelectedAccount,
+  handleSave,
+  changeStatus,
 }) => {
-  const [loading, setLoading] = useState(false);
-  const [showReasonBox, setShowReasonBox] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState("");
-  const [reason, setReason] = useState("");
+  if (!selectedAccount) return null;
 
-  if (!isOpen || !selectedAccount) return null;
+  const status = String(selectedAccount.status || "").toLowerCase();
 
-  const getValue = (...values) => {
-    for (const value of values) {
-      if (value !== undefined && value !== null && value !== "") {
-        return value;
-      }
-    }
-    return "—";
+  const closeModal = () => {
+    setSelectedAccount(null);
   };
 
   const formatMoney = (value) => {
@@ -34,243 +35,292 @@ const AccountModal = ({
     return `₦${number.toLocaleString()}`;
   };
 
-  const resetReasonState = () => {
-    setShowReasonBox(false);
-    setPendingStatus("");
-    setReason("");
-  };
-
-  const changeStatus = async (newStatus, customReason = "") => {
-    if (!selectedAccount?.id) {
-      if (showMessage) {
-        showMessage("error", "No account selected.");
-      } else {
-        alert("No account selected.");
-      }
-      return;
+  const getStatusClass = () => {
+    if (status === "active") {
+      return "bg-green-500/15 text-green-400 border border-green-500/30";
     }
 
-    try {
-      setLoading(true);
-
-      const res = await fetch("https://api.fundednaira.ng/api/admin/update-account-status.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: selectedAccount.id,
-          status: newStatus,
-          reason: customReason,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        if (showMessage) {
-          showMessage("error", data.message || "Failed to update account status.");
-        } else {
-          alert(data.message || "Failed to update account status.");
-        }
-        return;
-      }
-
-      if (showMessage) {
-        showMessage("success", data.message || `Account marked as ${newStatus}.`);
-      } else {
-        alert(data.message || "Status updated successfully.");
-      }
-
-      if (typeof refreshAccounts === "function") {
-        await refreshAccounts();
-      }
-
-      resetReasonState();
-      closeModal();
-    } catch (error) {
-      console.error("Status update error:", error);
-
-      if (showMessage) {
-        showMessage("error", "Something went wrong while updating the account status.");
-      } else {
-        alert("Something went wrong while updating the account status.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSuspendOrFail = (status) => {
-    setPendingStatus(status);
-    setShowReasonBox(true);
-  };
-
-  const submitReasonAction = async () => {
-    if (!reason.trim()) {
-      if (showMessage) {
-        showMessage("error", "Please enter a reason.");
-      } else {
-        alert("Please enter a reason.");
-      }
-      return;
+    if (status === "pending") {
+      return "bg-yellow-500/15 text-yellow-300 border border-yellow-500/30";
     }
 
-    await changeStatus(pendingStatus, reason.trim());
+    if (status === "failed") {
+      return "bg-red-500/15 text-red-400 border border-red-500/30";
+    }
+
+    return "bg-gray-700/20 text-gray-300 border border-gray-700/30";
   };
+
+  const getValue = (...values) => {
+    for (const value of values) {
+      if (value !== undefined && value !== null && value !== "") {
+        return value;
+      }
+    }
+    return "";
+  };
+
+  const userName = getValue(
+    selectedAccount.user,
+    selectedAccount.full_name,
+    selectedAccount.name
+  );
+
+  const userEmail = getValue(
+    selectedAccount.email,
+    selectedAccount.user_email
+  );
+
+  const loginValue = getValue(
+    selectedAccount.login,
+    selectedAccount.account_login
+  );
+
+  const passwordValue = getValue(
+    selectedAccount.password,
+    selectedAccount.account_password
+  );
+
+  const serverValue = getValue(
+    selectedAccount.server,
+    selectedAccount.account_server
+  );
+
+  const phaseValue = getValue(
+    selectedAccount.phase,
+    selectedAccount.current_phase
+  );
+
+  const typeValue = getValue(
+    selectedAccount.type,
+    selectedAccount.plan_type
+  );
+
+  const sizeValue = getValue(
+    selectedAccount.size,
+    selectedAccount.plan_size
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-2xl rounded-2xl border border-gray-800 bg-gray-900 text-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-800 px-6 py-4">
-          <div>
-            <h2 className="text-xl font-semibold">Account Details</h2>
-            <p className="text-sm text-gray-400">Manage purchased account status</p>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-4xl rounded-2xl border border-gray-800 bg-gray-900 p-6 text-white shadow-2xl max-h-[90vh] overflow-y-auto">
+        <button
+          onClick={closeModal}
+          className="absolute right-4 top-4 text-gray-400 transition hover:text-white"
+        >
+          <X size={22} />
+        </button>
 
-          <button
-            onClick={() => {
-              resetReasonState();
-              closeModal();
-            }}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white"
-          >
-            <X size={20} />
-          </button>
+        <div className="mb-6 pr-10">
+          <h2 className="text-2xl font-bold">Manage Account</h2>
+          <p className="mt-1 text-sm text-gray-400">
+            Review account details, credentials, and account status actions.
+          </p>
         </div>
 
-        <div className="space-y-6 p-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <InfoCard
-              label="User Name"
-              value={getValue(
-                selectedAccount.full_name,
-                selectedAccount.user,
-                selectedAccount.name
-              )}
-            />
-            <InfoCard
-              label="Email"
-              value={getValue(selectedAccount.email)}
-            />
-            <InfoCard
-              label="Account Login"
-              value={getValue(
-                selectedAccount.account_login,
-                selectedAccount.login
-              )}
-            />
-            <InfoCard
-              label="Server"
-              value={getValue(selectedAccount.server)}
-            />
-            <InfoCard
-              label="Password"
-              value={getValue(
-                selectedAccount.account_password,
-                selectedAccount.password
-              )}
-            />
-            <InfoCard
-              label="Current Phase"
-              value={getValue(
-                selectedAccount.current_phase,
-                selectedAccount.phase
-              )}
-            />
-            <InfoCard
-              label="Plan"
-              value={formatMoney(
-                getValue(selectedAccount.plan_size, selectedAccount.size, 0)
-              )}
-            />
-            <InfoCard
-              label="Type"
-              value={getValue(
-                selectedAccount.type,
-                selectedAccount.plan_type
-              )}
-            />
-            <InfoCard
-              label="Status"
-              value={getValue(selectedAccount.status)}
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* LEFT COLUMN */}
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="rounded-full bg-blue-600/20 p-2.5 text-blue-400">
+                  <UserCircle2 size={22} />
+                </div>
+                <div>
+                  <p className="font-semibold text-base">
+                    {userName || "Unknown User"}
+                  </p>
+                  <p className="text-sm text-gray-400">AC/{selectedAccount.id}</p>
+                  {userEmail && (
+                    <p className="text-xs text-gray-500 mt-1">{userEmail}</p>
+                  )}
+                </div>
+              </div>
 
-          {showReasonBox && (
-            <div className="rounded-2xl border border-yellow-600/30 bg-yellow-500/10 p-4">
-              <h3 className="mb-3 font-semibold text-yellow-300">
-                Enter reason for {pendingStatus}
-              </h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                  <p className="text-gray-400 text-xs mb-1 flex items-center gap-2">
+                    <Layers3 size={14} />
+                    Type
+                  </p>
+                  <p>{typeValue || "N/A"}</p>
+                </div>
 
-              <textarea
-                rows={4}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder={`Write reason for ${pendingStatus} account...`}
-                className="w-full resize-none rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-white outline-none focus:border-yellow-500"
-              />
+                <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                  <p className="text-gray-400 text-xs mb-1 flex items-center gap-2">
+                    <Wallet size={14} />
+                    Size
+                  </p>
+                  <p>{formatMoney(sizeValue)}</p>
+                </div>
 
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  onClick={submitReasonAction}
-                  disabled={loading}
-                  className="rounded-xl bg-yellow-500 px-5 py-2.5 font-medium text-black hover:bg-yellow-400 disabled:opacity-50"
-                >
-                  {loading ? "Processing..." : "Submit Reason"}
-                </button>
+                <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                  <p className="text-gray-400 text-xs mb-1 flex items-center gap-2">
+                    <Activity size={14} />
+                    Phase
+                  </p>
+                  <p className="capitalize">{phaseValue || "N/A"}</p>
+                </div>
 
-                <button
-                  onClick={resetReasonState}
-                  className="rounded-xl border border-gray-700 px-5 py-2.5 text-gray-300 hover:bg-gray-800"
-                >
-                  Cancel
-                </button>
+                <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                  <p className="text-gray-400 text-xs mb-1">Status</p>
+                  <span
+                    className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getStatusClass()}`}
+                  >
+                    {selectedAccount.status || "Unknown"}
+                  </span>
+                </div>
               </div>
             </div>
-          )}
 
-          {!showReasonBox && (
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => changeStatus("active")}
-                disabled={loading}
-                className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-3 font-medium hover:bg-green-500 disabled:opacity-50"
-              >
-                <CheckCircle2 size={18} />
-                {loading ? "Processing..." : "Activate"}
-              </button>
+            <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-5">
+              <div className="mb-3 flex items-center gap-2 text-gray-300">
+                <KeyRound size={16} />
+                <span className="font-medium">Account Credentials</span>
+              </div>
 
-              <button
-                onClick={() => handleSuspendOrFail("suspended")}
-                disabled={loading}
-                className="flex items-center gap-2 rounded-xl bg-yellow-500 px-5 py-3 font-medium text-black hover:bg-yellow-400 disabled:opacity-50"
-              >
-                <AlertCircle size={18} />
-                Suspend
-              </button>
+              {status === "pending" ? (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Login ID"
+                    value={loginValue}
+                    className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-blue-500"
+                    onChange={(e) =>
+                      setSelectedAccount({
+                        ...selectedAccount,
+                        login: e.target.value,
+                        account_login: e.target.value,
+                      })
+                    }
+                  />
 
-              <button
-                onClick={() => handleSuspendOrFail("failed")}
-                disabled={loading}
-                className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-medium hover:bg-red-500 disabled:opacity-50"
-              >
-                <Ban size={18} />
-                Fail Account
-              </button>
+                  <input
+                    type="text"
+                    placeholder="Password"
+                    value={passwordValue}
+                    className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-blue-500"
+                    onChange={(e) =>
+                      setSelectedAccount({
+                        ...selectedAccount,
+                        password: e.target.value,
+                        account_password: e.target.value,
+                      })
+                    }
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Server"
+                    value={serverValue}
+                    className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-blue-500"
+                    onChange={(e) =>
+                      setSelectedAccount({
+                        ...selectedAccount,
+                        server: e.target.value,
+                        account_server: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="space-y-3 text-sm">
+                  <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                    <p className="text-gray-400 text-xs mb-1">Login</p>
+                    <p>{loginValue || "Not assigned"}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                    <p className="text-gray-400 text-xs mb-1">Password</p>
+                    <p>{passwordValue || "Not assigned"}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">
+                    <p className="text-gray-400 text-xs mb-1 flex items-center gap-2">
+                      <Server size={14} />
+                      Server
+                    </p>
+                    <p>{serverValue || "Not assigned"}</p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="space-y-4">
+            {status === "active" && (
+              <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-5">
+                <h3 className="mb-3 text-base font-semibold">Active Account Actions</h3>
+                <div className="rounded-xl border border-green-800/40 bg-green-950/20 p-4 text-sm text-green-300 mb-4">
+                  This account is currently active and credentials have already been assigned.
+                </div>
+
+                <button
+                  onClick={() => changeStatus("failed")}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-medium text-white transition hover:bg-red-700"
+                >
+                  <Ban size={18} />
+                  Mark as Failed
+                </button>
+              </div>
+            )}
+
+            {status === "pending" && (
+              <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-5">
+                <h3 className="mb-3 text-base font-semibold">Pending Account Actions</h3>
+                <div className="rounded-xl border border-yellow-800/40 bg-yellow-950/20 p-4 text-sm text-yellow-200 mb-4">
+                  Add login details, password, and server before activating this account.
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    onClick={handleSave}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-3 font-medium text-white transition hover:bg-green-700"
+                  >
+                    <ShieldCheck size={18} />
+                    Activate Account
+                  </button>
+
+                  <button
+                    onClick={() => changeStatus("failed")}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-medium text-white transition hover:bg-red-700"
+                  >
+                    <Ban size={18} />
+                    Mark as Failed
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {status === "failed" && (
+              <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-5">
+                <h3 className="mb-3 text-base font-semibold">Failed Account Actions</h3>
+
+                <div className="rounded-xl border border-red-800 bg-red-950/40 p-4 text-red-300 mb-4">
+                  This account has been marked as failed.
+                </div>
+
+                <button
+                  onClick={() => changeStatus("active")}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-3 font-medium text-white transition hover:bg-green-700"
+                >
+                  <RefreshCcw size={18} />
+                  Reactivate Account
+                </button>
+              </div>
+            )}
+
+            {!["active", "pending", "failed"].includes(status) && (
+              <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-5">
+                <div className="rounded-xl border border-gray-700 bg-gray-900 p-4 text-gray-300">
+                  No actions available for this account status.
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-const InfoCard = ({ label, value }) => {
-  return (
-    <div className="rounded-2xl border border-gray-800 bg-gray-950 p-4">
-      <p className="text-sm text-gray-400">{label}</p>
-      <p className="mt-1 break-words font-medium text-white">{value || "—"}</p>
     </div>
   );
 };
