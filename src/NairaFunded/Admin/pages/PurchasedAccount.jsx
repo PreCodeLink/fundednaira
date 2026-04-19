@@ -51,13 +51,34 @@ const Accounts = () => {
     return `₦${number.toLocaleString()}`;
   };
 
+  const getValue = (...values) => {
+    for (const value of values) {
+      if (value !== undefined && value !== null && value !== "") {
+        return value;
+      }
+    }
+    return "";
+  };
+
+  const normalizeAccount = (acc) => ({
+    ...acc,
+    user: getValue(acc.user, acc.full_name, acc.name),
+    email: getValue(acc.email, acc.user_email),
+    login: getValue(acc.login, acc.account_login),
+    password: getValue(acc.password, acc.account_password),
+    server: getValue(acc.server, acc.account_server),
+    phase: getValue(acc.phase, acc.current_phase),
+    type: getValue(acc.type, acc.plan_type),
+    size: getValue(acc.size, acc.plan_size),
+  });
+
   const fetchAccounts = async () => {
     try {
       const res = await fetch("https://api.fundednaira.ng/api/admin/get-accounts.php");
       const data = await res.json();
 
       if (Array.isArray(data)) {
-        setAccounts(data);
+        setAccounts(data.map(normalizeAccount));
       } else {
         setAccounts([]);
         showMessage("error", "Invalid accounts response");
@@ -76,9 +97,9 @@ const Accounts = () => {
     if (!selectedAccount) return;
 
     if (
-      !selectedAccount.login ||
-      !selectedAccount.password ||
-      !selectedAccount.server
+      !selectedAccount.login?.trim() ||
+      !selectedAccount.password?.trim() ||
+      !selectedAccount.server?.trim()
     ) {
       showMessage("error", "Login, password and server are required");
       return;
@@ -91,7 +112,13 @@ const Accounts = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...selectedAccount,
+          id: selectedAccount.id,
+          login: selectedAccount.login,
+          account_login: selectedAccount.login,
+          password: selectedAccount.password,
+          account_password: selectedAccount.password,
+          server: selectedAccount.server,
+          account_server: selectedAccount.server,
           status: "active",
         }),
       });
@@ -100,8 +127,11 @@ const Accounts = () => {
 
       if (data.success) {
         setSelectedAccount(null);
-        fetchAccounts();
-        showMessage("success", "Account activated successfully");
+        await fetchAccounts();
+        showMessage(
+          "success",
+          data.message || "Account activated and details sent to user"
+        );
       } else {
         showMessage("error", data.message || "Failed to update account");
       }
@@ -130,7 +160,7 @@ const Accounts = () => {
 
       if (data.success) {
         setSelectedAccount(null);
-        fetchAccounts();
+        await fetchAccounts();
         showMessage("success", `Account marked as ${status}`);
       } else {
         showMessage("error", data.message || "Failed to change status");
@@ -143,7 +173,7 @@ const Accounts = () => {
 
   const filteredAccounts = accounts.filter((acc) => {
     if (filter === "All") return true;
-    return String(acc.status).toLowerCase() === filter.toLowerCase();
+    return String(acc.status || "").toLowerCase() === filter.toLowerCase();
   });
 
   const indexOfLast = currentPage * accountsPerPage;
@@ -152,7 +182,7 @@ const Accounts = () => {
   const totalPages = Math.ceil(filteredAccounts.length / accountsPerPage);
 
   const getStatusClass = (status) => {
-    const lower = String(status).toLowerCase();
+    const lower = String(status || "").toLowerCase();
 
     if (lower === "active") {
       return "bg-green-600/20 text-green-400 border border-green-600/30";
@@ -246,23 +276,23 @@ const Accounts = () => {
                     className="border-b border-gray-800 transition hover:bg-gray-800/70"
                   >
                     <td className="px-4 py-3">AC/{acc.id}</td>
-                    <td>{acc.user}</td>
+                    <td>{acc.user || "N/A"}</td>
                     <td>{acc.type || "N/A"}</td>
                     <td>{formatMoney(acc.size)}</td>
-                    <td className="capitalize">{acc.phase}</td>
+                    <td className="capitalize">{acc.phase || "N/A"}</td>
                     <td>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
                           acc.status
                         )}`}
                       >
-                        {acc.status}
+                        {acc.status || "N/A"}
                       </span>
                     </td>
 
                     <td className="px-4 text-right">
                       <button
-                        onClick={() => setSelectedAccount(acc)}
+                        onClick={() => setSelectedAccount(normalizeAccount(acc))}
                         className="rounded-lg bg-blue-600 px-3 py-1.5 transition hover:bg-blue-700"
                       >
                         Manage
