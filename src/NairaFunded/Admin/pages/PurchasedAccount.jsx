@@ -70,6 +70,7 @@ const Accounts = () => {
     phase: getValue(acc.phase, acc.current_phase),
     type: getValue(acc.type, acc.plan_type),
     size: getValue(acc.size, acc.plan_size),
+    failure_reason: getValue(acc.failure_reason),
   });
 
   const fetchAccounts = async () => {
@@ -141,19 +142,25 @@ const Accounts = () => {
     }
   };
 
-  const changeStatus = async (status) => {
+  const changeStatus = async (status, reason = "") => {
     if (!selectedAccount) return;
 
     try {
+      const payload = {
+        id: selectedAccount.id,
+        status,
+      };
+
+      if (status === "failed") {
+        payload.reason = reason;
+      }
+
       const res = await fetch("https://api.fundednaira.ng/api/admin/update-account-status.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          id: selectedAccount.id,
-          status,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -161,7 +168,7 @@ const Accounts = () => {
       if (data.success) {
         setSelectedAccount(null);
         await fetchAccounts();
-        showMessage("success", `Account marked as ${status}`);
+        showMessage("success", data.message || `Account marked as ${status}`);
       } else {
         showMessage("error", data.message || "Failed to change status");
       }
