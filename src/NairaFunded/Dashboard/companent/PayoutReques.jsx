@@ -40,7 +40,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
         setType("");
 
         const res = await fetch(
-          `http://localhost/FundedNaira/api/dashboard/get-user-accounts-for-payout.php?user_id=${userId}`
+          `https://api.fundednaira.ng/api/dashboard/get-user-accounts-for-payout.php?user_id=${userId}`
         );
 
         const text = await res.text();
@@ -127,7 +127,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
       setMessage("");
 
       const res = await fetch(
-        "http://localhost/FundedNaira/api/dashboard/request-payout.php",
+        "https://api.fundednaira.ng/api/dashboard/request-payout.php",
         {
           method: "POST",
           headers: {
