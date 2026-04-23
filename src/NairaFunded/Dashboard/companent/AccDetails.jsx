@@ -66,7 +66,7 @@ const AccountDetailsModal = ({ isOpen, onClose, account }) => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost/FundedNaira/api/dashboard/request-phase.php", {
+      const res = await fetch("https://api.fundednaira.ng/api/dashboard/request-phase.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
