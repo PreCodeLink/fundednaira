@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../companent/Layout";
 import Sidebar from "../companent/Sidebar";
+import TopSection from "../companent/TopSection";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -106,6 +107,7 @@ const Dashboard = () => {
         <Sidebar />
 
         <div className="flex-1 min-h-screen bg-[#0B0F19] text-white p-4 md:p-6 space-y-6 w-full md:max-w-4xl mx-auto">
+          <TopSection />
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h1 className="text-xl md:text-2xl font-bold">Dashboard</h1>
           </div>
