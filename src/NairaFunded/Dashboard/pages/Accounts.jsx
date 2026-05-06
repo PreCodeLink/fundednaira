@@ -3,6 +3,7 @@ import Layout from "../companent/Layout";
 import Sidebar from "../companent/Sidebar";
 import { useNavigate } from "react-router-dom";
 import { X, CheckCircle2, AlertCircle } from "lucide-react";
+import TopSection from "../companent/TopSection";
 
 const AccountDetailsModal = ({
   isOpen,
@@ -413,6 +414,7 @@ squadInstance.open();
         <Sidebar />
 
         <div className="flex-1 p-6 md:p-10 bg-gray-950 min-h-screen text-white relative">
+          <TopSection />
           {message.show && (
             <div className="fixed top-5 right-5 z-[100]">
               <div
