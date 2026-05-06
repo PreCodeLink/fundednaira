@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "../companent/Layout";
 import Sidebar from "../companent/Sidebar";
 import { useNavigate } from "react-router-dom";
+import TopSection from "../companent/TopSection";
 
 const Affiliate = () => {
   const navigate = useNavigate();
@@ -152,6 +153,7 @@ const Affiliate = () => {
         <Sidebar />
 
         <div className="flex-1 p-6 md:p-10 bg-gray-950 min-h-screen text-white">
+          <TopSection />
           {(message || error) && (
             <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black/50 backdrop-blur-sm">
               <div className="bg-[#111827] border border-gray-700 rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-xl">
