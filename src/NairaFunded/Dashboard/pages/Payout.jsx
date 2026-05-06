@@ -4,6 +4,7 @@ import PayoutModal from "../companent/PayoutReques";
 import Layout from "../companent/Layout";
 import Sidebar from "../companent/Sidebar";
 import { Wallet, CircleAlert, Download } from "lucide-react";
+import TopSection from "../companent/TopSection";
 
 const Payout = () => {
   const [showModal, setShowModal] = useState(false);
@@ -100,6 +101,7 @@ const Payout = () => {
         <Sidebar />
 
         <div className="flex-1 p-6 md:p-10 bg-gray-950 min-h-screen text-white w-full w-full md:max-w-4xl mx-auto">
+          <TopSection />
           <h1 className="text-3xl font-bold mb-8">Payouts</h1>
 
           <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mb-10">
