@@ -121,13 +121,13 @@ const Accounts = () => {
 
   const fetchAccounts = async () => {
     const userId = getUserId();
-    const res = await fetch(`/api/dashboard/get-user-accounts.php?user_id=${userId}`);
+    const res = await fetch(`https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`);
     const data = await res.json();
     setAccounts(Array.isArray(data) ? data : []);
   };
 
   const fetchPlans = async () => {
-    const res = await fetch("/api/dashboard/get-plans.php");
+    const res = await fetch("https://api.fundednaira.ng/api/dashboard/get-plans.php");
     const data = await res.json();
     setPlans(Array.isArray(data) ? data : []);
   };
@@ -144,7 +144,7 @@ const Accounts = () => {
     setBuyingPlanId(plan.id);
 
     try {
-      const res = await fetch("/api/payments/initialize-payment.php", {
+      const res = await fetch("https://api.fundednaira.ng/api/payments/initialize-payment.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: user.id, plan_id: plan.id }),
@@ -163,7 +163,7 @@ const Accounts = () => {
         currency_code: payment.currency,
         transaction_ref: payment.reference,
         onSuccess: () => {
-          window.location.href = `/dashboard/payment/callback?reference=${payment.reference}`;
+          window.location.href = `https://api.fundednaira.ng/dashboard/payment/callback?reference=${payment.reference}`;
         },
       });
 
