@@ -168,16 +168,32 @@ const Accounts = () => {
     return user?.id || user?.user_id || null;
   };
 
-  const fetchAccounts = async () => {
-    const userId = getUserId();
-    if (!userId) return;
+const fetchAccounts = async () => {
+  const userId = getUserId();
 
+  console.log("USER ID:", userId); // debug
+
+  if (!userId) return;
+
+  try {
     const res = await fetch(
       `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
     );
+
     const data = await res.json();
-    setAccounts(Array.isArray(data) ? data : []);
-  };
+
+    console.log("ACCOUNTS RESPONSE:", data);
+
+    // FIX: handle both array OR object response
+    const accountsData = Array.isArray(data)
+      ? data
+      : data?.data || [];
+
+    setAccounts(accountsData);
+  } catch (error) {
+    console.error("fetchAccounts error:", error);
+  }
+};
 
   const fetchPlans = async () => {
     const res = await fetch("https://api.fundednaira.ng/api/dashboard/get-plans.php");
