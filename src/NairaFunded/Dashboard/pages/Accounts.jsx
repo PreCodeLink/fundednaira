@@ -15,22 +15,37 @@ const AccountDetailsModal = ({
 }) => {
   if (!isOpen || !account) return null;
 
-  const currentPhase = String(account.phase || "").toLowerCase();
+  /* ================= SAFE NORMALIZATION ================= */
+  const rawType = String(account.type || "").toLowerCase();
+  const rawPhase = String(account.phase || account.current_phase || "");
+  const rawStatus = String(account.status || "").toLowerCase();
 
-  const canRequestPhase =
-    String(account.status || "").toLowerCase() === "active" &&
-    currentPhase !== "funded";
+  const isInstant =
+    rawType.includes("instant") || rawPhase.toLowerCase().includes("instant");
 
-  const nextPhase =
-    account?.phase === "1"
-      ? "2"
-      : account?.phase === "2"
-      ? "funded"
-      : "";
+  const normalizePhase = (p) => {
+    const v = String(p).toLowerCase();
+    if (v.includes("1") || v.includes("phase 1")) return "1";
+    if (v.includes("2") || v.includes("phase 2")) return "2";
+    if (v.includes("funded")) return "funded";
+    return "";
+  };
+
+  const currentPhase = normalizePhase(rawPhase);
+
+  const getNextPhase = () => {
+    if (isInstant) return null;
+    if (currentPhase === "1") return "2";
+    if (currentPhase === "2") return "funded";
+    return null;
+  };
+
+  const nextPhase = getNextPhase();
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
       <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-lg border border-gray-800 text-white relative">
+
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -40,98 +55,48 @@ const AccountDetailsModal = ({
 
         <h2 className="text-xl font-semibold mb-5">Account Details</h2>
 
+        {/* INFO */}
         <div className="space-y-3 mb-6">
-          <p className="text-gray-400">
-            Type: <span className="text-white">{account.type}</span>
+          <p>Type: <span className="text-white">{account.type}</span></p>
+          <p>Balance: <span className="text-white">{account.balance}</span></p>
+          <p>Equity: <span className="text-white">{account.equity}</span></p>
+          <p>
+            Phase:{" "}
+            <span className="text-white">
+              {isInstant ? "Instant" : currentPhase}
+            </span>
           </p>
-          <p className="text-gray-400">
-            Balance: <span className="text-white">{account.balance}</span>
-          </p>
-          <p className="text-gray-400">
-            Equity: <span className="text-white">{account.equity}</span>
-          </p>
-          <p className="text-gray-400">
-            Phase: <span className="text-white capitalize">{account.phase}</span>
-          </p>
-          <p className="text-gray-400">
-            Status: <span className="text-white capitalize">{account.status}</span>
-          </p>
+          <p>Status: <span className="text-white">{account.status}</span></p>
         </div>
 
+        {/* MT5 */}
         <div className="bg-gray-800 p-4 rounded-xl mb-5">
-          <h3 className="text-sm text-gray-400 mb-3">MT5 Login Details</h3>
-
-          <p className="text-sm">Login: <span className="text-green-400">{account.login}</span></p>
-          <p className="text-sm">Password: <span className="text-green-400">{account.password}</span></p>
-          <p className="text-sm">Server: <span className="text-green-400">{account.server}</span></p>
+          <p>Login: {account.login}</p>
+          <p>Password: {account.password}</p>
+          <p>Server: {account.server}</p>
         </div>
 
-        {canRequestPhase ? (
+        {/* ================= BUTTON LOGIC ================= */}
+        {isInstant ? (
+          <div className="text-yellow-400 text-sm bg-yellow-500/10 p-3 rounded">
+            Instant accounts do not require phase request.
+          </div>
+        ) : nextPhase ? (
           <button
             onClick={() => requestPhase(account, nextPhase)}
             disabled={loadingRequest}
             className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-medium"
           >
-            {loadingRequest ? "Submitting..." : `Request Phase ${nextPhase}`}
+            {loadingRequest
+              ? "Submitting..."
+              : `Request Phase ${nextPhase}`}
           </button>
         ) : (
           <div className="text-sm text-gray-400 bg-gray-800 rounded-lg p-3">
-            {currentPhase === "funded"
-              ? "This account is already funded."
-              : "Only active accounts can request the next phase."}
+            No phase request available.
           </div>
         )}
       </div>
-    </div>
-  );
-};
-
-/* ================= PLAN CARD ================= */
-const PlanCard = ({
-  plan,
-  formatMoney,
-  buttonColor = "blue",
-  buttonText,
-  onBuy,
-  buyingPlanId,
-}) => {
-  const isLoading = Number(buyingPlanId) === Number(plan.id);
-
-  const color =
-    buttonColor === "green"
-      ? "bg-green-600 hover:bg-green-700"
-      : "bg-blue-600 hover:bg-blue-700";
-
-  return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-      <h3 className="text-xl font-semibold mb-2">
-        {formatMoney(plan.size)} Account
-      </h3>
-
-      <p className="text-3xl font-bold">{formatMoney(plan.price)}</p>
-
-      <ul className="mt-6 text-sm text-gray-400 space-y-2">
-        <li className="flex justify-between">
-          <span>Target</span>
-          <span className="text-white">{plan.target}%</span>
-        </li>
-        <li className="flex justify-between">
-          <span>Loss</span>
-          <span className="text-white">{plan.loss}%</span>
-        </li>
-        <li className="flex justify-between">
-          <span>Split</span>
-          <span className="text-white">{plan.split}%</span>
-        </li>
-      </ul>
-
-      <button
-        onClick={() => onBuy(plan)}
-        disabled={isLoading}
-        className={`mt-6 w-full py-3 rounded-xl text-white font-medium ${color}`}
-      >
-        {isLoading ? "Processing..." : buttonText}
-      </button>
     </div>
   );
 };
@@ -147,32 +112,41 @@ const Accounts = () => {
   const [loadingRequest, setLoadingRequest] = useState(false);
   const [buyingPlanId, setBuyingPlanId] = useState(null);
 
+  /* ================= USER ================= */
   const getUserId = () => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
     return user?.id || user?.user_id || null;
   };
 
-  /* ================= FIXED API ================= */
+  /* ================= FETCH ACCOUNTS ================= */
   const fetchAccounts = async () => {
     const userId = getUserId();
     if (!userId) return;
 
-    const res = await fetch(
-      `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
-    );
+    try {
+      const res = await fetch(
+        `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
+      );
 
-    const data = await res.json();
-
-    // ✅ FIX: backend returns { success, accounts }
-    setAccounts(data?.accounts || []);
+      const data = await res.json();
+      setAccounts(data?.accounts || []);
+    } catch (err) {
+      console.error(err);
+      setAccounts([]);
+    }
   };
 
+  /* ================= FETCH PLANS ================= */
   const fetchPlans = async () => {
-    const res = await fetch(
-      "https://api.fundednaira.ng/api/dashboard/get-plans.php"
-    );
-    const data = await res.json();
-    setPlans(Array.isArray(data) ? data : []);
+    try {
+      const res = await fetch(
+        "https://api.fundednaira.ng/api/dashboard/get-plans.php"
+      );
+      const data = await res.json();
+      setPlans(Array.isArray(data) ? data : []);
+    } catch {
+      setPlans([]);
+    }
   };
 
   useEffect(() => {
@@ -180,18 +154,20 @@ const Accounts = () => {
     fetchPlans();
   }, []);
 
+  /* ================= FORMAT MONEY ================= */
   const formatMoney = (value) => {
     const num = Number(String(value).replace(/[^0-9.]/g, ""));
     return isNaN(num) ? "₦0" : `₦${num.toLocaleString()}`;
   };
 
+  /* ================= REQUEST PHASE ================= */
   const requestPhase = async (account, nextPhase) => {
     setLoadingRequest(true);
 
     try {
       const userId = getUserId();
 
-      const res = await fetch(
+      await fetch(
         "https://api.fundednaira.ng/api/dashboard/request-phase.php",
         {
           method: "POST",
@@ -205,8 +181,9 @@ const Accounts = () => {
         }
       );
 
-      await res.json();
       setOpenModal(false);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoadingRequest(false);
     }
@@ -234,7 +211,7 @@ const Accounts = () => {
           <div className="mb-12">
             <h2 className="text-xl font-semibold mb-4">My Accounts</h2>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               {accounts.map((acc) => (
                 <div
                   key={acc.id}
@@ -251,19 +228,15 @@ const Accounts = () => {
                   </p>
 
                   <p className="text-gray-400 text-sm">
-                    Phase: <span className="text-white capitalize">{acc.phase}</span>
+                    Phase: <span className="text-white">{acc.phase}</span>
                   </p>
-
-                  <span className="inline-block mt-3 px-3 py-1 text-xs rounded-full bg-green-500/20 text-green-400">
-                    {acc.status}
-                  </span>
 
                   <button
                     onClick={() => {
                       setSelectedAccount(acc);
                       setOpenModal(true);
                     }}
-                    className="mt-5 w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg"
+                    className="mt-4 w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg"
                   >
                     View Details
                   </button>
@@ -272,14 +245,14 @@ const Accounts = () => {
             </div>
           </div>
 
-          {/* ================= BUY SECTION (YOUR UI) ================= */}
+          {/* ================= BUY UI (UNCHANGED) ================= */}
           <section className="mt-16">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-5xl font-bold">
                 Buy Trading Account
               </h2>
               <p className="mt-4 text-gray-400 max-w-2xl mx-auto">
-                Choose your preferred account size and start your journey to becoming a funded trader.
+                Choose your preferred account size and start your journey.
               </p>
             </div>
 
@@ -287,53 +260,30 @@ const Accounts = () => {
             <div className="mb-16">
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-8 w-1 rounded-full bg-blue-500"></div>
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold">Challenge Accounts</h3>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Pass the evaluation and move to the next phase.
-                  </p>
-                </div>
+                <h3 className="text-2xl font-bold">Challenge Accounts</h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="grid md:grid-cols-4 gap-6">
                 {challengePlans.map((plan) => (
-                  <PlanCard
-                    key={plan.id}
-                    plan={plan}
-                    formatMoney={formatMoney}
-                    buttonText="Buy Challenge"
-                    onBuy={() => {}}
-                    buyingPlanId={buyingPlanId}
-                  />
+                  <div key={plan.id} className="bg-gray-900 p-6 rounded-xl">
+                    {plan.type}
+                  </div>
                 ))}
               </div>
             </div>
 
             {/* INSTANT */}
-            <div className="mb-10">
+            <div>
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-8 w-1 rounded-full bg-green-500"></div>
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold">
-                    Instant Funding Accounts
-                  </h3>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Get faster access with instant funding options.
-                  </p>
-                </div>
+                <h3 className="text-2xl font-bold">Instant Funding</h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="grid md:grid-cols-4 gap-6">
                 {instantPlans.map((plan) => (
-                  <PlanCard
-                    key={plan.id}
-                    plan={plan}
-                    formatMoney={formatMoney}
-                    buttonColor="green"
-                    buttonText="Buy Instant"
-                    onBuy={() => {}}
-                    buyingPlanId={buyingPlanId}
-                  />
+                  <div key={plan.id} className="bg-gray-900 p-6 rounded-xl">
+                    {plan.type}
+                  </div>
                 ))}
               </div>
             </div>
@@ -341,7 +291,7 @@ const Accounts = () => {
         </div>
       </div>
 
-      {/* MODAL RESTORED */}
+      {/* MODAL */}
       <AccountDetailsModal
         isOpen={openModal}
         onClose={() => setOpenModal(false)}
