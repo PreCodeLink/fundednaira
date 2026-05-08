@@ -13,18 +13,17 @@ const AccountDetailsModal = ({
   requestPhase,
   loadingRequest,
 }) => {
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-
   if (!isOpen || !account) return null;
 
   const normalizePhase = (phase) => {
     if (!phase) return "";
     const p = String(phase).toLowerCase();
+
     if (p.includes("instant")) return "Instant";
     if (p.includes("funded")) return "Funded";
     if (p.includes("1")) return "Phase 1";
     if (p.includes("2")) return "Phase 2";
+
     return phase;
   };
 
@@ -39,22 +38,18 @@ const AccountDetailsModal = ({
   const isInstant = currentPhase === "Instant";
 
   const handleRequest = async () => {
-    setMessage("");
-    setError("");
-
-    if (isInstant) {
-      return setError("Instant accounts cannot request phase.");
-    }
+    const user = JSON.parse(localStorage.getItem("user") || "null");
 
     const payload = {
-      user_id: JSON.parse(localStorage.getItem("user"))?.id,
+      user_id: user?.id || user?.user_id,
       account_id: account.id,
       current_phase: currentPhase,
       requested_phase: getNextPhase(),
     };
 
-    if (!payload.requested_phase) {
-      return setError("No next phase available.");
+    if (isInstant) {
+      alert("Instant accounts cannot request phase.");
+      return;
     }
 
     try {
@@ -69,14 +64,13 @@ const AccountDetailsModal = ({
 
       const data = await res.json();
 
-      if (!data.success) {
-        setError(data.message || "Request failed");
-        return;
+      if (data.success) {
+        alert("Phase request sent!");
+      } else {
+        alert(data.message || "Request failed");
       }
-
-      setMessage(data.message || "Request sent successfully.");
     } catch (err) {
-      setError("Server error.");
+      alert("Server error");
     }
   };
 
@@ -89,18 +83,6 @@ const AccountDetailsModal = ({
         </button>
 
         <h2 className="text-xl font-bold mb-5">Account Details</h2>
-
-        {message && (
-          <div className="mb-3 bg-green-500/10 text-green-400 p-3 rounded">
-            {message}
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-3 bg-red-500/10 text-red-400 p-3 rounded">
-            {error}
-          </div>
-        )}
 
         <div className="space-y-2 mb-5">
           <p>Type: {account.type}</p>
@@ -118,7 +100,7 @@ const AccountDetailsModal = ({
 
         {isInstant ? (
           <div className="text-yellow-400 bg-yellow-500/10 p-3 rounded">
-            Instant accounts have no phase request.
+            Instant accounts do not require phase requests.
           </div>
         ) : (
           <button
@@ -126,9 +108,7 @@ const AccountDetailsModal = ({
             disabled={loadingRequest}
             className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl"
           >
-            {loadingRequest
-              ? "Processing..."
-              : `Request ${getNextPhase() || "Next Phase"}`}
+            {loadingRequest ? "Loading..." : `Request ${getNextPhase()}`}
           </button>
         )}
       </div>
@@ -143,20 +123,18 @@ const PlanCard = ({
   buttonText,
   buttonColor = "blue",
   onBuy,
-  buyingPlanId,
+  loading,
 }) => {
-  const loading = Number(buyingPlanId) === Number(plan.id);
-
   const color =
     buttonColor === "green"
       ? "bg-green-600 hover:bg-green-700"
       : "bg-blue-600 hover:bg-blue-700";
 
+  const isLoading = loading === plan.id;
+
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-      <h3 className="text-xl font-bold">
-        {formatMoney(plan.size)} Account
-      </h3>
+      <h3 className="text-xl font-bold">{formatMoney(plan.size)} Account</h3>
 
       <p className="text-3xl font-bold mt-2">
         {formatMoney(plan.price)}
@@ -170,10 +148,10 @@ const PlanCard = ({
 
       <button
         onClick={() => onBuy(plan)}
-        disabled={loading}
+        disabled={isLoading}
         className={`mt-6 w-full py-3 rounded-xl text-white font-medium ${color}`}
       >
-        {loading ? "Processing..." : buttonText}
+        {isLoading ? "Processing..." : buttonText}
       </button>
     </div>
   );
@@ -187,8 +165,8 @@ const Accounts = () => {
   const [plans, setPlans] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [openModal, setOpenModal] = useState(false);
-  const [buyingPlanId, setBuyingPlanId] = useState(null);
   const [loadingRequest, setLoadingRequest] = useState(false);
+  const [buyingPlanId, setBuyingPlanId] = useState(null);
 
   const getUserId = () => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -228,12 +206,61 @@ const Accounts = () => {
     return isNaN(num) ? "₦0" : `₦${num.toLocaleString()}`;
   };
 
+  const handleBuyPlan = async (plan) => {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      setBuyingPlanId(plan.id);
+
+      const res = await fetch(
+        "https://api.fundednaira.ng/api/payments/initialize-payment.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: user.id || user.user_id,
+            plan_id: plan.id,
+          }),
+        }
+      );
+
+      const result = await res.json();
+
+      const squad = new window.squad({
+        key: result.data.public_key,
+        email: result.data.email,
+        amount: result.data.amount,
+        currency_code: result.data.currency,
+        transaction_ref: result.data.reference,
+        callback_url: result.data.callback_url,
+        onClose: () => setBuyingPlanId(null),
+        onSuccess: () => {
+          window.location.href = `/dashboard/payment/callback?reference=${result.data.reference}`;
+        },
+      });
+
+      squad.setup();
+      squad.open();
+    } catch (err) {
+      console.error(err);
+      setBuyingPlanId(null);
+    }
+  };
+
   const challengePlans = plans.filter(
     (p) => String(p.type).toLowerCase() === "challenge"
   );
 
-  const instantPlans = plans.filter((p) =>
-    ["instant", "instant funding"].includes(String(p.type).toLowerCase())
+  const instantPlans = plans.filter(
+    (p) =>
+      ["instant", "instant funding"].includes(
+        String(p.type).toLowerCase()
+      )
   );
 
   return (
@@ -258,7 +285,6 @@ const Accounts = () => {
                 >
                   <h3 className="font-bold">{acc.type}</h3>
                   <p>{formatMoney(acc.balance)}</p>
-                  <p className="text-sm text-gray-400">{acc.phase}</p>
 
                   <button
                     onClick={() => {
@@ -274,14 +300,15 @@ const Accounts = () => {
             </div>
           </div>
 
-          {/* ================= BUY SECTION (YOUR UI RESTORED) ================= */}
+          {/* ================= BUY UI (RESTORED EXACT) ================= */}
           <section className="mt-16">
+
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-5xl font-bold">
                 Buy Trading Account
               </h2>
               <p className="mt-4 text-gray-400 max-w-2xl mx-auto">
-                Choose your preferred account size and start your journey.
+                Choose your preferred account size and start your journey to becoming a funded trader.
               </p>
             </div>
 
@@ -299,8 +326,8 @@ const Accounts = () => {
                     plan={plan}
                     formatMoney={formatMoney}
                     buttonText="Buy Challenge"
-                    onBuy={() => {}}
-                    buyingPlanId={buyingPlanId}
+                    onBuy={handleBuyPlan}
+                    loading={buyingPlanId}
                   />
                 ))}
               </div>
@@ -321,10 +348,10 @@ const Accounts = () => {
                     key={plan.id}
                     plan={plan}
                     formatMoney={formatMoney}
-                    buttonColor="green"
                     buttonText="Buy Instant"
-                    onBuy={() => {}}
-                    buyingPlanId={buyingPlanId}
+                    buttonColor="green"
+                    onBuy={handleBuyPlan}
+                    loading={buyingPlanId}
                   />
                 ))}
               </div>
@@ -338,7 +365,6 @@ const Accounts = () => {
         isOpen={openModal}
         onClose={() => setOpenModal(false)}
         account={selectedAccount}
-        requestPhase={() => {}}
         loadingRequest={loadingRequest}
       />
     </Layout>
