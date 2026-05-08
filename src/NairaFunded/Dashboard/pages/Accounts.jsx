@@ -114,9 +114,11 @@ const PlanCard = ({
   const isLoading = Number(buyingPlanId) === Number(plan.id);
 
   return (
-    <div className={`bg-gray-900 border border-gray-800 rounded-2xl p-6`}>
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
       <div className="flex justify-between mb-4">
-        <h3 className="text-xl font-semibold">{formatMoney(plan.size)} Account</h3>
+        <h3 className="text-xl font-semibold">
+          {formatMoney(plan.size)} Account
+        </h3>
         <span className={`text-xs px-3 py-1 rounded-lg ${badgeClass}`}>
           {plan.type}
         </span>
@@ -161,42 +163,39 @@ const Accounts = () => {
   const [loadingRequest, setLoadingRequest] = useState(false);
   const [buyingPlanId, setBuyingPlanId] = useState(null);
 
-  const getUser = () => JSON.parse(localStorage.getItem("user") || "null");
+  const getUser = () =>
+    JSON.parse(localStorage.getItem("user") || "null");
 
   const getUserId = () => {
     const user = getUser();
     return user?.id || user?.user_id || null;
   };
 
-const fetchAccounts = async () => {
-  const userId = getUserId();
+  /* ================= FIXED HERE ================= */
+  const fetchAccounts = async () => {
+    const userId = getUserId();
+    if (!userId) return;
 
-  console.log("USER ID:", userId); // debug
+    try {
+      const res = await fetch(
+        `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
+      );
 
-  if (!userId) return;
+      const data = await res.json();
 
-  try {
-    const res = await fetch(
-      `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
-    );
+      const accountsData = data?.accounts || [];
 
-    const data = await res.json();
-
-    console.log("ACCOUNTS RESPONSE:", data);
-
-    // FIX: handle both array OR object response
-    const accountsData = Array.isArray(data)
-      ? data
-      : data?.data || [];
-
-    setAccounts(accountsData);
-  } catch (error) {
-    console.error("fetchAccounts error:", error);
-  }
-};
+      setAccounts(accountsData);
+    } catch (error) {
+      console.error("fetchAccounts error:", error);
+      setAccounts([]);
+    }
+  };
 
   const fetchPlans = async () => {
-    const res = await fetch("https://api.fundednaira.ng/api/dashboard/get-plans.php");
+    const res = await fetch(
+      "https://api.fundednaira.ng/api/dashboard/get-plans.php"
+    );
     const data = await res.json();
     setPlans(Array.isArray(data) ? data : []);
   };
@@ -241,7 +240,8 @@ const fetchAccounts = async () => {
         callback_url: result.data.callback_url,
         onClose: () => setBuyingPlanId(null),
         onSuccess: () =>
-          (window.location.href = `/dashboard/payment/callback?reference=${result.data.reference}`),
+          (window.location.href =
+            `/dashboard/payment/callback?reference=${result.data.reference}`),
       });
 
       squad.setup();
@@ -252,8 +252,8 @@ const fetchAccounts = async () => {
     }
   };
 
-  const challengePlans = plans.filter((p) =>
-    String(p.type).toLowerCase() === "challenge"
+  const challengePlans = plans.filter(
+    (p) => String(p.type).toLowerCase() === "challenge"
   );
 
   const instantPlans = plans.filter((p) =>
@@ -270,16 +270,18 @@ const fetchAccounts = async () => {
 
           <h1 className="text-3xl font-bold mb-8">Accounts Dashboard</h1>
 
-          {/* MY ACCOUNTS */}
+          {/* ACCOUNTS */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             {accounts.map((acc) => (
               <div key={acc.id} className="bg-gray-900 p-6 rounded-xl">
                 <h3>{acc.type}</h3>
                 <p>{formatMoney(acc.balance)}</p>
-                <button onClick={() => {
-                  setSelectedAccount(acc);
-                  setOpenModal(true);
-                }}>
+                <button
+                  onClick={() => {
+                    setSelectedAccount(acc);
+                    setOpenModal(true);
+                  }}
+                >
                   View
                 </button>
               </div>
@@ -301,7 +303,7 @@ const fetchAccounts = async () => {
             ))}
           </div>
 
-          {/* 🔥 INSTANT FEATURE ADDED (UNCHANGED STYLE) */}
+          {/* INSTANT */}
           <h2 className="text-2xl mt-10 mb-4">Instant Funding Accounts</h2>
           <div className="grid md:grid-cols-4 gap-6">
             {instantPlans.map((plan) => (
