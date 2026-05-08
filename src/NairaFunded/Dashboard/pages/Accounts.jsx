@@ -3,65 +3,50 @@ import Layout from "../companent/Layout";
 import Sidebar from "../companent/Sidebar";
 import TopSection from "../companent/TopSection";
 import { useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
 
 /* ================= MODAL ================= */
 const AccountDetailsModal = ({ isOpen, onClose, account }) => {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
 
   if (!isOpen || !account) return null;
 
-  const getUserId = () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      return user?.id || user?.user_id || null;
-    } catch {
-      return null;
-    }
+  const userId = JSON.parse(localStorage.getItem("user") || "{}")?.id;
+
+  const normalizePhase = (p) => {
+    const v = String(p || "").toLowerCase();
+    if (v.includes("instant")) return "Instant";
+    if (v.includes("funded")) return "Funded";
+    if (v.includes("2")) return "Phase 2";
+    return "Phase 1";
   };
 
-  const normalize = (v) => String(v || "").toLowerCase();
+  const currentPhase = normalizePhase(account.phase);
 
-  const currentPhase = account.phase;
-
-  const isInstant = normalize(currentPhase).includes("instant");
-
-  const getNextPhase = (phase) => {
-    const p = normalize(phase);
-
-    if (p.includes("phase 1")) return "Phase 2";
-    if (p.includes("phase 2")) return "Funded";
-
+  const getNextPhase = () => {
+    if (currentPhase === "Phase 1") return "Phase 2";
+    if (currentPhase === "Phase 2") return "Funded";
     return null;
   };
 
-  const nextPhase = getNextPhase(currentPhase);
+  const requestPhase = async () => {
+    setMsg("");
+    setErr("");
 
-  const handleRequest = async () => {
-    setError("");
-    setMessage("");
+    if (!userId) return setErr("Login required");
+    if (currentPhase === "Instant") return setErr("Instant has no request");
 
     const payload = {
-      user_id: getUserId(),
+      user_id: userId,
       account_id: account.id,
       current_phase: currentPhase,
-      requested_phase: nextPhase,
+      requested_phase: getNextPhase(),
     };
 
-    console.log("REQUEST:", payload);
-
-    if (!payload.user_id) return setError("Login required");
-    if (!payload.account_id) return setError("Missing account ID");
-
-    if (!nextPhase) {
-      return setError("No phase request allowed for this account");
-    }
+    setLoading(true);
 
     try {
-      setLoading(true);
-
       const res = await fetch(
         "https://api.fundednaira.ng/api/dashboard/request-phase.php",
         {
@@ -74,13 +59,12 @@ const AccountDetailsModal = ({ isOpen, onClose, account }) => {
       const data = await res.json();
 
       if (!data.success) {
-        setError(data.message || "Request failed");
-        return;
+        setErr(data.message || "Request failed");
+      } else {
+        setMsg(data.message || "Request sent");
       }
-
-      setMessage("Request submitted successfully");
-    } catch (err) {
-      setError("Server error");
+    } catch {
+      setErr("Server error");
     } finally {
       setLoading(false);
     }
@@ -88,46 +72,50 @@ const AccountDetailsModal = ({ isOpen, onClose, account }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-      <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-lg text-white border border-gray-800">
+      <div className="bg-gray-900 w-full max-w-lg p-6 rounded-2xl border border-gray-800 text-white">
 
-        {/* HEADER */}
         <div className="flex justify-between mb-4">
           <h2 className="text-xl font-semibold">Account Details</h2>
-          <button onClick={onClose}><X /></button>
+          <button onClick={onClose}>✕</button>
         </div>
 
-        {/* MESSAGES */}
-        {error && <p className="text-red-400 mb-2">{error}</p>}
-        {message && <p className="text-green-400 mb-2">{message}</p>}
+        {msg && (
+          <div className="bg-green-500/10 text-green-400 p-3 rounded mb-3">
+            {msg}
+          </div>
+        )}
 
-        {/* DETAILS */}
-        <div className="space-y-2">
+        {err && (
+          <div className="bg-red-500/10 text-red-400 p-3 rounded mb-3">
+            {err}
+          </div>
+        )}
+
+        <div className="space-y-2 mb-5">
           <p>Type: {account.type}</p>
-          <p>Balance: {account.balance}</p>
-          <p>Equity: {account.equity}</p>
-          <p>Phase: {account.phase}</p>
+          <p>Balance: ₦{account.balance}</p>
+          <p>Equity: ₦{account.equity}</p>
+          <p>Phase: {currentPhase}</p>
           <p>Status: {account.status}</p>
         </div>
 
-        {/* LOGIN */}
-        <div className="bg-gray-800 p-3 rounded mt-4">
+        <div className="bg-gray-800 p-4 rounded mb-5 text-sm">
           <p>Login: {account.login}</p>
           <p>Password: {account.password}</p>
           <p>Server: {account.server}</p>
         </div>
 
-        {/* INSTANT BLOCK */}
-        {isInstant ? (
-          <p className="text-yellow-400 mt-4">
-            Instant accounts do not require phase request
-          </p>
+        {currentPhase === "Instant" ? (
+          <div className="text-yellow-400 text-sm">
+            Instant account has no phase request
+          </div>
         ) : (
           <button
-            onClick={handleRequest}
+            onClick={requestPhase}
             disabled={loading}
-            className="w-full mt-4 bg-blue-600 hover:bg-blue-700 py-3 rounded-lg"
+            className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl"
           >
-            {loading ? "Loading..." : `Request ${nextPhase || "Next Phase"}`}
+            {loading ? "Loading..." : `Request ${getNextPhase()}`}
           </button>
         )}
       </div>
@@ -144,18 +132,10 @@ const Accounts = () => {
   const [selected, setSelected] = useState(null);
   const [open, setOpen] = useState(false);
 
-  const getUserId = () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      return user?.id || user?.user_id;
-    } catch {
-      return null;
-    }
-  };
+  const userId = JSON.parse(localStorage.getItem("user") || "{}")?.id;
 
-  /* ================= ACCOUNTS ================= */
+  /* FETCH ACCOUNTS */
   const fetchAccounts = async () => {
-    const userId = getUserId();
     if (!userId) return;
 
     try {
@@ -165,22 +145,20 @@ const Accounts = () => {
 
       const data = await res.json();
 
-      setAccounts(data?.accounts || []);
+      setAccounts(data.accounts || []);
     } catch (err) {
       console.log(err);
       setAccounts([]);
     }
   };
 
-  /* ================= PLANS ================= */
+  /* FETCH PLANS */
   const fetchPlans = async () => {
     try {
       const res = await fetch(
         "https://api.fundednaira.ng/api/dashboard/get-plans.php"
       );
-
       const data = await res.json();
-
       setPlans(Array.isArray(data) ? data : []);
     } catch {
       setPlans([]);
@@ -192,14 +170,14 @@ const Accounts = () => {
     fetchPlans();
   }, []);
 
-  const formatMoney = (v) =>
+  const format = (v) =>
     isNaN(Number(v)) ? "₦0" : `₦${Number(v).toLocaleString()}`;
 
-  const challengePlans = plans.filter(
+  const challenge = plans.filter(
     (p) => String(p.type).toLowerCase() === "challenge"
   );
 
-  const instantPlans = plans.filter((p) =>
+  const instant = plans.filter((p) =>
     ["instant", "instant funding"].includes(String(p.type).toLowerCase())
   );
 
@@ -211,30 +189,50 @@ const Accounts = () => {
         <div className="flex-1 p-6 bg-gray-950 text-white">
           <TopSection />
 
-          <h1 className="text-3xl font-bold mb-8">Accounts Dashboard</h1>
+          <h1 className="text-3xl font-bold mb-8">Accounts</h1>
 
           {/* ================= MY ACCOUNTS ================= */}
-          <div className="mb-10">
-            <h2 className="text-xl mb-4">My Accounts</h2>
+          <div className="mb-12">
+            <h2 className="text-xl font-semibold mb-4">My Accounts</h2>
 
             <div className="grid md:grid-cols-3 gap-6">
               {accounts.map((acc) => (
                 <div
                   key={acc.id}
-                  className="bg-gray-900 p-6 rounded-xl border border-gray-800"
+                  className="bg-gray-900 p-6 rounded-2xl border border-gray-800"
                 >
-                  <h3 className="font-semibold">{acc.type}</h3>
-                  <p>{formatMoney(acc.balance)}</p>
-                  <p>{acc.phase}</p>
+                  <h3 className="text-lg font-semibold">{acc.type}</h3>
+
+                  <p className="text-gray-400">
+                    Balance: <span className="text-white">{format(acc.balance)}</span>
+                  </p>
+
+                  <p className="text-gray-400">
+                    Equity: <span className="text-white">{format(acc.equity)}</span>
+                  </p>
+
+                  <p className="text-gray-400">
+                    Phase: <span className="text-white">{acc.phase}</span>
+                  </p>
+
+                  <span
+                    className={`inline-block mt-3 px-3 py-1 text-xs rounded-full ${
+                      acc.status === "active"
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-yellow-500/20 text-yellow-300"
+                    }`}
+                  >
+                    {acc.status}
+                  </span>
 
                   <button
                     onClick={() => {
                       setSelected(acc);
                       setOpen(true);
                     }}
-                    className="mt-3 w-full bg-blue-600 py-2 rounded"
+                    className="mt-4 w-full bg-blue-600 py-2 rounded-lg"
                   >
-                    View
+                    View Details
                   </button>
                 </div>
               ))}
@@ -242,30 +240,30 @@ const Accounts = () => {
           </div>
 
           {/* ================= CHALLENGE ================= */}
-          <h2 className="text-xl mb-4">Challenge Accounts</h2>
+          <h2 className="text-2xl mb-4">Challenge Accounts</h2>
           <div className="grid md:grid-cols-4 gap-6">
-            {challengePlans.map((p) => (
-              <div key={p.id} className="bg-gray-900 p-5 rounded-xl">
+            {challenge.map((p) => (
+              <div key={p.id} className="bg-gray-900 p-6 rounded-xl">
                 <h3>{p.size}</h3>
-                <p>{formatMoney(p.price)}</p>
+                <p>{format(p.price)}</p>
               </div>
             ))}
           </div>
 
           {/* ================= INSTANT ================= */}
-          <h2 className="text-xl mt-10 mb-4">Instant Funding</h2>
+          <h2 className="text-2xl mt-10 mb-4">Instant Accounts</h2>
           <div className="grid md:grid-cols-4 gap-6">
-            {instantPlans.map((p) => (
-              <div key={p.id} className="bg-gray-900 p-5 rounded-xl border border-green-600">
+            {instant.map((p) => (
+              <div key={p.id} className="bg-gray-900 p-6 rounded-xl">
                 <h3>{p.size}</h3>
-                <p>{formatMoney(p.price)}</p>
+                <p>{format(p.price)}</p>
+                <p className="text-green-400 text-sm">No Phase Required</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* MODAL */}
       <AccountDetailsModal
         isOpen={open}
         onClose={() => setOpen(false)}
