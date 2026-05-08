@@ -5,9 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { X, CheckCircle2, AlertCircle } from "lucide-react";
 import TopSection from "../companent/TopSection";
 
-/* =========================
-   ACCOUNT MODAL
-========================= */
+/* ===================== ACCOUNT MODAL ===================== */
 const AccountDetailsModal = ({
   isOpen,
   onClose,
@@ -45,62 +43,39 @@ const AccountDetailsModal = ({
         <h2 className="text-xl font-semibold mb-5">Account Details</h2>
 
         <div className="space-y-3 mb-6">
-          <p className="text-gray-400">
-            Type: <span className="text-white">{account.type || "N/A"}</span>
+          <p>Type: {account.type}</p>
+          <p>Balance: {account.balance}</p>
+          <p>Equity: {account.equity}</p>
+          <p>
+            Phase: {isInstant ? "Instant" : account.phase}
           </p>
-
-          <p className="text-gray-400">
-            Balance: <span className="text-white">{account.balance || "₦0"}</span>
-          </p>
-
-          <p className="text-gray-400">
-            Equity: <span className="text-white">{account.equity || "₦0"}</span>
-          </p>
-
-          <p className="text-gray-400">
-            Phase:{" "}
-            <span className="text-white">
-              {isInstant ? "Instant" : account.phase}
-            </span>
-          </p>
-
-          <p className="text-gray-400">
-            Status: <span className="text-white">{account.status}</span>
-          </p>
+          <p>Status: {account.status}</p>
         </div>
 
         <div className="bg-gray-800 p-4 rounded-xl mb-5">
-          <h3 className="text-sm text-gray-400 mb-3">MT5 Login Details</h3>
-
-          <p className="text-sm">
-            Login: <span className="text-green-400">{account.login || "Not assigned"}</span>
-          </p>
-          <p className="text-sm">
-            Password: <span className="text-green-400">{account.password || "Not assigned"}</span>
-          </p>
-          <p className="text-sm">
-            Server: <span className="text-green-400">{account.server || "Not assigned"}</span>
-          </p>
+          <p>Login: {account.login || "N/A"}</p>
+          <p>Password: {account.password || "N/A"}</p>
+          <p>Server: {account.server || "N/A"}</p>
         </div>
 
-        {/* ================= PHASE LOGIC ================= */}
+        {/* PHASE CONTROL */}
         {isInstant ? (
-          <div className="text-sm text-green-400 bg-green-900/20 border border-green-700 rounded-lg p-3">
+          <div className="text-green-400 text-sm bg-green-900/20 p-3 rounded-lg">
             Instant account — no phase request required
           </div>
         ) : canRequestPhase ? (
           <button
             onClick={() => requestPhase(account, nextPhase)}
             disabled={loadingRequest}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 py-3 rounded-lg font-medium"
+            className="w-full bg-blue-600 py-3 rounded-lg"
           >
-            {loadingRequest ? "Submitting..." : `Request Phase ${nextPhase}`}
+            {loadingRequest
+              ? "Submitting..."
+              : `Request Phase ${nextPhase}`}
           </button>
         ) : (
-          <div className="text-sm text-gray-400 bg-gray-800 rounded-lg p-3">
-            {currentPhase === "funded"
-              ? "This account is already funded."
-              : "Only active accounts can request the next phase."}
+          <div className="text-gray-400 text-sm bg-gray-800 p-3 rounded-lg">
+            No phase request available
           </div>
         )}
       </div>
@@ -108,22 +83,48 @@ const AccountDetailsModal = ({
   );
 };
 
-/* =========================
-   MAIN COMPONENT
-========================= */
+/* ===================== PLAN CARD ===================== */
+const PlanCard = ({ plan, onBuy, buyingPlanId, formatMoney }) => {
+  const isLoading = Number(buyingPlanId) === Number(plan.id);
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 p-6 rounded-xl">
+      <h3 className="text-lg font-semibold">
+        {formatMoney(plan.size)} Account
+      </h3>
+
+      <p className="text-2xl font-bold mt-2">
+        {formatMoney(plan.price)}
+      </p>
+
+      <button
+        onClick={() => onBuy(plan)}
+        disabled={isLoading}
+        className="mt-5 w-full bg-blue-600 py-2 rounded-lg"
+      >
+        {isLoading ? "Processing..." : "Buy Account"}
+      </button>
+    </div>
+  );
+};
+
+/* ===================== MAIN ===================== */
 const Accounts = () => {
   const navigate = useNavigate();
 
+  const [accounts, setAccounts] = useState([]);
+  const [plans, setPlans] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [openModal, setOpenModal] = useState(false);
-  const [accounts, setAccounts] = useState([]);
   const [loadingRequest, setLoadingRequest] = useState(false);
+  const [buyingPlanId, setBuyingPlanId] = useState(null);
 
   const getUserId = () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     return user?.id;
   };
 
+  /* ================= FETCH ACCOUNTS ================= */
   const fetchAccounts = async () => {
     const userId = getUserId();
 
@@ -136,23 +137,68 @@ const Accounts = () => {
     setAccounts(data.accounts || data || []);
   };
 
+  /* ================= FETCH PLANS ================= */
+  const fetchPlans = async () => {
+    const res = await fetch(
+      "https://api.fundednaira.ng/api/dashboard/get-plans.php"
+    );
+    const data = await res.json();
+    setPlans(Array.isArray(data) ? data : []);
+  };
+
   useEffect(() => {
     fetchAccounts();
+    fetchPlans();
   }, []);
 
-  const requestPhase = async (account, requestedPhase) => {
-    const userId = getUserId();
+  /* ================= BUY PLAN ================= */
+  const handleBuyPlan = async (plan) => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-    setLoadingRequest(true);
+    if (!user?.id) {
+      navigate("/auth");
+      return;
+    }
+
+    setBuyingPlanId(plan.id);
 
     try {
       const res = await fetch(
+        "https://api.fundednaira.ng/api/payments/initialize-payment.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: user.id,
+            plan_id: plan.id,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        window.location.href = `/dashboard/payment/callback?reference=${data.data.reference}`;
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setBuyingPlanId(null);
+    }
+  };
+
+  /* ================= REQUEST PHASE ================= */
+  const requestPhase = async (account, requestedPhase) => {
+    setLoadingRequest(true);
+
+    try {
+      await fetch(
         "https://api.fundednaira.ng/api/dashboard/request-phase.php",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            user_id: userId,
+            user_id: getUserId(),
             account_id: account.id,
             current_phase: account.phase,
             requested_phase: requestedPhase,
@@ -160,15 +206,24 @@ const Accounts = () => {
         }
       );
 
-      await res.json();
-      fetchAccounts();
       setOpenModal(false);
+      fetchAccounts();
     } catch (err) {
       console.log(err);
     } finally {
       setLoadingRequest(false);
     }
   };
+
+  const formatMoney = (v) => `₦${Number(v || 0).toLocaleString()}`;
+
+  const challengePlans = plans.filter(
+    (p) => p.type?.toLowerCase() === "challenge"
+  );
+
+  const instantPlans = plans.filter(
+    (p) => p.type?.toLowerCase().includes("instant")
+  );
 
   return (
     <Layout>
@@ -180,48 +235,61 @@ const Accounts = () => {
 
           <h1 className="text-3xl font-bold mb-8">Accounts Dashboard</h1>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          {/* ================= MY ACCOUNTS ================= */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
             {accounts.map((acc) => (
               <div
                 key={acc.id}
-                className="bg-gray-900 p-6 rounded-xl border border-gray-800"
+                className="bg-gray-900 p-5 rounded-xl border border-gray-800"
               >
-                <h3 className="text-lg font-semibold">{acc.type}</h3>
-
+                <h3>{acc.type}</h3>
                 <p>Balance: {acc.balance}</p>
-                <p>Equity: {acc.equity}</p>
                 <p>
                   Phase:{" "}
-                  {String(acc.type || "").toLowerCase() === "instant"
+                  {String(acc.type).toLowerCase() === "instant"
                     ? "Instant"
                     : acc.phase}
                 </p>
 
                 <button
-                  className="mt-4 bg-blue-600 w-full py-2 rounded"
                   onClick={() => {
                     setSelectedAccount(acc);
                     setOpenModal(true);
                   }}
+                  className="mt-3 w-full bg-blue-600 py-2 rounded-lg"
                 >
-                  View Details
+                  View
                 </button>
               </div>
             ))}
           </div>
 
-          <AccountDetailsModal
-            isOpen={openModal}
-            onClose={() => setOpenModal(false)}
-            account={selectedAccount}
-            requestPhase={requestPhase}
-            loadingRequest={loadingRequest}
-          />
+          {/* ================= BUY ACCOUNTS ================= */}
+          <h2 className="text-2xl font-bold mb-4">Buy Account</h2>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[...challengePlans, ...instantPlans].map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                onBuy={handleBuyPlan}
+                buyingPlanId={buyingPlanId}
+                formatMoney={formatMoney}
+              />
+            ))}
+          </div>
         </div>
       </div>
+
+      <AccountDetailsModal
+        isOpen={openModal}
+        onClose={() => setOpenModal(false)}
+        account={selectedAccount}
+        requestPhase={requestPhase}
+        loadingRequest={loadingRequest}
+      />
     </Layout>
   );
 };
 
-/* ⭐ IMPORTANT FIX FOR VERCEL BUILD */
 export default Accounts;
