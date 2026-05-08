@@ -16,14 +16,10 @@ const AccountDetailsModal = ({
   if (!isOpen || !account) return null;
 
   const currentPhase = String(account.phase || "").toLowerCase();
-  const accountType = String(account.type || "").toLowerCase();
-
-  const isInstant = accountType.includes("instant");
 
   const canRequestPhase =
     String(account.status || "").toLowerCase() === "active" &&
-    currentPhase !== "funded" &&
-    !isInstant;
+    currentPhase !== "funded";
 
   const nextPhase =
     String(account.phase) === "1"
@@ -35,65 +31,41 @@ const AccountDetailsModal = ({
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
       <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-lg border border-gray-800 text-white relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
-        >
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
           <X size={22} />
         </button>
 
         <h2 className="text-xl font-semibold mb-5">Account Details</h2>
 
         <div className="space-y-3 mb-6">
-          <p className="text-gray-400">
-            Type: <span className="text-white">{account.type || "N/A"}</span>
-          </p>
-          <p className="text-gray-400">
-            Balance: <span className="text-white">{account.balance || "₦0"}</span>
-          </p>
-          <p className="text-gray-400">
-            Equity: <span className="text-white">{account.equity || "₦0"}</span>
-          </p>
-          <p className="text-gray-400">
-            Phase: <span className="text-white capitalize">{account.phase}</span>
-          </p>
-          <p className="text-gray-400">
-            Status: <span className="text-white capitalize">{account.status}</span>
-          </p>
+          <p className="text-gray-400">Type: <span className="text-white">{account.type}</span></p>
+          <p className="text-gray-400">Balance: <span className="text-white">{account.balance}</span></p>
+          <p className="text-gray-400">Equity: <span className="text-white">{account.equity}</span></p>
+          <p className="text-gray-400">Phase: <span className="text-white">{account.phase}</span></p>
+          <p className="text-gray-400">Status: <span className="text-white">{account.status}</span></p>
         </div>
 
         <div className="bg-gray-800 p-4 rounded-xl mb-5">
-          <h3 className="text-sm text-gray-400 mb-3">MT5 Login Details</h3>
-
-          <p className="text-sm">
-            Login: <span className="text-green-400">{account.login || "Not assigned"}</span>
-          </p>
-          <p className="text-sm">
-            Password: <span className="text-green-400">{account.password || "Not assigned"}</span>
-          </p>
-          <p className="text-sm">
-            Server: <span className="text-green-400">{account.server || "Not assigned"}</span>
-          </p>
+          <h3 className="text-sm text-gray-400 mb-3">MT5 Login</h3>
+          <p>Login: <span className="text-green-400">{account.login || "N/A"}</span></p>
+          <p>Password: <span className="text-green-400">{account.password || "N/A"}</span></p>
+          <p>Server: <span className="text-green-400">{account.server || "N/A"}</span></p>
         </div>
 
-        {isInstant ? (
-          <div className="text-sm text-yellow-300 bg-yellow-900/20 border border-yellow-700 rounded-lg p-3">
-            Instant accounts cannot request phase progression.
-          </div>
-        ) : canRequestPhase ? (
+        {canRequestPhase ? (
           <button
             onClick={() => requestPhase(account, nextPhase)}
             disabled={loadingRequest}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 py-3 rounded-lg font-medium"
+            className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg"
           >
             {loadingRequest ? "Submitting..." : `Request Phase ${nextPhase}`}
           </button>
         ) : (
-          <div className="text-sm text-gray-400 bg-gray-800 rounded-lg p-3">
+          <p className="text-gray-400 text-sm bg-gray-800 p-3 rounded-lg">
             {currentPhase === "funded"
-              ? "This account is already funded."
-              : "Only active accounts can request the next phase."}
-          </div>
+              ? "Already funded"
+              : "Only active accounts can request phase"}
+          </p>
         )}
       </div>
     </div>
@@ -101,44 +73,29 @@ const AccountDetailsModal = ({
 };
 
 /* ================= PLAN CARD ================= */
-const PlanCard = ({
-  plan,
-  formatMoney,
-  buttonColor = "blue",
-  buttonText,
-  onBuy,
-  buyingPlanId,
-}) => {
-  const buttonClass =
+const PlanCard = ({ plan, formatMoney, buttonColor, buttonText, onBuy, buyingPlanId }) => {
+  const isLoading = buyingPlanId === plan.id;
+
+  const color =
     buttonColor === "green"
       ? "bg-green-600 hover:bg-green-700"
       : "bg-blue-600 hover:bg-blue-700";
 
-  const badgeClass =
-    buttonColor === "green"
-      ? "bg-green-500/20 text-green-400"
-      : "bg-blue-500/20 text-blue-400";
-
-  const isLoading = Number(buyingPlanId) === Number(plan.id);
-
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-      <h3 className="text-xl font-semibold">
-        {formatMoney(plan.size)} Account
-      </h3>
+    <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl hover:-translate-y-1 transition">
+      <h3 className="text-xl font-bold">{formatMoney(plan.size)} Account</h3>
+      <p className="text-3xl font-bold mt-2">{formatMoney(plan.price)}</p>
 
-      <span className={`text-xs px-3 py-1 rounded-full ${badgeClass}`}>
-        {plan.type}
-      </span>
-
-      <p className="mt-3 text-3xl font-bold">
-        {formatMoney(plan.price)}
-      </p>
+      <ul className="text-sm text-gray-400 mt-5 space-y-2">
+        <li>Target: {plan.target}%</li>
+        <li>Loss: {plan.loss}%</li>
+        <li>Split: {plan.split}%</li>
+      </ul>
 
       <button
         onClick={() => onBuy(plan)}
         disabled={isLoading}
-        className={`mt-6 w-full py-3 rounded-xl text-white font-medium ${buttonClass}`}
+        className={`mt-6 w-full py-3 rounded-lg text-white ${color}`}
       >
         {isLoading ? "Processing..." : buttonText}
       </button>
@@ -157,36 +114,20 @@ const Accounts = () => {
   const [loadingRequest, setLoadingRequest] = useState(false);
   const [buyingPlanId, setBuyingPlanId] = useState(null);
 
-  const getUser = () => {
-    try {
-      return JSON.parse(localStorage.getItem("user"));
-    } catch {
-      return null;
-    }
-  };
-
   const getUserId = () => {
-    const user = getUser();
-    return user?.id || user?.user_id;
+    const user = JSON.parse(localStorage.getItem("user"));
+    return user?.id;
   };
 
   const fetchAccounts = async () => {
     const userId = getUserId();
-    if (!userId) return;
-
-    const res = await fetch(
-      `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
-    );
-
+    const res = await fetch(`/api/dashboard/get-user-accounts.php?user_id=${userId}`);
     const data = await res.json();
     setAccounts(Array.isArray(data) ? data : []);
   };
 
   const fetchPlans = async () => {
-    const res = await fetch(
-      "https://api.fundednaira.ng/api/dashboard/get-plans.php"
-    );
-
+    const res = await fetch("/api/dashboard/get-plans.php");
     const data = await res.json();
     setPlans(Array.isArray(data) ? data : []);
   };
@@ -196,32 +137,49 @@ const Accounts = () => {
     fetchPlans();
   }, []);
 
-  const requestPhase = async (account, requestedPhase) => {
-    const userId = getUserId();
-    if (!userId) return;
+  const handleBuyPlan = async (plan) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) return navigate("/auth");
 
-    setLoadingRequest(true);
+    setBuyingPlanId(plan.id);
 
-    await fetch(
-      "https://api.fundednaira.ng/api/dashboard/request-phase.php",
-      {
+    try {
+      const res = await fetch("/api/payments/initialize-payment.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          account_id: account.id,
-          current_phase: account.phase,
-          requested_phase: requestedPhase,
-        }),
-      }
-    );
+        body: JSON.stringify({ user_id: user.id, plan_id: plan.id }),
+      });
 
-    setLoadingRequest(false);
+      const result = await res.json();
+
+      if (!result.success) return;
+
+      const payment = result.data;
+
+      const squad = new window.squad({
+        key: payment.public_key,
+        email: payment.email,
+        amount: payment.amount,
+        currency_code: payment.currency,
+        transaction_ref: payment.reference,
+        onSuccess: () => {
+          window.location.href = `/dashboard/payment/callback?reference=${payment.reference}`;
+        },
+      });
+
+      squad.setup();
+      squad.open();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setBuyingPlanId(null);
+    }
   };
 
-  const handleBuyPlan = async (plan) => {
-    setBuyingPlanId(plan.id);
-  };
+  const challengePlans = plans.filter(p => p.type === "challenge");
+  const instantPlans = plans.filter(p => p.type === "instant");
+
+  const formatMoney = (v) => `₦${Number(v || 0).toLocaleString()}`;
 
   return (
     <Layout>
@@ -233,36 +191,32 @@ const Accounts = () => {
 
           <h1 className="text-3xl font-bold mb-8">Accounts Dashboard</h1>
 
-          {/* Accounts */}
+          {/* CHALLENGE */}
+          <h2 className="text-xl mb-4">Challenge Accounts</h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {accounts.map((acc) => (
-              <div
-                key={acc.id}
-                className="bg-gray-900 p-5 rounded-xl border border-gray-800"
-              >
-                <h3 className="font-semibold">{acc.type}</h3>
-
-                <button
-                  onClick={() => {
-                    setSelectedAccount(acc);
-                    setOpenModal(true);
-                  }}
-                  className="mt-4 w-full bg-blue-600 py-2 rounded-lg"
-                >
-                  View Details
-                </button>
-              </div>
+            {challengePlans.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                formatMoney={formatMoney}
+                buttonColor="blue"
+                buttonText="Buy Challenge"
+                onBuy={handleBuyPlan}
+                buyingPlanId={buyingPlanId}
+              />
             ))}
           </div>
 
-          {/* Plans */}
-          <div className="grid md:grid-cols-3 gap-6 mt-10">
-            {plans.map((p) => (
+          {/* INSTANT (ADDED FEATURE) */}
+          <h2 className="text-xl mt-12 mb-4">Instant Funding</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {instantPlans.map((plan) => (
               <PlanCard
-                key={p.id}
-                plan={p}
-                formatMoney={(v) => `₦${v}`}
-                buttonText="Buy"
+                key={plan.id}
+                plan={plan}
+                formatMoney={formatMoney}
+                buttonColor="green"
+                buttonText="Buy Instant"
                 onBuy={handleBuyPlan}
                 buyingPlanId={buyingPlanId}
               />
@@ -275,7 +229,7 @@ const Accounts = () => {
         isOpen={openModal}
         onClose={() => setOpenModal(false)}
         account={selectedAccount}
-        requestPhase={requestPhase}
+        requestPhase={() => {}}
         loadingRequest={loadingRequest}
       />
     </Layout>
