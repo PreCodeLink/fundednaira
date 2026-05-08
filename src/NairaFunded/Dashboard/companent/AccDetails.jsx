@@ -1,7 +1,12 @@
 import { useState } from "react";
 
-const AccountDetailsModal = ({ isOpen, onClose, account }) => {
-  const [loading, setLoading] = useState(false);
+const AccountDetailsModal = ({
+  isOpen,
+  onClose,
+  account,
+  requestPhase,
+  loadingRequest,
+}) => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -16,28 +21,18 @@ const AccountDetailsModal = ({ isOpen, onClose, account }) => {
     }
   };
 
-  // ✅ Normalize phase properly
-  const normalizePhase = (phase) => {
-    if (!phase) return "";
+  /* ================= FIX: DETECT INSTANT ================= */
+  const isInstant =
+    String(account.type || "").toLowerCase().includes("instant");
 
-    const p = String(phase).toLowerCase();
+  const currentPhase = String(account.phase || "").toLowerCase();
 
-    if (p.includes("instant")) return "Instant";
-    if (p.includes("funded")) return "Funded";
-    if (p.includes("phase 1") || p === "1") return "Phase 1";
-    if (p.includes("phase 2") || p === "2") return "Phase 2";
+  /* ================= FIX: NEXT PHASE ================= */
+  const getNextPhase = () => {
+    if (isInstant) return null;
 
-    return phase;
-  };
-
-  const getNextPhase = (phase) => {
-    const p = normalizePhase(phase);
-
-    if (p === "Phase 1") return "Phase 2";
-    if (p === "Phase 2") return "Funded";
-
-    // ❌ Instant has NO phase request
-    if (p === "Instant") return null;
+    if (currentPhase === "phase 1" || currentPhase === "1") return "Phase 2";
+    if (currentPhase === "phase 2" || currentPhase === "2") return "Funded";
 
     return null;
   };
@@ -48,36 +43,35 @@ const AccountDetailsModal = ({ isOpen, onClose, account }) => {
 
     const userId = getUserId();
 
-    const currentPhase = normalizePhase(account.phase || account.current_phase);
-    const requestedPhase = getNextPhase(currentPhase);
-
     const payload = {
       user_id: userId,
-      account_id: account.id || account.account_id,
-      current_phase: currentPhase,
-      requested_phase: requestedPhase,
+      account_id: account.id || account.account_id || 0,
+      current_phase: account.phase || account.current_phase || "",
+      requested_phase: getNextPhase(),
     };
 
-    console.log("PHASE REQUEST PAYLOAD:", payload);
+    console.log("PHASE REQUEST:", payload);
 
-    // ✅ VALIDATION
     if (!payload.user_id) return setError("Missing user_id");
     if (!payload.account_id) return setError("Missing account_id");
-    if (!payload.current_phase) return setError("Missing current_phase");
 
-    // ❌ instant = no request allowed
-    if (!requestedPhase) {
-      return setError("This account cannot request next phase (Instant or Funded).");
+    /* ================= IMPORTANT ================= */
+    if (isInstant) {
+      return setError("Instant accounts cannot request phase.");
     }
 
-    setLoading(true);
+    if (!payload.requested_phase) {
+      return setError("No next phase available.");
+    }
 
     try {
       const res = await fetch(
         "https://api.fundednaira.ng/api/dashboard/request-phase.php",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(payload),
         }
       );
@@ -92,24 +86,21 @@ const AccountDetailsModal = ({ isOpen, onClose, account }) => {
       setMessage(data.message || "Phase request submitted successfully.");
     } catch (err) {
       console.error(err);
-      setError("Server error. Please try again.");
-    } finally {
-      setLoading(false);
+      setError("Server error. Try again later.");
     }
   };
-
-  const currentPhase = normalizePhase(account.phase || account.current_phase);
-  const nextPhase = getNextPhase(currentPhase);
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
       <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-lg border border-gray-800 text-white">
 
+        {/* HEADER */}
         <div className="flex justify-between items-center mb-5">
           <h2 className="text-xl font-semibold">Account Details</h2>
-          <button onClick={onClose}>✕</button>
+          <button onClick={onClose} className="text-white">✕</button>
         </div>
 
+        {/* MESSAGES */}
         {message && (
           <div className="mb-3 bg-green-500/10 border border-green-500/30 text-green-400 p-3 rounded">
             {message}
@@ -122,33 +113,40 @@ const AccountDetailsModal = ({ isOpen, onClose, account }) => {
           </div>
         )}
 
+        {/* ACCOUNT INFO */}
         <div className="space-y-2 mb-5">
           <p>Type: <span className="text-white">{account.type}</span></p>
           <p>Balance: <span className="text-white">{account.balance}</span></p>
           <p>Equity: <span className="text-white">{account.equity}</span></p>
-          <p>Phase: <span className="text-white">{currentPhase}</span></p>
+          <p>
+            Phase:{" "}
+            <span className="text-white">
+              {isInstant ? "Instant" : account.phase}
+            </span>
+          </p>
         </div>
 
+        {/* MT5 INFO */}
         <div className="bg-gray-800 p-4 rounded mb-5">
           <p>Login: {account.login}</p>
           <p>Password: {account.password}</p>
           <p>Server: {account.server}</p>
         </div>
 
-        {/* ❌ NO REQUEST FOR INSTANT */}
-        {currentPhase === "Instant" ? (
+        {/* ================= BUTTON LOGIC ================= */}
+        {isInstant ? (
           <div className="text-yellow-400 text-sm bg-yellow-500/10 p-3 rounded">
             Instant accounts do not require phase requests.
           </div>
         ) : (
           <button
             onClick={handlePhaseRequest}
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl"
+            disabled={loadingRequest}
+            className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-medium"
           >
-            {loading
+            {loadingRequest
               ? "Please wait..."
-              : `Request ${nextPhase || "Next Phase"}`}
+              : `Request ${getNextPhase() || "Next Phase"}`}
           </button>
         )}
       </div>
