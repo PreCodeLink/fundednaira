@@ -117,7 +117,7 @@ const PlanCard = ({
     <div className={`bg-gray-900 border border-gray-800 rounded-2xl p-6`}>
       <div className="flex justify-between mb-4">
         <h3 className="text-xl font-semibold">{formatMoney(plan.size)} Account</h3>
-        <span className={`text-xs px-3 py-1 rounded-full ${badgeClass}`}>
+        <span className={`text-xs px-3 py-1 rounded-lg ${badgeClass}`}>
           {plan.type}
         </span>
       </div>
