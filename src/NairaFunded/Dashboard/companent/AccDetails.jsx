@@ -1,12 +1,7 @@
 import { useState } from "react";
 
-const AccountDetailsModal = ({
-  isOpen,
-  onClose,
-  account,
-  requestPhase,
-  loadingRequest,
-}) => {
+const AccountDetailsModal = ({ isOpen, onClose, account }) => {
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -14,30 +9,25 @@ const AccountDetailsModal = ({
 
   const getUserId = () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      return user?.id || user?.user_id || null;
+      const rawUser = localStorage.getItem("user");
+      if (!rawUser) return null;
+      const user = JSON.parse(rawUser);
+      return user.id || user.user_id || null;
     } catch {
       return null;
     }
   };
 
-  /* ================= FIX: DETECT INSTANT ================= */
-  const isInstant =
-    String(account.type || "").toLowerCase().includes("instant");
-
-  const currentPhase = String(account.phase || "").toLowerCase();
-
-  /* ================= FIX: NEXT PHASE ================= */
-  const getNextPhase = () => {
-    if (isInstant) return null;
-
-    if (currentPhase === "phase 1" || currentPhase === "1") return "Phase 2";
-    if (currentPhase === "phase 2" || currentPhase === "2") return "Funded";
-
-    return null;
+  const getNextPhase = (phase) => {
+    if (!phase) return "";
+    if (phase.toLowerCase() === "phase 1") return "Phase 2";
+    if (phase.toLowerCase() === "phase 2") return "Funded";
+    return "Next Phase";
   };
 
   const handlePhaseRequest = async () => {
+    alert("button clicked");
+
     setMessage("");
     setError("");
 
@@ -47,108 +37,117 @@ const AccountDetailsModal = ({
       user_id: userId,
       account_id: account.id || account.account_id || 0,
       current_phase: account.phase || account.current_phase || "",
-      requested_phase: getNextPhase(),
+      requested_phase: getNextPhase(account.phase || account.current_phase || ""),
     };
 
-    console.log("PHASE REQUEST:", payload);
+    console.log("PHASE REQUEST PAYLOAD:", payload);
+    console.log("ACCOUNT OBJECT:", account);
 
-    if (!payload.user_id) return setError("Missing user_id");
-    if (!payload.account_id) return setError("Missing account_id");
+    if (!payload.user_id) {
+      setError("Missing user_id");
+      return;
+    }
 
-    /* ================= IMPORTANT ================= */
-    if (isInstant) {
-      return setError("Instant accounts cannot request phase.");
+    if (!payload.account_id) {
+      setError("Missing account_id");
+      return;
+    }
+
+    if (!payload.current_phase) {
+      setError("Missing current_phase");
+      return;
     }
 
     if (!payload.requested_phase) {
-      return setError("No next phase available.");
+      setError("Missing requested_phase");
+      return;
     }
 
-    try {
-      const res = await fetch(
-        "https://api.fundednaira.ng/api/dashboard/request-phase.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+    setLoading(true);
 
-      const data = await res.json();
+    try {
+      const res = await fetch("https://api.fundednaira.ng/api/dashboard/request-phase.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await res.text();
+
+      const data = JSON.parse(text);
 
       if (!data.success) {
-        setError(data.message || "Request failed");
+        setError(data.message || "Failed to request next phase.");
         return;
       }
 
       setMessage(data.message || "Phase request submitted successfully.");
     } catch (err) {
-      console.error(err);
-      setError("Server error. Try again later.");
+      console.error("PHASE REQUEST ERROR:", err);
+      setError("Server error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
       <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-lg border border-gray-800 text-white">
-
-        {/* HEADER */}
         <div className="flex justify-between items-center mb-5">
           <h2 className="text-xl font-semibold">Account Details</h2>
-          <button onClick={onClose} className="text-white">✕</button>
+          <button onClick={onClose}>✕</button>
         </div>
 
-        {/* MESSAGES */}
         {message && (
-          <div className="mb-3 bg-green-500/10 border border-green-500/30 text-green-400 p-3 rounded">
+          <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 text-sm">
             {message}
           </div>
         )}
 
         {error && (
-          <div className="mb-3 bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded">
+          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 text-sm">
             {error}
           </div>
         )}
 
-        {/* ACCOUNT INFO */}
-        <div className="space-y-2 mb-5">
-          <p>Type: <span className="text-white">{account.type}</span></p>
-          <p>Balance: <span className="text-white">{account.balance}</span></p>
-          <p>Equity: <span className="text-white">{account.equity}</span></p>
-          <p>
-            Phase:{" "}
-            <span className="text-white">
-              {isInstant ? "Instant" : account.phase}
-            </span>
+        <div className="space-y-3 mb-6">
+          <p className="text-gray-400">
+            Type: <span className="text-white">{account.type}</span>
+          </p>
+          <p className="text-gray-400">
+            Balance: <span className="text-white">{account.balance}</span>
+          </p>
+          <p className="text-gray-400">
+            Equity: <span className="text-white">{account.equity}</span>
+          </p>
+          <p className="text-gray-400">
+            Phase: <span className="text-white">{account.phase || account.current_phase}</span>
           </p>
         </div>
 
-        {/* MT5 INFO */}
-        <div className="bg-gray-800 p-4 rounded mb-5">
-          <p>Login: {account.login}</p>
-          <p>Password: {account.password}</p>
-          <p>Server: {account.server}</p>
+        <div className="bg-gray-800 p-4 rounded-xl mb-5">
+          <h3 className="text-sm text-gray-400 mb-3">MT5 Login Details</h3>
+
+          <p className="text-sm">
+            Login: <span className="text-green-400">{account.login}</span>
+          </p>
+          <p className="text-sm">
+            Password: <span className="text-green-400">{account.password}</span>
+          </p>
+          <p className="text-sm">
+            Server: <span className="text-green-400">{account.server}</span>
+          </p>
         </div>
 
-        {/* ================= BUTTON LOGIC ================= */}
-        {isInstant ? (
-          <div className="text-yellow-400 text-sm bg-yellow-500/10 p-3 rounded">
-            Instant accounts do not require phase requests.
-          </div>
-        ) : (
-          <button
-            onClick={handlePhaseRequest}
-            disabled={loadingRequest}
-            className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-medium"
-          >
-            {loadingRequest
-              ? "Please wait..."
-              : `Request ${getNextPhase() || "Next Phase"}`}
-          </button>
-        )}
+        <button
+          onClick={handlePhaseRequest}
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-medium disabled:opacity-60"
+        >
+          {loading ? "Please wait..." : `Request ${getNextPhase(account.phase || account.current_phase) || "Next Phase"}`}
+        </button>
       </div>
     </div>
   );
