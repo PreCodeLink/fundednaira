@@ -20,12 +20,13 @@ const AccountDetailsModal = ({
     String(account.status || "").toLowerCase() === "active" &&
     currentPhase !== "funded";
 
-  const nextPhase =
-    String(account.phase) === "1"
-      ? "2"
-      : String(account.phase) === "2"
-      ? "funded"
-      : "";
+  const phase = String(account.phase || "").toLowerCase();
+
+const nextPhase = phase.includes("1")
+  ? "2"
+  : phase.includes("2")
+  ? "funded"
+  : "";
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
@@ -219,25 +220,40 @@ const Accounts = () => {
       return;
     }
 
-    try {
-      const res = await fetch(
-        `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
-      );
+    const fetchAccounts = async () => {
+  const userId = getUserId();
 
-      const text = await res.text();
-      const data = JSON.parse(text);
+  if (!userId) {
+    setAccounts([]);
+    return;
+  }
 
-      if (Array.isArray(data)) {
-        setAccounts(data);
-      } else {
-        setAccounts([]);
-      }
-    } catch (error) {
-      console.error("fetchAccounts error:", error);
-      showMessage("error", "Server error while loading accounts");
+  try {
+    const res = await fetch(
+      `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
+    );
+
+    const text = await res.text();
+
+    console.log("RAW RESPONSE:", text);
+
+    const data = JSON.parse(text);
+
+    console.log("PARSED DATA:", data);
+
+    // ✅ FIXED
+    if (data.success && Array.isArray(data.accounts)) {
+      setAccounts(data.accounts);
+    } else {
+      setAccounts([]);
+      console.log("No accounts found");
     }
-  };
+  } catch (error) {
+    console.error("fetchAccounts error:", error);
 
+    showMessage("error", "Server error while loading accounts");
+  }
+};
   const fetchPlans = async () => {
     try {
       const res = await fetch("https://api.fundednaira.ng/api/dashboard/get-plans.php");
@@ -388,9 +404,6 @@ const Accounts = () => {
 
 squadInstance.setup();
 squadInstance.open();
-
-      squadInstance.setup();
-      squadInstance.open();
     } catch (error) {
       console.error("handleBuyPlan error:", error);
       showMessage("error", "Server error while starting payment");
