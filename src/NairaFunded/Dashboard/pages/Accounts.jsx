@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { X, CheckCircle2, AlertCircle } from "lucide-react";
 import TopSection from "../companent/TopSection";
 
+/* ================= MODAL ================= */
 const AccountDetailsModal = ({
   isOpen,
   onClose,
@@ -37,55 +38,35 @@ const AccountDetailsModal = ({
           <X size={22} />
         </button>
 
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-semibold">Account Details</h2>
-        </div>
+        <h2 className="text-xl font-semibold mb-5">Account Details</h2>
 
         <div className="space-y-3 mb-6">
-          <p className="text-gray-400">
-            Type: <span className="text-white">{account.type || "N/A"}</span>
-          </p>
-          <p className="text-gray-400">
-            Balance: <span className="text-white">{account.balance || "₦0"}</span>
-          </p>
-          <p className="text-gray-400">
-            Equity: <span className="text-white">{account.equity || "₦0"}</span>
-          </p>
-          <p className="text-gray-400">
-            Phase: <span className="text-white capitalize">{account.phase}</span>
-          </p>
-          <p className="text-gray-400">
-            Status: <span className="text-white capitalize">{account.status}</span>
-          </p>
+          <p>Type: <span className="text-white">{account.type}</span></p>
+          <p>Balance: <span className="text-white">{account.balance}</span></p>
+          <p>Equity: <span className="text-white">{account.equity}</span></p>
+          <p>Phase: <span className="text-white">{account.phase}</span></p>
+          <p>Status: <span className="text-white">{account.status}</span></p>
         </div>
 
         <div className="bg-gray-800 p-4 rounded-xl mb-5">
-          <h3 className="text-sm text-gray-400 mb-3">MT5 Login Details</h3>
-
-          <p className="text-sm">
-            Login: <span className="text-green-400">{account.login || "Not assigned"}</span>
-          </p>
-          <p className="text-sm">
-            Password: <span className="text-green-400">{account.password || "Not assigned"}</span>
-          </p>
-          <p className="text-sm">
-            Server: <span className="text-green-400">{account.server || "Not assigned"}</span>
-          </p>
+          <p>Login: {account.login}</p>
+          <p>Password: {account.password}</p>
+          <p>Server: {account.server}</p>
         </div>
 
         {canRequestPhase ? (
           <button
             onClick={() => requestPhase(account, nextPhase)}
             disabled={loadingRequest}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 py-3 rounded-lg font-medium"
+            className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg"
           >
             {loadingRequest ? "Submitting..." : `Request Phase ${nextPhase}`}
           </button>
         ) : (
-          <div className="text-sm text-gray-400 bg-gray-800 rounded-lg p-3">
+          <div className="text-sm text-gray-400 bg-gray-800 p-3 rounded-lg">
             {currentPhase === "funded"
-              ? "This account is already funded."
-              : "Only active accounts can request the next phase."}
+              ? "Already funded account"
+              : "Cannot request phase"}
           </div>
         )}
       </div>
@@ -93,70 +74,37 @@ const AccountDetailsModal = ({
   );
 };
 
+/* ================= PLAN CARD ================= */
 const PlanCard = ({
   plan,
   formatMoney,
-  buttonColor = "blue",
+  buttonColor,
   buttonText,
   onBuy,
   buyingPlanId,
 }) => {
-  const buttonClass =
+  const isLoading = Number(buyingPlanId) === Number(plan.id);
+
+  const color =
     buttonColor === "green"
       ? "bg-green-600 hover:bg-green-700"
       : "bg-blue-600 hover:bg-blue-700";
 
-  const badgeClass =
-    buttonColor === "green"
-      ? "bg-green-500/20 text-green-400 border border-green-500/30"
-      : "bg-blue-500/20 text-blue-400 border border-blue-500/30";
-
-  const isLoading = Number(buyingPlanId) === Number(plan.id);
-
   return (
-    <div
-      className={`relative bg-gray-900 border border-gray-800 rounded-2xl p-6 transition hover:-translate-y-1 ${
-        buttonColor === "green" ? "hover:border-green-500" : "hover:border-blue-500"
-      } ${plan.popular ? "scale-[1.02]" : ""}`}
-    >
-      {plan.popular && (
-        <div className="absolute top-[-10px] right-4 bg-yellow-500 text-black text-xs font-semibold px-3 py-1 rounded-full">
-          Most Popular
-        </div>
-      )}
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+      <h3 className="text-xl font-bold">{formatMoney(plan.size)} Account</h3>
+      <p className="text-3xl font-bold mt-2">{formatMoney(plan.price)}</p>
 
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold">{formatMoney(plan.size)} Account</h3>
-        <span className={`text-xs px-3 py-1 rounded-full ${badgeClass}`}>
-          {plan.type}
-        </span>
+      <div className="mt-4 text-sm text-gray-400 space-y-2">
+        <p>Target: {plan.target}%</p>
+        <p>Loss: {plan.loss}%</p>
+        <p>Split: {plan.split}%</p>
       </div>
-
-      <p className="mt-2 text-3xl font-bold">{formatMoney(plan.price)}</p>
-
-      <ul className="mt-6 space-y-3 text-gray-400 text-sm">
-        <li className="flex justify-between">
-          <span>Profit Target</span>
-          <span className="text-white font-medium">{plan.target}%</span>
-        </li>
-        <li className="flex justify-between">
-          <span>Max Loss</span>
-          <span className="text-white font-medium">{plan.loss}%</span>
-        </li>
-        <li className="flex justify-between">
-          <span>Profit Split</span>
-          <span className="text-white font-medium">{plan.split}%</span>
-        </li>
-        <li className="flex justify-between">
-          <span>Type</span>
-          <span className="text-white font-medium">{plan.type}</span>
-        </li>
-      </ul>
 
       <button
         onClick={() => onBuy(plan)}
         disabled={isLoading}
-        className={`mt-8 w-full py-3 rounded-xl transition text-white font-medium disabled:opacity-50 ${buttonClass}`}
+        className={`mt-6 w-full py-3 rounded-xl text-white ${color}`}
       >
         {isLoading ? "Processing..." : buttonText}
       </button>
@@ -164,87 +112,51 @@ const PlanCard = ({
   );
 };
 
+/* ================= MAIN ================= */
 const Accounts = () => {
   const navigate = useNavigate();
 
-  const [selectedAccount, setSelectedAccount] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [plans, setPlans] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
   const [loadingRequest, setLoadingRequest] = useState(false);
   const [buyingPlanId, setBuyingPlanId] = useState(null);
 
-  const [message, setMessage] = useState({
-    show: false,
-    type: "",
-    text: "",
-  });
-
-  const showMessage = (type, text) => {
-    setMessage({ show: true, type, text });
-    setTimeout(() => {
-      setMessage({ show: false, type: "", text: "" });
-    }, 3000);
-  };
-
-  const formatMoney = (value) => {
-    if (value === null || value === undefined || value === "") return "₦0";
-    const clean = String(value).replace(/[^0-9.]/g, "");
-    const number = Number(clean);
-    if (Number.isNaN(number)) return `₦${value}`;
-    return `₦${number.toLocaleString()}`;
-  };
-
-  const getUser = () => {
-    try {
-      const rawUser = localStorage.getItem("user");
-      if (!rawUser) return null;
-      return JSON.parse(rawUser);
-    } catch (error) {
-      console.error("getUser error:", error);
-      return null;
-    }
-  };
-
   const getUserId = () => {
-    const user = getUser();
+    const user = JSON.parse(localStorage.getItem("user") || "null");
     return user?.id || user?.user_id || null;
   };
 
+  /* ================= FIXED FETCH ACCOUNTS ================= */
   const fetchAccounts = async () => {
     const userId = getUserId();
-
-    if (!userId) {
-      setAccounts([]);
-      return;
-    }
+    if (!userId) return setAccounts([]);
 
     try {
       const res = await fetch(
         `https://api.fundednaira.ng/api/dashboard/get-user-accounts.php?user_id=${userId}`
       );
 
-      const text = await res.text();
-      const data = JSON.parse(text);
+      const data = await res.json();
 
-      if (Array.isArray(data)) {
-        setAccounts(data);
-      } else {
-        setAccounts([]);
-      }
-    } catch (error) {
-      console.error("fetchAccounts error:", error);
-      showMessage("error", "Server error while loading accounts");
+      console.log("ACCOUNTS:", data);
+
+      setAccounts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      setAccounts([]);
     }
   };
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch("https://api.fundednaira.ng/api/dashboard/get-plans.php");
+      const res = await fetch(
+        "https://api.fundednaira.ng/api/dashboard/get-plans.php"
+      );
       const data = await res.json();
       setPlans(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("fetchPlans error:", error);
+    } catch (err) {
       setPlans([]);
     }
   };
@@ -254,158 +166,99 @@ const Accounts = () => {
     fetchPlans();
   }, []);
 
-  const handleViewDetails = (acc) => {
-    setSelectedAccount(acc);
-    setOpenModal(true);
+  const formatMoney = (value) => {
+    const num = Number(String(value).replace(/[^0-9.]/g, ""));
+    return isNaN(num) ? "₦0" : `₦${num.toLocaleString()}`;
   };
 
-  const requestPhase = async (account, requestedPhase) => {
+  /* ================= REQUEST PHASE ================= */
+  const requestPhase = async (account, nextPhase) => {
     const userId = getUserId();
-    if (!userId) {
-      showMessage("error", "User not logged in");
-      return;
-    }
-
-    const currentPhase = account?.phase || "";
-
-    if (!account?.id) {
-      showMessage("error", "Missing account id");
-      return;
-    }
-
-    if (!currentPhase) {
-      showMessage("error", "Missing current phase");
-      return;
-    }
-
-    if (!requestedPhase) {
-      showMessage("error", "Missing requested phase");
-      return;
-    }
+    if (!userId) return;
 
     try {
       setLoadingRequest(true);
 
-      const payload = {
-        user_id: userId,
-        account_id: account.id,
-        current_phase: String(currentPhase),
-        requested_phase: String(requestedPhase),
-      };
+      const res = await fetch(
+        "https://api.fundednaira.ng/api/dashboard/request-phase.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: userId,
+            account_id: account.id,
+            current_phase: account.phase,
+            requested_phase: nextPhase,
+          }),
+        }
+      );
 
-      const res = await fetch("https://api.fundednaira.ng/api/dashboard/request-phase.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const text = await res.text();
-      const data = JSON.parse(text);
+      const data = await res.json();
 
       if (data.success) {
-        showMessage("success", data.message || "Phase request submitted");
         setOpenModal(false);
-        setSelectedAccount(null);
         fetchAccounts();
-      } else {
-        showMessage("error", data.message || "Failed to submit request");
       }
-    } catch (error) {
-      console.error(error);
-      showMessage("error", "Server error");
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoadingRequest(false);
     }
   };
 
+  /* ================= BUY ACCOUNT ================= */
   const handleBuyPlan = async (plan) => {
-    const user = getUser();
+    const user = JSON.parse(localStorage.getItem("user") || "null");
 
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
+    if (!user) return navigate("/auth");
 
-    if (!window.squad) {
-      showMessage("error", "Squad payment script not loaded");
-      return;
-    }
+    setBuyingPlanId(plan.id);
 
     try {
-      setBuyingPlanId(plan.id);
+      const res = await fetch(
+        "https://api.fundednaira.ng/api/payments/initialize-payment.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: user.id,
+            plan_id: plan.id,
+          }),
+        }
+      );
 
-      const res = await fetch("https://api.fundednaira.ng/api/payments/initialize-payment.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: user.id || user.user_id,
-          plan_id: plan.id,
-        }),
-      });
+      const data = await res.json();
 
-      const text = await res.text();
-      console.log("initialize payment raw:", text);
+      if (!data.success) return;
 
-      let result;
-      try {
-        result = JSON.parse(text);
-      } catch (error) {
-        showMessage("error", "Invalid server response");
-        return;
-      }
+      const payment = data.data;
 
-      if (!result.success) {
-        showMessage("error", result.message || "Failed to initialize payment");
-        return;
-      }
-
-      const payment = result.data;
-
-     const squadInstance = new window.squad({
+      const squad = new window.squad({
         key: payment.public_key,
         email: payment.email,
         amount: payment.amount,
         currency_code: payment.currency,
         transaction_ref: payment.reference,
-        customer_name: payment.customer_name,
         callback_url: payment.callback_url,
-        payment_channels: payment.payment_channels,
-        metadata: payment.metadata,
-  onClose: () => {
-    setBuyingPlanId(null);
-  },
-  onLoad: () => {
-    console.log("Squad modal loaded");
-  },
-  onSuccess: () => {
-    window.location.href = `/dashboard/payment/callback?reference=${payment.reference}`;
-  },
-});
+        onClose: () => setBuyingPlanId(null),
+        onSuccess: () =>
+          (window.location.href = `/dashboard/payment/callback?reference=${payment.reference}`),
+      });
 
-squadInstance.setup();
-squadInstance.open();
-
-      squadInstance.setup();
-      squadInstance.open();
-    } catch (error) {
-      console.error("handleBuyPlan error:", error);
-      showMessage("error", "Server error while starting payment");
+      squad.setup();
+      squad.open();
+    } catch (err) {
+      console.error(err);
       setBuyingPlanId(null);
     }
   };
 
   const challengePlans = plans.filter(
-    (plan) => String(plan.type || "").toLowerCase() === "challenge"
+    (p) => String(p.type).toLowerCase() === "challenge"
   );
 
   const instantPlans = plans.filter(
-    (plan) =>
-      String(plan.type || "").toLowerCase() === "instant" ||
-      String(plan.type || "").toLowerCase() === "instant funding"
+    (p) => String(p.type).toLowerCase().includes("instant")
   );
 
   return (
@@ -413,176 +266,88 @@ squadInstance.open();
       <div className="flex pt-16">
         <Sidebar />
 
-        <div className="flex-1 p-6 md:p-10 bg-gray-950 min-h-screen text-white relative">
+        <div className="flex-1 p-6 bg-gray-950 text-white">
           <TopSection />
-          {message.show && (
-            <div className="fixed top-5 right-5 z-[100]">
-              <div
-                className={`flex items-start gap-3 min-w-[300px] max-w-[420px] rounded-2xl border px-4 py-4 shadow-2xl ${
-                  message.type === "success"
-                    ? "bg-green-950/90 border-green-700 text-green-200"
-                    : "bg-red-950/90 border-red-700 text-red-200"
-                }`}
-              >
-                <div className="mt-0.5">
-                  {message.type === "success" ? (
-                    <CheckCircle2 size={20} />
-                  ) : (
-                    <AlertCircle size={20} />
-                  )}
-                </div>
 
-                <div className="flex-1">
-                  <h4 className="font-semibold mb-1">
-                    {message.type === "success" ? "Success" : "Error"}
-                  </h4>
-                  <p className="text-sm">{message.text}</p>
-                </div>
+          <h1 className="text-3xl font-bold mb-8">Accounts</h1>
 
+          {/* MY ACCOUNTS */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {accounts.map((acc) => (
+              <div key={acc.id} className="bg-gray-900 p-6 rounded-2xl">
+                <h3 className="font-bold">{acc.type}</h3>
+                <p>{acc.phase}</p>
                 <button
-                  onClick={() => setMessage({ show: false, type: "", text: "" })}
-                  className="text-gray-300 hover:text-white"
+                  className="mt-4 bg-blue-600 w-full py-2 rounded"
+                  onClick={() => {
+                    setSelectedAccount(acc);
+                    setOpenModal(true);
+                  }}
                 >
-                  <X size={18} />
+                  View
                 </button>
               </div>
-            </div>
-          )}
-
-          <h1 className="text-3xl font-bold mb-8">Accounts Dashboard</h1>
-
-          <div className="mb-12">
-            <h2 className="text-xl font-semibold mb-4">My Accounts</h2>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {accounts.map((acc) => (
-                <div
-                  key={acc.id}
-                  className="bg-gray-900 p-6 rounded-2xl border border-gray-800 hover:border-blue-500 transition"
-                >
-                  <h3 className="text-lg font-semibold mb-2">{acc.type || "Account"}</h3>
-
-                  <p className="text-gray-400 text-sm">
-                    Balance: <span className="text-white">{formatMoney(acc.balance)}</span>
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    Equity: <span className="text-white">{formatMoney(acc.equity)}</span>
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    Phase: <span className="text-white capitalize">{acc.phase}</span>
-                  </p>
-
-                  <span
-                    className={`inline-block mt-3 px-3 py-1 text-xs rounded-full ${
-                      String(acc.status).toLowerCase() === "active"
-                        ? "bg-green-500/20 text-green-400"
-                        : String(acc.status).toLowerCase() === "pending"
-                        ? "bg-yellow-500/20 text-yellow-300"
-                        : "bg-red-500/20 text-red-400"
-                    }`}
-                  >
-                    {acc.status}
-                  </span>
-
-                  <button
-                    onClick={() => handleViewDetails(acc)}
-                    className="mt-5 w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg"
-                  >
-                    View Details
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {accounts.length === 0 && (
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400">
-                No accounts found
-              </div>
-            )}
+            ))}
           </div>
 
+          {/* BUY ACCOUNTS UI (RESTORED EXACT STYLE) */}
           <section className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-5xl font-bold">Buy Trading Account</h2>
-              <p className="mt-4 text-gray-400 max-w-2xl mx-auto">
-                Choose your preferred account size and start your journey to becoming a funded trader.
-              </p>
+              <h2 className="text-3xl md:text-5xl font-bold">
+                Buy Trading Account
+              </h2>
             </div>
 
             <div className="mb-16">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-8 w-1 rounded-full bg-blue-500"></div>
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold">Challenge Accounts</h3>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Pass the evaluation and move to the next phase.
-                  </p>
-                </div>
-              </div>
+              <h3 className="text-2xl font-bold mb-6">
+                Challenge Accounts
+              </h3>
 
-              {challengePlans.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {challengePlans.map((plan, index) => (
-                    <PlanCard
-                      key={plan.id || index}
-                      plan={plan}
-                      formatMoney={formatMoney}
-                      buttonColor="blue"
-                      buttonText="Buy Challenge"
-                      onBuy={handleBuyPlan}
-                      buyingPlanId={buyingPlanId}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400">
-                  No challenge plans available
-                </div>
-              )}
+              <div className="grid md:grid-cols-4 gap-6">
+                {challengePlans.map((plan) => (
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    formatMoney={formatMoney}
+                    buttonColor="blue"
+                    buttonText="Buy Challenge"
+                    onBuy={handleBuyPlan}
+                    buyingPlanId={buyingPlanId}
+                  />
+                ))}
+              </div>
             </div>
 
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-8 w-1 rounded-full bg-green-500"></div>
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold">Instant Funding Accounts</h3>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Get faster access with instant funding options.
-                  </p>
-                </div>
-              </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-6">
+                Instant Funding
+              </h3>
 
-              {instantPlans.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {instantPlans.map((plan, index) => (
-                    <PlanCard
-                      key={plan.id || index}
-                      plan={plan}
-                      formatMoney={formatMoney}
-                      buttonColor="green"
-                      buttonText="Buy Instant"
-                      onBuy={handleBuyPlan}
-                      buyingPlanId={buyingPlanId}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400">
-                  No instant funding plans available
-                </div>
-              )}
+              <div className="grid md:grid-cols-4 gap-6">
+                {instantPlans.map((plan) => (
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    formatMoney={formatMoney}
+                    buttonColor="green"
+                    buttonText="Buy Instant"
+                    onBuy={handleBuyPlan}
+                    buyingPlanId={buyingPlanId}
+                  />
+                ))}
+              </div>
             </div>
           </section>
+
+          <AccountDetailsModal
+            isOpen={openModal}
+            onClose={() => setOpenModal(false)}
+            account={selectedAccount}
+            requestPhase={requestPhase}
+            loadingRequest={loadingRequest}
+          />
         </div>
       </div>
-
-      <AccountDetailsModal
-        isOpen={openModal}
-        onClose={() => setOpenModal(false)}
-        account={selectedAccount}
-        requestPhase={requestPhase}
-        loadingRequest={loadingRequest}
-      />
     </Layout>
   );
 };
