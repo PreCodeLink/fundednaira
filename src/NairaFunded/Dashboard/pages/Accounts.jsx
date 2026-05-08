@@ -171,7 +171,7 @@ const Accounts = () => {
     return user?.id || user?.user_id || null;
   };
 
-  /* ================= FIXED HERE ================= */
+  /* ✅ FIXED FETCH ACCOUNTS */
   const fetchAccounts = async () => {
     const userId = getUserId();
     if (!userId) return;
@@ -183,6 +183,9 @@ const Accounts = () => {
 
       const data = await res.json();
 
+      console.log("ACCOUNTS RESPONSE:", data);
+
+      // ✅ IMPORTANT FIX
       const accountsData = data?.accounts || [];
 
       setAccounts(accountsData);
@@ -270,22 +273,60 @@ const Accounts = () => {
 
           <h1 className="text-3xl font-bold mb-8">Accounts Dashboard</h1>
 
-          {/* ACCOUNTS */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {accounts.map((acc) => (
-              <div key={acc.id} className="bg-gray-900 p-6 rounded-xl">
-                <h3>{acc.type}</h3>
-                <p>{formatMoney(acc.balance)}</p>
-                <button
-                  onClick={() => {
-                    setSelectedAccount(acc);
-                    setOpenModal(true);
-                  }}
+          {/* ================= ACCOUNTS (FIXED STYLE) ================= */}
+          <div className="mb-12">
+            <h2 className="text-xl font-semibold mb-4">My Accounts</h2>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {accounts.map((acc) => (
+                <div
+                  key={acc.id}
+                  className="bg-gray-900 p-6 rounded-2xl border border-gray-800 hover:border-blue-500 transition"
                 >
-                  View
-                </button>
+                  <h3 className="text-lg font-semibold mb-2">
+                    {acc.type || "Account"}
+                  </h3>
+
+                  <p className="text-gray-400 text-sm">
+                    Balance: <span className="text-white">{formatMoney(acc.balance)}</span>
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Equity: <span className="text-white">{formatMoney(acc.equity)}</span>
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Phase: <span className="text-white capitalize">{acc.phase}</span>
+                  </p>
+
+                  <span
+                    className={`inline-block mt-3 px-3 py-1 text-xs rounded-full ${
+                      String(acc.status).toLowerCase() === "active"
+                        ? "bg-green-500/20 text-green-400"
+                        : String(acc.status).toLowerCase() === "pending"
+                        ? "bg-yellow-500/20 text-yellow-300"
+                        : "bg-red-500/20 text-red-400"
+                    }`}
+                  >
+                    {acc.status}
+                  </span>
+
+                  <button
+                    onClick={() => {
+                      setSelectedAccount(acc);
+                      setOpenModal(true);
+                    }}
+                    className="mt-5 w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg"
+                  >
+                    View Details
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {accounts.length === 0 && (
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400">
+                No accounts found
               </div>
-            ))}
+            )}
           </div>
 
           {/* CHALLENGE */}
@@ -303,7 +344,7 @@ const Accounts = () => {
             ))}
           </div>
 
-          {/* INSTANT */}
+          {/* INSTANT (NO REQUEST FEATURE) */}
           <h2 className="text-2xl mt-10 mb-4">Instant Funding Accounts</h2>
           <div className="grid md:grid-cols-4 gap-6">
             {instantPlans.map((plan) => (
