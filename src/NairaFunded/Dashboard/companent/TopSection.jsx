@@ -45,8 +45,6 @@ const TopSection = () => {
     </div>
   );
 };
-
-=======
 import { useNavigate } from "react-router-dom";
 import { Wallet, Users, DollarSign, User } from "lucide-react";
 
