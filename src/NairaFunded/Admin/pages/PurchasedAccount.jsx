@@ -286,11 +286,8 @@ const Accounts = () => {
                     <td>{acc.user || "N/A"}</td>
                     <td>{acc.type || "N/A"}</td>
                     <td>{formatMoney(acc.size)}</td>
-<<<<<<< HEAD
                     <td className="capitalize">{acc.phase || "N/A"}</td>
-=======
                     <td className="capitalize">{acc.type === "Instant" ? "Instant" : acc.phase || "N/A"}</td>
->>>>>>> d5aea70 (Refaral Feature)
                     <td>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
