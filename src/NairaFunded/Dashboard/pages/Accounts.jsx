@@ -27,6 +27,7 @@ const AccountDetailsModal = ({
       ? "funded"
       : "";
 
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
       <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-lg border border-gray-800 text-white relative">
@@ -51,9 +52,9 @@ const AccountDetailsModal = ({
           <p className="text-gray-400">
             Equity: <span className="text-white">{account.equity || "₦0"}</span>
           </p>
-          <p className="text-gray-400">
-            Phase: <span className="text-white capitalize">{account.phase}</span>
-          </p>
+         <p className="text-gray-400 text-sm">
+                    Phase: {account.type == "Instant" ? <span className="text-white capitalize">Instant</span> : <span className="text-white capitalize">{account.phase}</span>}
+                  </p>
           <p className="text-gray-400">
             Status: <span className="text-white capitalize">{account.status}</span>
           </p>
@@ -74,18 +75,24 @@ const AccountDetailsModal = ({
         </div>
 
         {canRequestPhase ? (
-          <button
+         account.type === "Instant"
+            ? (<button
+            className="w-full text-sm text-gray-400 bg-gray-800 rounded-lg p-3"
+          >This account is Instant
+          </button> )
+          :(<button
             onClick={() => requestPhase(account, nextPhase)}
             disabled={loadingRequest}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 py-3 rounded-lg font-medium"
           >
             {loadingRequest ? "Submitting..." : `Request Phase ${nextPhase}`}
-          </button>
+          </button>)
         ) : (
           <div className="text-sm text-gray-400 bg-gray-800 rounded-lg p-3">
             {currentPhase === "funded"
               ? "This account is already funded."
               : "Only active accounts can request the next phase."}
+              
           </div>
         )}
       </div>
@@ -469,7 +476,7 @@ squadInstance.open();
                     Equity: <span className="text-white">{formatMoney(acc.equity)}</span>
                   </p>
                   <p className="text-gray-400 text-sm">
-                    Phase: <span className="text-white capitalize">{acc.phase}</span>
+                    Phase: {acc.type == "Instant" ? <span className="text-white capitalize">Instant</span> : <span className="text-white capitalize">{acc.phase}</span>}
                   </p>
 
                   <span

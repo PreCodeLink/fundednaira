@@ -286,7 +286,11 @@ const Accounts = () => {
                     <td>{acc.user || "N/A"}</td>
                     <td>{acc.type || "N/A"}</td>
                     <td>{formatMoney(acc.size)}</td>
+<<<<<<< HEAD
                     <td className="capitalize">{acc.phase || "N/A"}</td>
+=======
+                    <td className="capitalize">{acc.type === "Instant" ? "Instant" : acc.phase || "N/A"}</td>
+>>>>>>> d5aea70 (Refaral Feature)
                     <td>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
@@ -327,19 +331,74 @@ const Accounts = () => {
           </button>
 
           <div className="flex gap-2">
-            {[...Array(totalPages || 1)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`rounded px-3 py-1 transition ${
-                  currentPage === i + 1
-                    ? "bg-blue-600"
-                    : "bg-gray-800 hover:bg-gray-700"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+           {totalPages > 0 && (
+  <div className="flex flex-wrap justify-center items-center gap-2 mt-6">
+    
+    <button
+      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+      className="px-4 py-2 bg-gray-800 rounded-lg disabled:opacity-50"
+      disabled={currentPage === 1}
+    >
+      Prev
+    </button>
+
+    <div className="flex items-center gap-2 flex-wrap justify-center">
+      {Array.from(
+        { length: Math.min(totalPages, 5) },
+        (_, i) => {
+          let pageNumber;
+
+          if (totalPages <= 5) {
+            pageNumber = i + 1;
+          } else if (currentPage <= 3) {
+            pageNumber = i + 1;
+          } else if (currentPage >= totalPages - 2) {
+            pageNumber = totalPages - 4 + i;
+          } else {
+            pageNumber = currentPage - 2 + i;
+          }
+
+          return (
+            <button
+              key={pageNumber}
+              onClick={() => setCurrentPage(pageNumber)}
+              className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
+                currentPage === pageNumber
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              {pageNumber}
+            </button>
+          );
+        }
+      )}
+
+      {totalPages > 5 && currentPage < totalPages - 2 && (
+        <>
+          <span className="text-gray-500 px-1">...</span>
+
+          <button
+            onClick={() => setCurrentPage(totalPages)}
+            className="w-10 h-10 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700"
+          >
+            {totalPages}
+          </button>
+        </>
+      )}
+    </div>
+
+    <button
+      onClick={() =>
+        setCurrentPage((p) => Math.min(p + 1, totalPages))
+      }
+      className="px-4 py-2 bg-gray-800 rounded-lg disabled:opacity-50"
+      disabled={currentPage === totalPages}
+    >
+      Next
+    </button>
+  </div>
+)}
           </div>
 
           <button

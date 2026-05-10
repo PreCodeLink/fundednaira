@@ -122,9 +122,9 @@ const AccountDetailsModal = ({ isOpen, onClose, account }) => {
           <p className="text-gray-400">
             Equity: <span className="text-white">{account.equity}</span>
           </p>
-          <p className="text-gray-400">
-            Phase: <span className="text-white">{account.phase || account.current_phase}</span>
-          </p>
+          <p className="text-gray-400 text-sm">
+                    Phase: {acc.type == "Instant" ? <span className="text-white capitalize">Instant</span> : <span className="text-white capitalize">{acc.phase}</span>}
+                  </p>
         </div>
 
         <div className="bg-gray-800 p-4 rounded-xl mb-5">

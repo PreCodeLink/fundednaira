@@ -33,6 +33,7 @@ import ForgotPassword from "./NairaFunded/pages/ForgotPassword";
 import ResetPassword from "./NairaFunded/pages/ResetPassword";
 import PaymentCallback from "./NairaFunded/Dashboard/pages/PaymentCallback";
 import AdminProtectedRoute from "./NairaFunded/AdminProtectedRoute";
+import ManageReferrals from "./NairaFunded/Admin/pages/ManageReferrals";
 
 function App() {
   return (
@@ -82,6 +83,10 @@ function App() {
           <Route path="/auth/admin/accounts" element={<AdminAccountPlans />} />
           <Route path="/auth/admin/payouts" element={<AdminPayout />} />
           <Route path="/auth/admin/phase" element={<PhaseRequest />} />
+<<<<<<< HEAD
+=======
+          <Route path="/auth/admin/referrals" element={<ManageReferrals />} />
+>>>>>>> d5aea70 (Refaral Feature)
           <Route path="/auth/admin/notifications" element={<AdminNotifications />} />
         </Route>
 

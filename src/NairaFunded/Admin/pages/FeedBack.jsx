@@ -112,49 +112,74 @@ const Feedback = () => {
           </div>
         </div>
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 gap-4 flex-wrap">
+        {totalPages > 0 && (
+  <div className="flex flex-wrap justify-center items-center gap-2 mt-6">
+    
+    <button
+      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+      className="px-4 py-2 bg-gray-800 rounded-lg disabled:opacity-50"
+      disabled={currentPage === 1}
+    >
+      Prev
+    </button>
+
+    <div className="flex items-center gap-2 flex-wrap justify-center">
+      {Array.from(
+        { length: Math.min(totalPages, 5) },
+        (_, i) => {
+          let pageNumber;
+
+          if (totalPages <= 5) {
+            pageNumber = i + 1;
+          } else if (currentPage <= 3) {
+            pageNumber = i + 1;
+          } else if (currentPage >= totalPages - 2) {
+            pageNumber = totalPages - 4 + i;
+          } else {
+            pageNumber = currentPage - 2 + i;
+          }
+
+          return (
             <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-lg ${
-                currentPage === 1
-                  ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-800 hover:bg-gray-700"
+              key={pageNumber}
+              onClick={() => setCurrentPage(pageNumber)}
+              className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
+                currentPage === pageNumber
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
               }`}
             >
-              Prev
+              {pageNumber}
             </button>
+          );
+        }
+      )}
 
-            <div className="flex gap-2 flex-wrap">
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded-lg ${
-                    currentPage === i + 1
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
+      {totalPages > 5 && currentPage < totalPages - 2 && (
+        <>
+          <span className="text-gray-500 px-1">...</span>
 
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-lg ${
-                currentPage === totalPages
-                  ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-800 hover:bg-gray-700"
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        )}
+          <button
+            onClick={() => setCurrentPage(totalPages)}
+            className="w-10 h-10 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700"
+          >
+            {totalPages}
+          </button>
+        </>
+      )}
+    </div>
+
+    <button
+      onClick={() =>
+        setCurrentPage((p) => Math.min(p + 1, totalPages))
+      }
+      className="px-4 py-2 bg-gray-800 rounded-lg disabled:opacity-50"
+      disabled={currentPage === totalPages}
+    >
+      Next
+    </button>
+  </div>
+)}
 
         <FeedbackModal
           feedback={selectedFeedback}
