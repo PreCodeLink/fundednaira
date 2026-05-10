@@ -83,10 +83,7 @@ function App() {
           <Route path="/auth/admin/accounts" element={<AdminAccountPlans />} />
           <Route path="/auth/admin/payouts" element={<AdminPayout />} />
           <Route path="/auth/admin/phase" element={<PhaseRequest />} />
-<<<<<<< HEAD
-=======
           <Route path="/auth/admin/referrals" element={<ManageReferrals />} />
->>>>>>> d5aea70 (Refaral Feature)
           <Route path="/auth/admin/notifications" element={<AdminNotifications />} />
         </Route>
 
