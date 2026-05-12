@@ -39,8 +39,11 @@ const Profile = () => {
   const getUserId = () => {
     try {
       const rawUser = localStorage.getItem("user");
+
       if (!rawUser) return null;
+
       const parsedUser = JSON.parse(rawUser);
+
       return parsedUser.id || parsedUser.user_id || null;
     } catch (err) {
       console.error("getUserId error:", err);
@@ -50,12 +53,17 @@ const Profile = () => {
 
   const getInitials = (name) => {
     if (!name) return "U";
+
     const parts = name.trim().split(" ").filter(Boolean);
-    if (parts.length === 1) return parts[0][0].toUpperCase();
+
+    if (parts.length === 1) {
+      return parts[0][0].toUpperCase();
+    }
+
     return (parts[0][0] + parts[1][0]).toUpperCase();
   };
 
-  useEffect(() => {
+  const fetchProfile = async () => {
     const userId = getUserId();
 
     if (!userId) {
@@ -63,47 +71,64 @@ const Profile = () => {
       return;
     }
 
-    fetch(`${API_BASE}/profile.php?user_id=${userId}`)
-      .then((res) => res.text())
-      .then((text) => {
-        let data;
+    try {
+      const res = await fetch(
+        `${API_BASE}/profile.php?user_id=${userId}`
+      );
 
-        try {
-          data = JSON.parse(text);
-        } catch {
-          console.error("Invalid JSON:", text);
-          setLoading(false);
-          return;
-        }
+      const text = await res.text();
 
-        if (!data.success) {
-          console.error("Profile fetch failed:", data.message);
-          setLoading(false);
-          return;
-        }
+      let data;
 
-        const fetchedUser = data.user || {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error("Invalid JSON:", text);
+        return;
+      }
 
-        setUser(fetchedUser);
-        setProfileForm({
-          full_name: fetchedUser.full_name || "",
-          email: fetchedUser.email || "",
-        });
-        setPayment({
-          bank_name: fetchedUser.bank_name || "",
-          account_number: fetchedUser.account_number || "",
-          account_name: fetchedUser.account_name || "",
-        });
+      if (!data.success) {
+        console.error("Profile fetch failed:", data.message);
+        return;
+      }
 
-        localStorage.setItem("user", JSON.stringify(fetchedUser));
-      })
-      .catch((err) => {
-        console.error("Profile fetch error:", err);
-      })
-      .finally(() => {
-        setLoading(false);
+      const fetchedUser = data.user || {};
+
+      const normalizedUser = {
+        ...fetchedUser,
+        full_name:
+          fetchedUser.full_name ||
+          fetchedUser.name ||
+          "",
+      };
+
+      setUser(normalizedUser);
+
+      setProfileForm({
+        full_name: normalizedUser.full_name,
+        email: normalizedUser.email || "",
       });
-  }, [navigate]);
+
+      setPayment({
+        bank_name: normalizedUser.bank_name || "",
+        account_number: normalizedUser.account_number || "",
+        account_name: normalizedUser.account_name || "",
+      });
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(normalizedUser)
+      );
+    } catch (err) {
+      console.error("Profile fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     if (message || error) {
@@ -117,37 +142,52 @@ const Profile = () => {
   }, [message, error]);
 
   const handleProfileChange = (e) => {
-    setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
+    setProfileForm({
+      ...profileForm,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handlePasswordChange = (e) => {
-    setPassword({ ...password, [e.target.name]: e.target.value });
+    setPassword({
+      ...password,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handlePaymentChange = (e) => {
-    setPayment({ ...payment, [e.target.name]: e.target.value });
+    setPayment({
+      ...payment,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
+
     setMessage("");
     setError("");
 
     const userId = getUserId();
 
     try {
-      const res = await fetch(`${API_BASE}/update-profile.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          ...profileForm,
-        }),
-      });
+      const res = await fetch(
+        `${API_BASE}/update-profile.php`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            full_name: profileForm.full_name,
+            email: profileForm.email,
+          }),
+        }
+      );
 
       const text = await res.text();
+
       const data = JSON.parse(text);
 
       if (!data.success) {
@@ -162,33 +202,48 @@ const Profile = () => {
       };
 
       setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setMessage(data.message);
-    } catch {
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(updatedUser)
+      );
+
+      setMessage(
+        data.message || "Profile updated successfully."
+      );
+
+      fetchProfile();
+    } catch (err) {
+      console.error(err);
       setError("Server error. Please try again.");
     }
   };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+
     setMessage("");
     setError("");
 
     const userId = getUserId();
 
     try {
-      const res = await fetch(`${API_BASE}/change-password.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          ...password,
-        }),
-      });
+      const res = await fetch(
+        `${API_BASE}/change-password.php`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            ...password,
+          }),
+        }
+      );
 
       const text = await res.text();
+
       const data = JSON.parse(text);
 
       if (!data.success) {
@@ -197,39 +252,60 @@ const Profile = () => {
       }
 
       setMessage(data.message);
+
       setPassword({
         current_password: "",
         new_password: "",
       });
-    } catch {
+    } catch (err) {
+      console.error(err);
       setError("Server error. Please try again.");
     }
   };
 
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
+
     setMessage("");
     setError("");
 
     const userId = getUserId();
 
+    if (
+      payment.account_name.trim().toLowerCase() !==
+      profileForm.full_name.trim().toLowerCase()
+    ) {
+      setError(
+        "Account name must match your registered name."
+      );
+
+      return;
+    }
+
     try {
-      const res = await fetch(`${API_BASE}/save-payment-method.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          ...payment,
-        }),
-      });
+      const res = await fetch(
+        `${API_BASE}/save-payment-method.php`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            ...payment,
+          }),
+        }
+      );
 
       const text = await res.text();
+
       const data = JSON.parse(text);
 
       if (!data.success) {
-        setError(data.message || "Failed to save payment method.");
+        setError(
+          data.message || "Failed to save payment method."
+        );
+
         return;
       }
 
@@ -241,9 +317,20 @@ const Profile = () => {
       };
 
       setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setMessage(data.message);
-    } catch {
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(updatedUser)
+      );
+
+      setMessage(
+        data.message ||
+          "Payment method updated successfully."
+      );
+
+      fetchProfile();
+    } catch (err) {
+      console.error(err);
       setError("Server error. Please try again.");
     }
   };
@@ -253,6 +340,7 @@ const Profile = () => {
       <Layout>
         <div className="flex pt-16">
           <Sidebar />
+
           <div className="flex-1 min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white flex items-center justify-center">
             Loading profile...
           </div>
@@ -272,13 +360,17 @@ const Profile = () => {
               <div className="bg-[#111827] border border-gray-700 rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-xl">
                 <div
                   className={`text-lg font-semibold mb-3 ${
-                    error ? "text-red-400" : "text-green-400"
+                    error
+                      ? "text-red-400"
+                      : "text-green-400"
                   }`}
                 >
                   {error ? "Error" : "Success"}
                 </div>
 
-                <p className="text-gray-300 text-sm mb-5">{error || message}</p>
+                <p className="text-gray-300 text-sm mb-5">
+                  {error || message}
+                </p>
 
                 <button
                   onClick={() => {
@@ -293,28 +385,40 @@ const Profile = () => {
             </div>
           )}
 
-          <h1 className="text-3xl font-bold mb-10">Profile</h1>
+          <h1 className="text-3xl font-bold mb-10">
+            Profile
+          </h1>
 
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl mb-10 flex flex-col md:flex-row items-center gap-6">
             <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-3xl font-bold">
-              {getInitials(user.name)}
+              {getInitials(user.full_name)}
             </div>
 
             <div className="text-center md:text-left">
-              <h2 className="text-xl font-semibold">{user.name}</h2>
-              <p className="text-gray-400">{user.email}</p>
+              <h2 className="text-xl font-semibold">
+                {user.full_name}
+              </h2>
+
+              <p className="text-gray-400">
+                {user.email}
+              </p>
             </div>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8 mb-8">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
-              <h2 className="text-lg font-semibold mb-5">Edit Profile</h2>
+              <h2 className="text-lg font-semibold mb-5">
+                Edit Profile
+              </h2>
 
-              <form className="space-y-4" onSubmit={handleProfileSubmit}>
+              <form
+                className="space-y-4"
+                onSubmit={handleProfileSubmit}
+              >
                 <input
                   type="text"
                   name="full_name"
-                  value={user.name}
+                  value={profileForm.full_name}
                   onChange={handleProfileChange}
                   placeholder="Full Name"
                   className="w-full bg-gray-800/60 p-3 rounded-xl"
@@ -336,9 +440,14 @@ const Profile = () => {
             </div>
 
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
-              <h2 className="text-lg font-semibold mb-5">Security</h2>
+              <h2 className="text-lg font-semibold mb-5">
+                Security
+              </h2>
 
-              <form className="space-y-4" onSubmit={handlePasswordSubmit}>
+              <form
+                className="space-y-4"
+                onSubmit={handlePasswordSubmit}
+              >
                 <input
                   type="password"
                   name="current_password"
@@ -365,9 +474,14 @@ const Profile = () => {
           </div>
 
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl mb-10">
-            <h2 className="text-lg font-semibold mb-5">Payment Method</h2>
+            <h2 className="text-lg font-semibold mb-5">
+              Payment Method
+            </h2>
 
-            <form onSubmit={handlePaymentSubmit} className="grid md:grid-cols-2 gap-4">
+            <form
+              onSubmit={handlePaymentSubmit}
+              className="grid md:grid-cols-2 gap-4"
+            >
               <input
                 type="text"
                 name="bank_name"
@@ -399,11 +513,14 @@ const Profile = () => {
               />
 
               <p className="text-yellow-400 text-sm md:col-span-2">
-                ⚠️ Account name must match your registered name
+                ⚠️ Account name must match your
+                registered name
               </p>
 
               <button className="bg-gradient-to-r from-blue-500 to-sky-400 py-3 rounded-xl md:col-span-2">
-                {user.bank_name || user.account_number || user.account_name
+                {user.bank_name ||
+                user.account_number ||
+                user.account_name
                   ? "Update Payment Method"
                   : "Save Payment Method"}
               </button>
@@ -411,22 +528,36 @@ const Profile = () => {
           </div>
 
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
-            <h2 className="text-lg font-semibold mb-5">Saved Payment Method</h2>
+            <h2 className="text-lg font-semibold mb-5">
+              Saved Payment Method
+            </h2>
 
-            {user.bank_name || user.account_number || user.account_name ? (
+            {user.bank_name ||
+            user.account_number ||
+            user.account_name ? (
               <div className="bg-gray-800/60 p-5 rounded-2xl border border-gray-700">
-                <h3 className="font-semibold text-lg mb-2">{payment.bank_name}</h3>
+                <h3 className="font-semibold text-lg mb-2">
+                  {payment.bank_name}
+                </h3>
 
                 <p className="text-gray-400 text-sm">
-                  Account No: <span className="text-white">{payment.account_number}</span>
+                  Account No:{" "}
+                  <span className="text-white">
+                    {payment.account_number}
+                  </span>
                 </p>
 
                 <p className="text-gray-400 text-sm">
-                  Name: <span className="text-white">{payment.account_name}</span>
+                  Name:{" "}
+                  <span className="text-white">
+                    {payment.account_name}
+                  </span>
                 </p>
               </div>
             ) : (
-              <p className="text-gray-400 text-sm">No payment method saved yet.</p>
+              <p className="text-gray-400 text-sm">
+                No payment method saved yet.
+              </p>
             )}
           </div>
         </div>

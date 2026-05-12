@@ -17,6 +17,7 @@ const Affiliate = () => {
   const [claimed, setClaimed] = useState([]);
 
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const referralLink = `https://www.fundednaira.ng/auth?ref=${referralCode}`;
 
   const [withdrawData, setWithdrawData] = useState({
     account_name: "",
@@ -32,11 +33,31 @@ const Affiliate = () => {
   });
 
   const rewards = [
-    { id: 1, account: "₦200K Account", required: 5 },
-    { id: 2, account: "₦400K Account", required: 10 },
-    { id: 3, account: "₦600K Account", required: 15 },
-    { id: 4, account: "₦800K Account", required: 20 },
-  ];
+  {
+    id: 1,
+    account: "₦200K Account",
+    size: "200000",
+    required: 5,
+  },
+  {
+    id: 2,
+    account: "₦400K Account",
+    size: "400000",
+    required: 10,
+  },
+  {
+    id: 3,
+    account: "₦600K Account",
+    size: "600000",
+    required: 15,
+  },
+  {
+    id: 4,
+    account: "₦800K Account",
+    size: "800000",
+    required: 20,
+  },
+];
    const [transactions, setTransactions] = useState([]);
   const getUserId = () => {
     try {
@@ -132,63 +153,59 @@ const Affiliate = () => {
 
     try {
       await navigator.clipboard.writeText(
-        referralCode
-      );
+  `https://www.fundednaira.ng/auth?ref=${referralCode}`
+);
 
       setMessage(
-        "Referral code copied successfully"
+        "Referral link copied successfully"
       );
     } catch {
-      setError("Failed to copy referral code");
+      setError("Failed to copy referral link");
     }
   };
 
   const handleClaim = async (reward) => {
-    const userId = getUserId();
+  const userId = getUserId();
 
-    try {
-      const res = await fetch(
-        `${API_BASE}/claim-reward.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            reward_name: reward.account,
-            reward_required:
-              reward.required,
-          }),
-        }
-      );
-
-      const text = await res.text();
-
-      const data = JSON.parse(text);
-
-      if (!data.success) {
-        setError(
-          data.message ||
-            "Failed to claim reward"
-        );
-
-        return;
+  try {
+    const res = await fetch(
+      `${API_BASE}/claim-affiliate-account.php`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          size: reward.size,
+        }),
       }
+    );
 
-      setClaimed((prev) => [
-        ...prev,
-        reward.account,
-      ]);
+    const data = await res.json();
 
-      setMessage(data.message);
-    } catch {
-      setError(
-        "Server error. Please try again."
+    if (!data.success) {
+      setError(data.message);
+      return;
+    }
+
+    setClaimed((prev) => [
+      ...prev,
+      reward.account,
+    ]);
+
+    setMessage(data.message);
+
+    if (data.status === "claimed") {
+      setMessage(
+        `Account claimed successfully.`
       );
     }
-  };
+  } catch (err) {
+    console.log(err);
+    setError("Server error. Please try again.");
+  }
+};
 
  const handleWithdraw = async () => {
   const userId = getUserId();
@@ -319,16 +336,16 @@ const Affiliate = () => {
           {/* Referral Code */}
 
           <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mb-8">
-            <h2 className="text-gray-400 mb-2">
-              Your Referral Code
-            </h2>
+           <h2 className="text-gray-400 mb-2">
+  Your Referral Link
+</h2>
 
-            <div className="flex gap-3">
-              <input
-                value={referralCode}
-                readOnly
-                className="flex-1 bg-gray-800 p-3 rounded-lg"
-              />
+<div className="flex gap-3">
+  <input
+    value={`https://www.fundednaira.ng/auth?ref=${referralCode}`}
+    readOnly
+    className="flex-1 bg-gray-800 p-3 rounded-lg"
+  />
 
               <button
                 onClick={copyCode}

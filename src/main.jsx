@@ -34,6 +34,12 @@ import ResetPassword from "./NairaFunded/pages/ResetPassword";
 import PaymentCallback from "./NairaFunded/Dashboard/pages/PaymentCallback";
 import AdminProtectedRoute from "./NairaFunded/AdminProtectedRoute";
 import ManageReferrals from "./NairaFunded/Admin/pages/ManageReferrals";
+import UplaodAccount from "./NairaFunded/Admin/pages/UplaodAccount";
+import ReffaralClaims from "./NairaFunded/Admin/pages/ReffaralClaims.jsx";
+import StaffLogin from "./NairaFunded/Staff/Pages/Login.jsx";
+import StaffDashboard from "./NairaFunded/Staff/Pages/Dashboard.jsx";
+import StaffProtectedRoute from "./NairaFunded/StaffProtectedRoute.jsx"
+import StaffUploadAccount from "./NairaFunded/Staff/Pages/UploadAccounts.jsx";
 
 function App() {
   return (
@@ -65,7 +71,14 @@ function App() {
           <Route path="/dashboard/affiliate" element={<AffiliateDash />} />
           <Route path="/dashboard/profile" element={<Profile />} />
         </Route>
-
+         {/*Staff Public Route*/}
+          <Route path="/auth/staff" element={<StaffLogin />} />
+          {/* Staff Protected Routes */}
+<Route element={<StaffProtectedRoute />}>
+  <Route path="/staff/dashboard" element={<StaffDashboard />} />
+  <Route path="/staff/upload-account" element={<StaffUploadAccount />} />
+</Route>
+          
         {/* Admin login page - keep public if admin needs to login first */}
         <Route path="/auth/admin" element={<AdminAuth />} />
 
@@ -85,6 +98,9 @@ function App() {
           <Route path="/auth/admin/phase" element={<PhaseRequest />} />
           <Route path="/auth/admin/referrals" element={<ManageReferrals />} />
           <Route path="/auth/admin/notifications" element={<AdminNotifications />} />
+          <Route path="/auth/admin/upload-acc" element={<UplaodAccount />} />
+          <Route path="/auth/admin/referral-claims" element={<ReffaralClaims />}
+/>
         </Route>
 
         {/* Not found */}

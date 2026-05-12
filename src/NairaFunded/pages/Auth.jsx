@@ -1,17 +1,25 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  Link,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import Layout from "../layout/Layout";
 
 const Register = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    referral_code: "",
-  });
+const referralFromUrl =
+  searchParams.get("ref") || "";
+
+ const [formData, setFormData] = useState({
+  full_name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  referral_code: referralFromUrl,
+});
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -25,7 +33,14 @@ const Register = () => {
       [e.target.name]: e.target.value,
     }));
   };
-
+useEffect(() => {
+  if (referralFromUrl) {
+    setFormData((prev) => ({
+      ...prev,
+      referral_code: referralFromUrl,
+    }));
+  }
+}, [referralFromUrl]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
@@ -156,15 +171,15 @@ const Register = () => {
               placeholder="Confirm Password"
               className="w-full p-3 rounded-lg bg-gray-900 border border-gray-800 focus:outline-none"
             />
-
-            <input
-              type="text"
-              name="referral_code"
-              value={formData.referral_code}
-              onChange={handleChange}
-              placeholder="Referral Code (Optional)"
-              className="w-full p-3 rounded-lg bg-gray-900 border border-gray-800 focus:outline-none"
-            />
+<input
+  type="text"
+  name="referral_code"
+  value={formData.referral_code}
+  onChange={handleChange}
+  readOnly={!!referralFromUrl}
+  placeholder="Referral Code (Optional)"
+  className="w-full p-3 rounded-lg bg-gray-900 border border-gray-800 focus:outline-none"
+/>
 
             <button
               type="submit"

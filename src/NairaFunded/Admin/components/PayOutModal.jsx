@@ -137,6 +137,18 @@ const PayoutModal = ({ payout, setPayout, updatePayout }) => {
                     <span className="text-gray-400">Server:</span>{" "}
                     <span className="text-green-400">{accountDetails.server}</span>
                   </p>
+                    <p>
+                    <span className="text-gray-400">Account Type:</span>{" "}
+                    <span className="text-green-400">{accountDetails.type}</span>
+                  </p>
+                   <p>
+                    <span className="text-gray-400">Account Size:</span>{" "}
+                    <span className="text-green-400">{accountDetails.size}</span>
+                  </p>
+                    <p>
+                    <span className="text-gray-400">Current Phase:</span>{" "}
+                    <span className="text-green-400">{ accountDetails.type === "Instant" ? "Instant" : accountDetails.phase }</span>
+                  </p>
                 </div>
               ) : (
                 <p className="text-red-400 text-sm">Failed to load account</p>

@@ -15,7 +15,8 @@ const AdminDashboard = () => {
     { title: "Referral Withdrawals", value: "₦0" },
     { title: "Referral Withdrawals This Month", value: "₦0" },
     { title: "Total Account Plans", value: "0" },
-    { title: "Total Purchased Accounts", value: "0" },
+    { title: "Total Purchased Accounts", value: "0" },   
+    { title: "Total Ref Earned Accounts", value: "0" },
   ]);
 
   const [users, setUsers] = useState([]);
@@ -101,6 +102,11 @@ const AdminDashboard = () => {
             title: "Total Purchased Accounts",
             value:
               data.stats.total_purchased_accounts || 0,
+          },
+           {
+            title: "Total Ref Earned Accounts",
+            value:
+              data.stats.total_ref_earned_accounts || 0,
           },
         ]);
 

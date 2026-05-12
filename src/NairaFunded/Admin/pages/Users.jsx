@@ -1,63 +1,92 @@
 import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "../Layout";
 import { Search } from "lucide-react";
+import UserToggleModal from "../components/UserModal";
 
 const AdminUsers = () => {
   const API_BASE = "https://api.fundednaira.ng/api/admin";
-
+   
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+
   const [users, setUsers] = useState([]);
+
   const [loading, setLoading] = useState(true);
+
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const usersPerPage = 10;
 
+  /*
+  |--------------------------------------------------------------------------
+  | Fetch Users
+  |--------------------------------------------------------------------------
+  */
+
   const fetchUsers = async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setError("Admin token not found");
-      setLoading(false);
-      return;
-    }
-
     try {
+      setLoading(true);
+
       const query = new URLSearchParams({
         search,
         status: filter,
       }).toString();
 
-      const res = await fetch(`${API_BASE}/get-users.php?${query}`, {
-        method: "GET",
-        headers: {
-          Authorization: token,
-        },
-      });
+      const res = await fetch(
+        `${API_BASE}/get-users.php?${query}`
+      );
 
       const text = await res.text();
-      const data = JSON.parse(text);
 
-      if (!data.success) {
-        setError(data.message || "Failed to fetch users");
-        setLoading(false);
+      console.log("RAW USERS RESPONSE:", text);
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.log(err);
+
+        setError("Invalid JSON response");
+        setUsers([]);
+
         return;
       }
 
-      setUsers(data.users || []);
-    } catch {
+      if (!data.success) {
+        setError(data.message || "Failed to fetch users");
+        setUsers([]);
+
+        return;
+      }
+
+      setUsers(Array.isArray(data.users) ? data.users : []);
+    } catch (error) {
+      console.log(error);
+
       setError("Server error. Please try again.");
+      setUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
+  /*
+  |--------------------------------------------------------------------------
+  | Effects
+  |--------------------------------------------------------------------------
+  */
+
   useEffect(() => {
     fetchUsers();
   }, [search, filter]);
+
+  useEffect(() => {
+    console.log(users);
+  }, [users]);
 
   useEffect(() => {
     if (message || error) {
@@ -70,71 +99,145 @@ const AdminUsers = () => {
     }
   }, [message, error]);
 
-  const filteredUsers = useMemo(() => users, [users]);
+  /*
+  |--------------------------------------------------------------------------
+  | Filtered Users
+  |--------------------------------------------------------------------------
+  */
+
+  const filteredUsers = useMemo(() => {
+    return Array.isArray(users) ? users : [];
+  }, [users]);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Pagination
+  |--------------------------------------------------------------------------
+  */
 
   const indexOfLast = currentPage * usersPerPage;
+
   const indexOfFirst = indexOfLast - usersPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
-  const handleStatusChange = async (userId, status) => {
-    const token = localStorage.getItem("token");
+  const currentUsers = filteredUsers.slice(
+    indexOfFirst,
+    indexOfLast
+  );
 
+  const totalPages = Math.ceil(
+    filteredUsers.length / usersPerPage
+  );
+
+  /*
+  |--------------------------------------------------------------------------
+  | Update User Status
+  |--------------------------------------------------------------------------
+  */
+
+  const handleStatusChange = async (
+    userId,
+    status
+  ) => {
     try {
-      const res = await fetch(`${API_BASE}/update-user-status.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          status,
-        }),
-      });
+      const res = await fetch(
+        `${API_BASE}/update-user-status.php`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            user_id: userId,
+            status,
+          }),
+        }
+      );
 
       const text = await res.text();
-      const data = JSON.parse(text);
 
-      if (!data.success) {
-        setError(data.message || "Failed to update status");
+      console.log("UPDATE STATUS RESPONSE:", text);
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setError("Invalid JSON response");
         return;
       }
 
-      setMessage(data.message);
+      if (!data.success) {
+        setError(
+          data.message || "Failed to update status"
+        );
+
+        return;
+      }
+
+      setMessage(data.message || "Status updated");
+
       fetchUsers();
+
       setSelectedUser(null);
-    } catch {
+    } catch (error) {
+      console.log(error);
+
       setError("Server error. Please try again.");
     }
   };
 
-  const handleDelete = async (userId) => {
-    const token = localStorage.getItem("token");
+  /*
+  |--------------------------------------------------------------------------
+  | Delete User
+  |--------------------------------------------------------------------------
+  */
 
+  const handleDelete = async (userId) => {
     try {
-      const res = await fetch(`${API_BASE}/delete-user.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-        body: JSON.stringify({
-          user_id: userId,
-        }),
-      });
+      const res = await fetch(
+        `${API_BASE}/delete-user.php`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            user_id: userId,
+          }),
+        }
+      );
 
       const text = await res.text();
-      const data = JSON.parse(text);
 
-      if (!data.success) {
-        setError(data.message || "Failed to delete user");
+      console.log("DELETE USER RESPONSE:", text);
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setError("Invalid JSON response");
         return;
       }
 
-      setMessage(data.message);
+      if (!data.success) {
+        setError(
+          data.message || "Failed to delete user"
+        );
+
+        return;
+      }
+
+      setMessage(data.message || "User deleted");
+
       fetchUsers();
-    } catch {
+    } catch (error) {
+      console.log(error);
+
       setError("Server error. Please try again.");
     }
   };
@@ -147,13 +250,17 @@ const AdminUsers = () => {
             <div className="bg-[#111827] border border-gray-700 rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-xl">
               <div
                 className={`text-lg font-semibold mb-3 ${
-                  error ? "text-red-400" : "text-green-400"
+                  error
+                    ? "text-red-400"
+                    : "text-green-400"
                 }`}
               >
                 {error ? "Error" : "Success"}
               </div>
 
-              <p className="text-gray-300 text-sm mb-5">{error || message}</p>
+              <p className="text-gray-300 text-sm mb-5">
+                {error || message}
+              </p>
 
               <button
                 onClick={() => {
@@ -169,11 +276,17 @@ const AdminUsers = () => {
         )}
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-          <h2 className="text-2xl font-bold">Manage Users</h2>
+          <h2 className="text-2xl font-bold">
+            Manage Users
+          </h2>
 
           <div className="flex gap-3">
             <div className="flex items-center bg-gray-900 px-3 rounded-lg border border-gray-800">
-              <Search size={16} className="text-gray-400" />
+              <Search
+                size={16}
+                className="text-gray-400"
+              />
+
               <input
                 type="text"
                 placeholder="Search users..."
@@ -206,19 +319,31 @@ const AdminUsers = () => {
           <table className="w-full text-sm">
             <thead className="text-gray-400 border-b border-gray-800">
               <tr>
-                <th className="text-left py-3 px-4">ID</th>
+                <th className="text-left py-3 px-4">
+                  ID
+                </th>
+
                 <th>User</th>
+
                 <th>Email</th>
+
                 <th>Referrals</th>
+
                 <th>Status</th>
-                <th className="text-right px-4">Actions</th>
+
+                <th className="text-right px-4">
+                  Actions
+                </th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="p-6 text-center text-gray-400">
+                  <td
+                    colSpan="6"
+                    className="p-6 text-center text-gray-400"
+                  >
                     Loading users...
                   </td>
                 </tr>
@@ -228,9 +353,18 @@ const AdminUsers = () => {
                     key={user.id}
                     className="border-b border-gray-800 hover:bg-gray-800"
                   >
-                    <td className="py-3 px-4 font-medium">FN/NG/{user.id}</td>
-                    <td>{user.name}</td>
+                    <td className="py-3 px-4 font-medium">
+                      FN/NG/{user.id}
+                    </td>
+
+                    <td>
+                      {user.full_name ||
+                        user.name ||
+                        "N/A"}
+                    </td>
+
                     <td>{user.email}</td>
+
                     <td>{user.ref}</td>
 
                     <td>
@@ -238,7 +372,8 @@ const AdminUsers = () => {
                         className={`px-3 py-1 rounded-full text-xs ${
                           user.status === "Active"
                             ? "bg-green-500/20 text-green-400"
-                            : user.status === "Suspended"
+                            : user.status ===
+                              "Suspended"
                             ? "bg-yellow-500/20 text-yellow-400"
                             : "bg-blue-500/20 text-blue-400"
                         }`}
@@ -249,14 +384,23 @@ const AdminUsers = () => {
 
                     <td className="text-right px-4 space-x-2">
                       <button
-                        onClick={() => setSelectedUser(user)}
+                        onClick={() => {
+                          console.log(
+                            "SELECTED USER:",
+                            user
+                          );
+
+                          setSelectedUser(user);
+                        }}
                         className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700"
                       >
                         View
                       </button>
 
                       <button
-                        onClick={() => handleDelete(user.id)}
+                        onClick={() =>
+                          handleDelete(user.id)
+                        }
                         className="px-3 py-1 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30"
                       >
                         Delete
@@ -266,50 +410,76 @@ const AdminUsers = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="p-6 text-center text-gray-400">
+                  <td
+                    colSpan="6"
+                    className="p-6 text-center text-gray-400"
+                  >
                     No users found
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-        </div>
-
-        {totalPages > 0 && (
-  <div className="flex flex-wrap justify-center items-center gap-2 mt-6">
+          {/* Pagination */}
+{filteredUsers.length > usersPerPage && (
+  <div className="mt-6 flex flex-col gap-4">
     
-    <button
-      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-      className="px-4 py-2 bg-gray-800 rounded-lg disabled:opacity-50"
-      disabled={currentPage === 1}
-    >
-      Prev
-    </button>
+    {/* Info */}
+    <div className="text-sm text-gray-400">
+      Showing{" "}
+      <span className="text-white font-medium">
+        {indexOfFirst + 1}
+      </span>{" "}
+      -{" "}
+      <span className="text-white font-medium">
+        {Math.min(indexOfLast, filteredUsers.length)}
+      </span>{" "}
+      of{" "}
+      <span className="text-white font-medium">
+        {filteredUsers.length}
+      </span>
+    </div>
 
-    <div className="flex items-center gap-2 flex-wrap justify-center">
+    {/* Pagination Buttons */}
+    <div className="flex flex-wrap items-center gap-2">
+      
+      {/* Prev */}
+      <button
+        onClick={() =>
+          setCurrentPage((p) => Math.max(p - 1, 1))
+        }
+        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl disabled:opacity-50"
+        disabled={currentPage === 1}
+      >
+        Prev
+      </button>
+
+      {/* Dynamic Pages */}
       {Array.from(
-        { length: Math.min(totalPages, 5) },
+        { length: Math.min(totalPages, 10) },
         (_, i) => {
           let pageNumber;
 
-          if (totalPages <= 5) {
+          if (totalPages <= 10) {
             pageNumber = i + 1;
-          } else if (currentPage <= 3) {
+          } else if (currentPage <= 6) {
             pageNumber = i + 1;
-          } else if (currentPage >= totalPages - 2) {
-            pageNumber = totalPages - 4 + i;
+          } else if (currentPage >= totalPages - 5) {
+            pageNumber = totalPages - 9 + i;
           } else {
-            pageNumber = currentPage - 2 + i;
+            pageNumber = currentPage - 5 + i;
           }
 
           return (
             <button
               key={pageNumber}
-              onClick={() => setCurrentPage(pageNumber)}
-              className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
+              onClick={() =>
+                setCurrentPage(pageNumber)
+              }
+              className={`w-11 h-11 rounded-xl text-sm font-semibold transition ${
                 currentPage === pageNumber
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                  ? "bg-gradient-to-r from-blue-600 to-sky-400 text-white shadow-lg"
+                  : "bg-gray-900 border border-gray-700 text-gray-300 hover:bg-gray-800"
               }`}
             >
               {pageNumber}
@@ -318,81 +488,52 @@ const AdminUsers = () => {
         }
       )}
 
-      {totalPages > 5 && currentPage < totalPages - 2 && (
-        <>
-          <span className="text-gray-500 px-1">...</span>
+      {/* Last Page */}
+      {totalPages > 10 &&
+        currentPage < totalPages - 5 && (
+          <>
+            <span className="text-gray-500 px-1">
+              ...
+            </span>
 
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            className="w-10 h-10 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700"
-          >
-            {totalPages}
-          </button>
-        </>
-      )}
+            <button
+              onClick={() =>
+                setCurrentPage(totalPages)
+              }
+              className="w-11 h-11 rounded-xl bg-gray-900 border border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
+              {totalPages}
+            </button>
+          </>
+        )}
+
+      {/* Next */}
+      <button
+        onClick={() =>
+          setCurrentPage((p) =>
+            Math.min(p + 1, totalPages)
+          )
+        }
+        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl disabled:opacity-50"
+        disabled={currentPage === totalPages}
+      >
+        Next
+      </button>
     </div>
-
-    <button
-      onClick={() =>
-        setCurrentPage((p) => Math.min(p + 1, totalPages))
-      }
-      className="px-4 py-2 bg-gray-800 rounded-lg disabled:opacity-50"
-      disabled={currentPage === totalPages}
-    >
-      Next
-    </button>
   </div>
 )}
-
-        {selectedUser && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]">
-            <div className="bg-gray-900 w-full max-w-md rounded-2xl border border-gray-800 p-6">
-              <h3 className="text-xl font-bold mb-4">User Details</h3>
-
-              <div className="space-y-3 text-sm">
-                <p>
-                  <span className="text-gray-400">ID:</span> FN/NG/{selectedUser.id}
-                </p>
-                <p>
-                  <span className="text-gray-400">Name:</span> {selectedUser.name}
-                </p>
-                <p>
-                  <span className="text-gray-400">Email:</span> {selectedUser.email}
-                </p>
-                <p>
-                  <span className="text-gray-400">Referrals:</span> {selectedUser.ref}
-                </p>
-                <p>
-                  <span className="text-gray-400">Status:</span> {selectedUser.status}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mt-6">
-                <button
-                  onClick={() => handleStatusChange(selectedUser.id, "active")}
-                  className="bg-green-600 hover:bg-green-700 py-2 rounded-lg"
-                >
-                  Activate
-                </button>
-
-                <button
-                  onClick={() => handleStatusChange(selectedUser.id, "suspended")}
-                  className="bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg"
-                >
-                  Suspend
-                </button>
-              </div>
-
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="w-full mt-4 bg-gray-800 hover:bg-gray-700 py-2 rounded-lg"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
+
+      {selectedUser && (
+        <UserToggleModal
+          user={selectedUser}
+          onClose={() =>
+            setSelectedUser(null)
+          }
+          onStatusChange={handleStatusChange}
+        />
+      )}
     </AdminLayout>
   );
 };

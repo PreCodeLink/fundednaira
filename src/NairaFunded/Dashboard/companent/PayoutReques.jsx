@@ -15,8 +15,15 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
     try {
       const rawUser = localStorage.getItem("user");
       if (!rawUser) return null;
+
       const user = JSON.parse(rawUser);
-      return user.id || user.user_id || null;
+
+      return (
+        user?.id ||
+        user?.user_id ||
+        user?.userId ||
+        null
+      );
     } catch (error) {
       console.error("getUserId error:", error);
       return null;
@@ -32,6 +39,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
   useEffect(() => {
     const fetchAccounts = async () => {
       const userId = getUserId();
+
       if (!userId || !isOpen) return;
 
       try {
@@ -44,9 +52,11 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
         );
 
         const text = await res.text();
+
         console.log("accounts raw response:", text);
 
         let data = [];
+
         try {
           data = JSON.parse(text);
         } catch (err) {
@@ -56,9 +66,14 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
 
         const normalized = Array.isArray(data)
           ? data.map((acc) => ({
-              id: acc.id || acc.account_id || "",
-              phase: acc.phase || "",
-              status: acc.status || "",
+              id:
+                acc.id ||
+                acc.account_id ||
+                acc.accountId ||
+                acc.trading_account_id ||
+                "",
+              phase: acc.phase || acc.account_phase || "",
+              status: acc.status || acc.account_status || "",
             }))
           : [];
 
@@ -67,10 +82,15 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
         setAccounts(normalized);
 
         const firstValid = normalized.find(
-          (acc) => String(acc.status || "").toLowerCase() !== "failed"
+          (acc) =>
+            String(acc.status || "").toLowerCase() !== "failed"
         );
 
-        setSelectedAccount(firstValid ? String(firstValid.id) : "");
+        console.log("FIRST VALID ACCOUNT:", firstValid);
+
+        setSelectedAccount(
+          firstValid?.id ? String(firstValid.id) : ""
+        );
       } catch (error) {
         console.error("fetchAccounts error:", error);
         setAccounts([]);
@@ -88,7 +108,8 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
   }, [isOpen]);
 
   const validAccounts = accounts.filter(
-    (acc) => String(acc.status || "").toLowerCase() !== "failed"
+    (acc) =>
+      String(acc.status || "").toLowerCase() !== "failed"
   );
 
   const handleSubmit = async (e) => {
@@ -96,19 +117,24 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
 
     const userId = getUserId();
 
+    console.log("FINAL selectedAccount:", selectedAccount);
+    console.log("FINAL userId:", userId);
+    console.log("FINAL amount:", amount);
+    console.log("FINAL accounts:", accounts);
+
     if (!userId) {
       setType("error");
       setMessage("User not logged in");
       return;
     }
 
-    if (!selectedAccount) {
+    if (!selectedAccount || Number(selectedAccount) <= 0) {
       setType("error");
       setMessage("Please select trading account");
       return;
     }
 
-    if (!amount) {
+    if (!amount || Number(amount) <= 0) {
       setType("error");
       setMessage("Please enter payout amount");
       return;
@@ -117,7 +143,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
     const payload = {
       user_id: Number(userId),
       account_id: Number(selectedAccount),
-      amount: amount,
+      amount: String(amount),
     };
 
     console.log("Submitting payout payload:", payload);
@@ -138,33 +164,50 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
       );
 
       const text = await res.text();
+
       console.log("raw payout submit response:", text);
 
       let result;
+
       try {
         result = JSON.parse(text);
       } catch (error) {
+        console.error("JSON parse error:", error);
+
         setType("error");
         setMessage("Invalid server response");
+
         return;
       }
 
       if (result.success) {
         setType("success");
-        setMessage(result.message || "Payout request submitted successfully");
+
+        setMessage(
+          result.message ||
+            "Payout request submitted successfully"
+        );
+
         setAmount("");
         setSelectedAccount("");
 
         setTimeout(() => {
           onClose();
-          if (onSuccess) onSuccess();
+
+          if (onSuccess) {
+            onSuccess();
+          }
         }, 1200);
       } else {
         setType("error");
-        setMessage(result.message || "Something went wrong");
+
+        setMessage(
+          result.message || "Something went wrong"
+        );
       }
     } catch (error) {
       console.error("submit payout error:", error);
+
       setType("error");
       setMessage("Server error");
     } finally {
@@ -178,8 +221,14 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-md border border-gray-800 text-white">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-semibold">Request Payout</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <h2 className="text-xl font-semibold">
+            Request Payout
+          </h2>
+
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white"
+          >
             <X size={20} />
           </button>
         </div>
@@ -199,11 +248,16 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
         {!hasPaymentDetails ? (
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
             <div className="flex items-start gap-2">
-              <CircleAlert size={18} className="text-yellow-400 mt-0.5" />
+              <CircleAlert
+                size={18}
+                className="text-yellow-400 mt-0.5"
+              />
+
               <div>
                 <p className="text-sm text-yellow-200">
                   No bank details found in your profile.
                 </p>
+
                 <Link
                   to="/profile"
                   className="inline-block mt-3 px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-sm font-medium"
@@ -214,20 +268,34 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
             <div className="bg-gray-800 rounded-xl p-4 space-y-2 text-sm">
-              <p className="text-gray-400">Saved Bank Details</p>
+              <p className="text-gray-400">
+                Saved Bank Details
+              </p>
+
               <p>
                 Account Name:{" "}
-                <span className="text-white">{paymentDetails.account_name}</span>
+                <span className="text-white">
+                  {paymentDetails.account_name}
+                </span>
               </p>
+
               <p>
                 Bank Name:{" "}
-                <span className="text-white">{paymentDetails.bank_name}</span>
+                <span className="text-white">
+                  {paymentDetails.bank_name}
+                </span>
               </p>
+
               <p>
                 Account Number:{" "}
-                <span className="text-white">{paymentDetails.account_number}</span>
+                <span className="text-white">
+                  {paymentDetails.account_number}
+                </span>
               </p>
             </div>
 
@@ -239,32 +307,49 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
               <select
                 value={selectedAccount}
                 onChange={(e) => {
-                  console.log("dropdown changed to:", e.target.value);
+                  console.log(
+                    "dropdown changed to:",
+                    e.target.value
+                  );
+
                   setSelectedAccount(e.target.value);
                 }}
                 className="w-full bg-gray-800 p-3 rounded-lg outline-none text-white border border-gray-700"
                 required
-                disabled={loadingAccounts || validAccounts.length === 0}
+                disabled={
+                  loadingAccounts ||
+                  validAccounts.length === 0
+                }
               >
-                <option value="">Select trading account</option>
+                <option value="">
+                  Select trading account
+                </option>
 
                 {validAccounts.map((acc) => (
-                  <option key={acc.id} value={String(acc.id)}>
-                    Account ID: {acc.id} | Phase: {acc.phase || "N/A"} | Status:{" "}
+                  <option
+                    key={acc.id}
+                    value={String(acc.id)}
+                  >
+                    Account ID: {acc.id} | Phase:{" "}
+                    {acc.phase || "N/A"} | Status:{" "}
                     {acc.status || "N/A"}
                   </option>
                 ))}
               </select>
 
               {loadingAccounts && (
-                <p className="text-xs text-gray-400 mt-2">Loading accounts...</p>
-              )}
-
-              {!loadingAccounts && validAccounts.length === 0 && (
-                <p className="text-xs text-red-400 mt-2">
-                  No eligible accounts available. Failed accounts cannot request payout.
+                <p className="text-xs text-gray-400 mt-2">
+                  Loading accounts...
                 </p>
               )}
+
+              {!loadingAccounts &&
+                validAccounts.length === 0 && (
+                  <p className="text-xs text-red-400 mt-2">
+                    No eligible accounts available.
+                    Failed accounts cannot request payout.
+                  </p>
+                )}
             </div>
 
             <input
@@ -279,10 +364,16 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
 
             <button
               type="submit"
-              disabled={loading || loadingAccounts || validAccounts.length === 0}
+              disabled={
+                loading ||
+                loadingAccounts ||
+                validAccounts.length === 0
+              }
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-medium"
             >
-              {loading ? "Submitting..." : "Submit Request"}
+              {loading
+                ? "Submitting..."
+                : "Submit Request"}
             </button>
           </form>
         )}

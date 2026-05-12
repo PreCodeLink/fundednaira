@@ -146,6 +146,10 @@ const PlanCard = ({
           <span>Profit Target</span>
           <span className="text-white font-medium">{plan.target}%</span>
         </li>
+         <li className="flex justify-between">
+            <span>Phase</span>
+            <span className="text-white">{plan.type === "Challenge" ?"1/2" : "Instant"}</span>
+          </li>
         <li className="flex justify-between">
           <span>Max Loss</span>
           <span className="text-white font-medium">{plan.loss}%</span>
