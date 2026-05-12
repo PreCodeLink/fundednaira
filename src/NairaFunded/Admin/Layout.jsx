@@ -11,7 +11,8 @@ import {
   ShoppingCart,
   ArrowUpRight,
   ArrowBigRight,
-  Mail
+  Mail,
+  ArrowBigUpIcon
 } from "lucide-react";
 
 const AdminLayout = ({children}) => {
@@ -37,6 +38,7 @@ const AdminLayout = ({children}) => {
       <NavItem to="/auth/admin/payments" icon={<CreditCard />} label="Payments" />
       <NavItem to="/auth/admin/referrals" icon={<Users />} label="Manage Referrals" />
       <NavItem to="/auth/admin/feedback" icon={<MessageSquare />} label="Feedback" />
+      <NavItem to="/auth/admin/upload-acc" icon={<ArrowBigUpIcon />} label="Upload Account" />
       <NavItem to="/auth/admin/notifications" icon={<Mail />} label="Send Email" />
       <NavItem to="/auth/admin/settings" icon={<Settings />} label="Settings" />
         </nav>
