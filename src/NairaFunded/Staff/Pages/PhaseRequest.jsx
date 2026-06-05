@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Eye, Search } from "lucide-react";
-import PhaseModal from "../components/PhaseModal";
+import PhaseModal from "../Components/PhaseModal";
 import MPLayout from "../Components/Layout2";
 
 const StatusBadge = ({ status }) => {
