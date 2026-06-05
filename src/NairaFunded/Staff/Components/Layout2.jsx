@@ -4,15 +4,19 @@ import {
   Menu,
   X,
   LayoutDashboard,
-  Upload,
+  ClipboardCheck,
   LogOut,
 } from "lucide-react";
 
-const StaffLayout = ({ children }) => {
+const MPLayout = ({ children }) => {
   const [open, setOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  const staff = JSON.parse(
+    localStorage.getItem("staff") || "{}"
+  );
 
   const logout = () => {
     localStorage.removeItem("staff");
@@ -24,18 +28,17 @@ const StaffLayout = ({ children }) => {
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/staff/dashboard",
+      path: "/staff/dashboard2",
     },
     {
-      name: "Upload Accounts",
-      icon: Upload,
-      path: "/staff/upload-account",
+      name: "Phase Requests",
+      icon: ClipboardCheck,
+      path: "/staff/phase-requests",
     },
   ];
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-white">
-      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 z-50 h-full w-64 bg-gray-900 border-r border-gray-800 transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
@@ -61,8 +64,12 @@ const StaffLayout = ({ children }) => {
             </p>
 
             <h3 className="font-semibold">
-              Upload Account Staff
+              {staff.name || "MP Staff"}
             </h3>
+
+            <p className="text-blue-400 text-sm">
+              Manage Phase
+            </p>
           </div>
 
           <nav className="space-y-2">
@@ -96,7 +103,6 @@ const StaffLayout = ({ children }) => {
         </div>
       </aside>
 
-      {/* Mobile Overlay */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -104,9 +110,7 @@ const StaffLayout = ({ children }) => {
         />
       )}
 
-      {/* Main */}
       <div className="lg:ml-64">
-        {/* Navbar */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-800 bg-gray-900 px-6">
           <div className="flex items-center gap-3">
             <button
@@ -117,18 +121,17 @@ const StaffLayout = ({ children }) => {
             </button>
 
             <h1 className="text-lg font-semibold">
-              Upload Account Manegement
+              Phase Management
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">
-              S
-            </div>
+          <div className="h-10 w-10 rounded-full bg-green-600 flex items-center justify-center font-bold">
+            {staff.name
+              ? staff.name.charAt(0).toUpperCase()
+              : "M"}
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="p-6">
           {children}
         </main>
@@ -137,4 +140,4 @@ const StaffLayout = ({ children }) => {
   );
 };
 
-export default StaffLayout;
+export default MPLayout;

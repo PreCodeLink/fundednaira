@@ -40,6 +40,8 @@ import StaffLogin from "./NairaFunded/Staff/Pages/Login.jsx";
 import StaffDashboard from "./NairaFunded/Staff/Pages/Dashboard.jsx";
 import StaffProtectedRoute from "./NairaFunded/StaffProtectedRoute.jsx"
 import StaffUploadAccount from "./NairaFunded/Staff/Pages/UploadAccounts.jsx";
+import MPDashboard from "./NairaFunded/Staff/Pages/Dashboard2.jsx";
+import PhaseRequests from "./NairaFunded/Staff/Pages/PhaseRequest.jsx";
 
 function App() {
   return (
@@ -76,7 +78,9 @@ function App() {
           {/* Staff Protected Routes */}
 <Route element={<StaffProtectedRoute />}>
   <Route path="/staff/dashboard" element={<StaffDashboard />} />
+  <Route path="/staff/dashboard2" element={<MPDashboard />} />
   <Route path="/staff/upload-account" element={<StaffUploadAccount />} />
+  <Route path="/staff/phase-requests" element={<PhaseRequests />} />
 </Route>
           
         {/* Admin login page - keep public if admin needs to login first */}

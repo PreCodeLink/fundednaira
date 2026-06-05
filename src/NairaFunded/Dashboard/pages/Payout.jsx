@@ -12,6 +12,7 @@ const Payout = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userStatus, setUserStatus] = useState("");
+  const [timeLeft, setTimeLeft] = useState("");
 
   const getUser = () => {
     try {
@@ -78,6 +79,53 @@ const Payout = () => {
 
     loadData();
   }, []);
+  useEffect(() => {
+  const pendingRequest = history.find(
+    (item) => item.status === "Pending"
+  );
+
+  if (!pendingRequest) {
+    setTimeLeft("");
+    return;
+  }
+
+  const createdAt = new Date(pendingRequest.date);
+
+  const expiry = new Date(
+    createdAt.getTime() + 24 * 60 * 60 * 1000
+  );
+
+  const timer = setInterval(() => {
+    const now = new Date();
+
+    const diff = expiry - now;
+
+    if (diff <= 0) {
+      setTimeLeft("Processing...");
+      clearInterval(timer);
+      return;
+    }
+
+    const hours = Math.floor(
+      diff / (1000 * 60 * 60)
+    );
+
+    const minutes = Math.floor(
+      (diff % (1000 * 60 * 60)) /
+        (1000 * 60)
+    );
+
+    const seconds = Math.floor(
+      (diff % (1000 * 60)) / 1000
+    );
+
+    setTimeLeft(
+      `${hours}h ${minutes}m ${seconds}s`
+    );
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [history]);
 
   const hasPaymentDetails =
     paymentDetails &&
@@ -181,7 +229,23 @@ const Payout = () => {
               </div>
             </div>
           </div>
+         {history.some(
+  (item) => item.status === "Pending"
+) && (
+  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-5 mb-6">
+    <h3 className="text-yellow-300 font-semibold text-lg">
+      Payout Request Pending
+    </h3>
 
+    <p className="text-gray-300 mt-2">
+      Expect your payment within 24 hours.
+    </p>
+
+    <div className="mt-3 text-2xl font-bold text-yellow-400">
+      {timeLeft}
+    </div>
+  </div>
+)}
           <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
             <h2 className="text-xl font-semibold mb-4">Payout History</h2>
 
