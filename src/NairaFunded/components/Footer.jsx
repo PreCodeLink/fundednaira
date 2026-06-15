@@ -142,7 +142,7 @@ const Footer = () => {
 
           {/* Twitter/X Card */}
           <a
-            href="https://x.com/FundedNaira"
+            href="https://x.com/FundedNair8"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 flex items-center gap-4 rounded-2xl border border-gray-500/20 bg-gradient-to-r from-gray-700/20 to-gray-900/20 p-4 transition hover:scale-[1.02] hover:border-gray-400"
