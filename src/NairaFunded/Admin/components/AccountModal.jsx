@@ -129,7 +129,7 @@ const AccountModal = ({
                       <Activity size={14} />
                       Phase
                     </p>
-                    <p className="capitalize">{selectedAccount.phase || "N/A"}</p>
+                    <p className="capitalize">{selectedAccount.type === 'Challenge' ? selectedAccount.phase : selectedAccount.type || "N/A"}</p>
                   </div>
 
                   <div className="rounded-xl bg-gray-900 p-3 border border-gray-800">

@@ -8,6 +8,8 @@ const Accounts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [accounts, setAccounts] = useState([]);
+  const [search, setSearch] = useState("");
+const [sizeFilter, setSizeFilter] = useState("All");
 
   const accountsPerPage = 10;
 
@@ -179,9 +181,22 @@ const Accounts = () => {
   };
 
   const filteredAccounts = accounts.filter((acc) => {
-    if (filter === "All") return true;
-    return String(acc.status || "").toLowerCase() === filter.toLowerCase();
-  });
+  const matchesStatus =
+    filter === "All" ||
+    String(acc.status || "").toLowerCase() === filter.toLowerCase();
+
+  const matchesSearch =
+    !search ||
+    String(acc.user || "")
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+  const matchesSize =
+    sizeFilter === "All" ||
+    String(acc.size).replace(/[^0-9]/g, "") === sizeFilter;
+
+  return matchesStatus && matchesSearch && matchesSize;
+});
 
   const indexOfLast = currentPage * accountsPerPage;
   const indexOfFirst = indexOfLast - accountsPerPage;
@@ -246,19 +261,50 @@ const Accounts = () => {
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-2xl font-bold">Accounts</h2>
 
-          <select
-            className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 outline-none"
-            value={filter}
-            onChange={(e) => {
-              setFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
-            <option>All</option>
-            <option>Active</option>
-            <option>Pending</option>
-            <option>Failed</option>
-          </select>
+         <div className="flex flex-col md:flex-row gap-3">
+  <input
+    type="text"
+    placeholder="Search user..."
+    value={search}
+    onChange={(e) => {
+      setSearch(e.target.value);
+      setCurrentPage(1);
+    }}
+    className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 outline-none"
+  />
+
+  <select
+    value={sizeFilter}
+    onChange={(e) => {
+      setSizeFilter(e.target.value);
+      setCurrentPage(1);
+    }}
+    className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 outline-none"
+  >
+    <option value="All">All Sizes</option>
+    <option value="50000">50K</option>
+    <option value="100000">100K</option>
+    <option value="200000">200K</option>
+    <option value="300000">300K</option>
+    <option value="400000">400K</option>
+    <option value="600000">600K</option>
+    <option value="800000">800K</option>
+  </select>
+
+  <select
+    value={filter}
+    onChange={(e) => {
+      setFilter(e.target.value);
+      setCurrentPage(1);
+    }}
+    className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 outline-none"
+  >
+    <option>All</option>
+    <option>Active</option>
+    <option>Pending</option>
+    <option>Failed</option>
+  </select>
+</div>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900">
@@ -286,8 +332,7 @@ const Accounts = () => {
                     <td>{acc.user || "N/A"}</td>
                     <td>{acc.type || "N/A"}</td>
                     <td>{formatMoney(acc.size)}</td>
-                    <td className="capitalize">{acc.phase || "N/A"}</td>
-                    <td className="capitalize">{acc.type === "Instant" ? "Instant" : acc.phase || "N/A"}</td>
+                    <td className="capitalize">{acc.type === "Challenge" ?  acc.phase: acc.type || "N/A"}</td>
                     <td>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(

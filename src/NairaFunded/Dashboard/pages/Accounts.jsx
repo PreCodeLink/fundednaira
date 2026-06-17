@@ -53,7 +53,7 @@ const AccountDetailsModal = ({
             Equity: <span className="text-white">{account.equity || "₦0"}</span>
           </p>
          <p className="text-gray-400 text-sm">
-                    Phase: {account.type == "Instant" ? <span className="text-white capitalize">Instant</span> : <span className="text-white capitalize">{account.phase}</span>}
+                    Phase: {account.type == "Challenge" ? <span className="text-white capitalize">{account.phase}</span> : <span className="text-white capitalize">{account.type}</span>}
                   </p>
           <p className="text-gray-400">
             Status: <span className="text-white capitalize">{account.status}</span>
@@ -73,20 +73,23 @@ const AccountDetailsModal = ({
             Server: <span className="text-green-400">{account.server || "Not assigned"}</span>
           </p>
         </div>
-
-        {canRequestPhase ? (
-         account.type === "Instant"
-            ? (<button
-            className="w-full text-sm text-gray-400 bg-gray-800 rounded-lg p-3"
-          >This account is Instant
-          </button> )
-          :(<button
-            onClick={() => requestPhase(account, nextPhase)}
-            disabled={loadingRequest}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 py-3 rounded-lg font-medium"
-          >
-            {loadingRequest ? "Submitting..." : `Request Phase ${nextPhase}`}
-          </button>)
+         {canRequestPhase ? (
+  String(account.type).toLowerCase() === "challenge" ? (
+    <button
+      onClick={() => requestPhase(account, nextPhase)}
+      disabled={loadingRequest}
+      className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 py-3 rounded-lg font-medium"
+    >
+      {loadingRequest ? "Submitting..." : `Request Phase ${nextPhase}`}
+    </button>
+  ) : (
+    <button
+      className="w-full text-sm text-gray-400 bg-gray-800 rounded-lg p-3"
+    >
+      Phase requests are only available for Challenge accounts
+    </button>
+  )
+          
         ) : (
           <div className="text-sm text-gray-400 bg-gray-800 rounded-lg p-3">
             {currentPhase === "funded"
@@ -108,16 +111,19 @@ const PlanCard = ({
   onBuy,
   buyingPlanId,
 }) => {
-  const buttonClass =
-    buttonColor === "green"
-      ? "bg-green-600 hover:bg-green-700"
-      : "bg-blue-600 hover:bg-blue-700";
+const buttonClass =
+  buttonColor === "gold"
+    ? "bg-yellow-500 text-black hover:bg-yellow-400"
+    : buttonColor === "green"
+    ? "bg-green-600 hover:bg-green-700"
+    : "bg-blue-600 hover:bg-blue-700";
 
   const badgeClass =
-    buttonColor === "green"
-      ? "bg-green-500/20 text-green-400 border border-green-500/30"
-      : "bg-blue-500/20 text-blue-400 border border-blue-500/30";
-
+  buttonColor === "gold"
+    ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+    : buttonColor === "green"
+    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+    : "bg-blue-500/20 text-blue-400 border border-blue-500/30";
   const isLoading = Number(buyingPlanId) === Number(plan.id);
 
   return (
@@ -141,28 +147,83 @@ const PlanCard = ({
 
       <p className="mt-2 text-3xl font-bold">{formatMoney(plan.price)}</p>
 
-      <ul className="mt-6 space-y-3 text-gray-400 text-sm">
-        <li className="flex justify-between">
-          <span>Profit Target</span>
-          <span className="text-white font-medium">{plan.target}%</span>
-        </li>
-         <li className="flex justify-between">
-            <span>Phase</span>
-            <span className="text-white">{plan.type === "Challenge" ?"1/2" : "Instant"}</span>
-          </li>
-        <li className="flex justify-between">
-          <span>Max Loss</span>
-          <span className="text-white font-medium">{plan.loss}%</span>
-        </li>
-        <li className="flex justify-between">
-          <span>Profit Split</span>
-          <span className="text-white font-medium">{plan.split}%</span>
-        </li>
-        <li className="flex justify-between">
-          <span>Type</span>
-          <span className="text-white font-medium">{plan.type}</span>
-        </li>
-      </ul>
+     {String(plan.type).toLowerCase() === "instant premium" ? (
+  <ul className="mt-6 space-y-3 text-gray-400 text-sm">
+    <li className="flex justify-between">
+      <span>Profit Target</span>
+      <span className="text-white">{plan.target}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Phase</span>
+      <span className="text-white">Instant Premium</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Max Drawdown</span>
+      <span className="text-white">{plan.loss}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Profit Split</span>
+      <span className="text-white">{plan.split}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Daily Loss</span>
+      <span className="text-white">No Limit</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Minimum Days</span>
+      <span className="text-white">No Limit</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Payout</span>
+      <span className="text-white">5 Minutes</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Period</span>
+      <span className="text-white">Unlimited</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Weekend Holding</span>
+      <span className="text-white">Yes</span>
+    </li>
+  </ul>
+) : (
+  <ul className="mt-6 space-y-3 text-gray-400 text-sm">
+    <li className="flex justify-between">
+      <span>Profit Target</span>
+      <span className="text-white font-medium">{plan.target}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Phase</span>
+      <span className="text-white">
+        {plan.type === "Challenge" ? "1/2" : "Instant"}
+      </span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Max Loss</span>
+      <span className="text-white font-medium">{plan.loss}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Profit Split</span>
+      <span className="text-white font-medium">{plan.split}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Type</span>
+      <span className="text-white font-medium">{plan.type}</span>
+    </li>
+  </ul>
+)}
 
       <button
         onClick={() => onBuy(plan)}
@@ -418,6 +479,14 @@ squadInstance.open();
       String(plan.type || "").toLowerCase() === "instant" ||
       String(plan.type || "").toLowerCase() === "instant funding"
   );
+  const premiumPlans = plans.filter((plan) => {
+  const t = String(plan.type).toLowerCase();
+  return (
+    t === "instant premium" ||
+    t === "premium" ||
+    t === "instant-premium"
+  );
+});
 
   return (
     <Layout>
@@ -480,7 +549,7 @@ squadInstance.open();
                     Equity: <span className="text-white">{formatMoney(acc.equity)}</span>
                   </p>
                   <p className="text-gray-400 text-sm">
-                    Phase: {acc.type == "Instant" ? <span className="text-white capitalize">Instant</span> : <span className="text-white capitalize">{acc.phase}</span>}
+                    Phase: {acc.type == "Challenge" ? <span className="text-white capitalize">{acc.phase}</span> : <span className="text-white capitalize">{acc.type}</span>}
                   </p>
 
                   <span
@@ -583,6 +652,41 @@ squadInstance.open();
                 </div>
               )}
             </div>
+            <div className="mb-10">
+  <div className="flex items-center gap-3 mb-6">
+    <div className="h-8 w-1 rounded-full bg-yellow-500"></div>
+
+    <div>
+      <h3 className="text-2xl md:text-3xl font-bold">
+        Instant Premium Accounts
+      </h3>
+
+      <p className="text-gray-400 text-sm mt-1">
+        Premium funding accounts with exclusive benefits.
+      </p>
+    </div>
+  </div>
+
+  {premiumPlans.length > 0 ? (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      {premiumPlans.map((plan, index) => (
+        <PlanCard
+          key={plan.id || index}
+          plan={plan}
+          formatMoney={formatMoney}
+          buttonColor="gold"
+          buttonText="Buy Premium"
+          onBuy={handleBuyPlan}
+          buyingPlanId={buyingPlanId}
+        />
+      ))}
+    </div>
+  ) : (
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400">
+      No premium plans available
+    </div>
+  )}
+</div>
           </section>
         </div>
       </div>

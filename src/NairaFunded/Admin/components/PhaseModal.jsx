@@ -5,6 +5,8 @@ const PhaseModal = ({ data, onClose, onUpdated }) => {
   const [note, setNote] = useState("");
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [showBreachModal, setShowBreachModal] = useState(false);
+  const [breachReason, setBreachReason] = useState("");
 
   const [details, setDetails] = useState({
   login: "",
@@ -138,8 +140,56 @@ const PhaseModal = ({ data, onClose, onUpdated }) => {
       setLoadingAction(false);
     }
   };
+ const handleBreach = () => {
+  setShowBreachModal(true);
+};
 
+const submitFailedReason = async () => {
+  if (!breachReason.trim()) {
+    alert("Please enter a failure reason.");
+    return;
+  }
+
+  try {
+    setLoadingAction(true);
+
+    const res = await fetch(
+      "https://api.fundednaira.ng/api/admin/update-account-status.php",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: data.account_id,
+          status: "failed",
+          reason: breachReason,
+        }),
+      }
+    );
+
+    const result = await res.json();
+
+    if (result.success) {
+      alert(result.message);
+
+      setShowBreachModal(false);
+      setBreachReason("");
+
+      onUpdated?.();
+      onClose();
+    } else {
+      alert(result.message || "Failed to breach account.");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Server error");
+  } finally {
+    setLoadingAction(false);
+  }
+};
   if (!data) return null;
+
 
   return (
 <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md overflow-y-auto">
@@ -338,7 +388,7 @@ const PhaseModal = ({ data, onClose, onUpdated }) => {
         />
 
         {/* ACTION BUTTONS */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
 
           {/* APPROVE */}
           <button
@@ -377,10 +427,65 @@ const PhaseModal = ({ data, onClose, onUpdated }) => {
               "Reject"
             )}
           </button>
+          <button
+  disabled={loadingAction}
+  onClick={handleBreach}
+  className="rounded-xl bg-orange-600 py-3 font-medium hover:bg-orange-700 transition disabled:opacity-50"
+>
+  {loadingAction ? (
+    <span className="flex items-center justify-center gap-2">
+      <Loader2 size={18} className="animate-spin" />
+      Please wait...
+    </span>
+  ) : (
+    "Breach Account"
+  )}
+</button>
         </div>
       </div>
     </div>
-  
+  {showBreachModal && (
+  <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
+    <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-2xl">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-white">
+          Failure Reason
+        </h3>
+
+        <p className="mt-1 text-sm text-gray-400">
+          Please enter the reason for marking this account as failed.
+        </p>
+      </div>
+
+      <textarea
+        rows={5}
+        value={breachReason}
+        onChange={(e) => setBreachReason(e.target.value)}
+        placeholder="Enter failure reason..."
+        className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-red-500"
+      />
+
+      <div className="mt-4 flex gap-3">
+        <button
+          onClick={() => {
+            setShowBreachModal(false);
+            setBreachReason("");
+          }}
+          className="w-full rounded-lg border border-gray-700 bg-gray-800 py-3 text-white hover:bg-gray-700"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={submitFailedReason}
+          className="w-full rounded-lg bg-red-600 py-3 font-medium text-white hover:bg-red-700"
+        >
+          Confirm Failed
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

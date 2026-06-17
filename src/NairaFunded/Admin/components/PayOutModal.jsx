@@ -7,6 +7,8 @@ const PayoutModal = ({ payout, setPayout, updatePayout }) => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [certificate, setCertificate] = useState(null);
   const [adminNote, setAdminNote] = useState("");
+  const [showBreachModal, setShowBreachModal] = useState(false);
+  const [breachReason, setBreachReason] = useState("");
 
   useEffect(() => {
     const fetchAccountDetails = async () => {
@@ -81,7 +83,48 @@ const PayoutModal = ({ payout, setPayout, updatePayout }) => {
       setLoading(false);
     }
   };
+const submitBreach = async () => {
+  if (!breachReason.trim()) {
+    alert("Please enter a breach reason");
+    return;
+  }
 
+  try {
+    setLoading(true);
+
+    const res = await fetch(
+      "https://api.fundednaira.ng/api/admin/update-account-status.php",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: payout.account_id,
+          status: "failed",
+          reason: breachReason,
+        }),
+      }
+    );
+
+    const result = await res.json();
+
+    if (result.success) {
+      alert("Account breached successfully");
+
+      setShowBreachModal(false);
+      setBreachReason("");
+      setPayout(null);
+    } else {
+      alert(result.message || "Failed to breach account");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Server error");
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-4xl p-6 text-white relative max-h-[90vh] overflow-y-auto">
@@ -147,7 +190,7 @@ const PayoutModal = ({ payout, setPayout, updatePayout }) => {
                   </p>
                     <p>
                     <span className="text-gray-400">Current Phase:</span>{" "}
-                    <span className="text-green-400">{ accountDetails.type === "Instant" ? "Instant" : accountDetails.phase }</span>
+                    <span className="text-green-400">{ accountDetails.type === "Challenge" ? accountDetails.phase : accountDetails.type }</span>
                   </p>
                 </div>
               ) : (
@@ -205,7 +248,7 @@ const PayoutModal = ({ payout, setPayout, updatePayout }) => {
         </div>
 
         {/* ACTIONS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
           <button
             disabled={loading}
             onClick={() => {
@@ -227,7 +270,54 @@ const PayoutModal = ({ payout, setPayout, updatePayout }) => {
           >
             {loading ? "Please wait..." : "Reject"}
           </button>
+          <button
+  disabled={loading}
+  onClick={() => setShowBreachModal(true)}
+  className="bg-orange-600 hover:bg-orange-700 py-3 rounded-xl disabled:opacity-50 font-medium"
+>
+  {loading ? "Please wait..." : "Breach Account"}
+</button>
         </div>
+        {showBreachModal && (
+  <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
+    <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-2xl">
+      <h3 className="text-lg font-semibold text-white mb-2">
+        Breach Account
+      </h3>
+
+      <p className="text-sm text-gray-400 mb-4">
+        Enter the reason for breaching this account.
+      </p>
+
+      <textarea
+        rows={5}
+        value={breachReason}
+        onChange={(e) => setBreachReason(e.target.value)}
+        placeholder="Enter breach reason..."
+        className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white outline-none focus:border-orange-500"
+      />
+
+      <div className="mt-4 flex gap-3">
+        <button
+          onClick={() => {
+            setShowBreachModal(false);
+            setBreachReason("");
+          }}
+          className="w-full rounded-lg border border-gray-700 bg-gray-800 py-3 text-white hover:bg-gray-700"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={submitBreach}
+          className="w-full rounded-lg bg-orange-600 py-3 font-medium text-white hover:bg-orange-700"
+        >
+          Confirm Breach
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </div>
   );

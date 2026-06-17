@@ -36,15 +36,28 @@ const Pricing = () => {
     const t = String(p.type).toLowerCase();
     return t === "instant" || t === "instant funding";
   });
+const premiumPlans = plans.filter((p) => {
+  const t = String(p.type).toLowerCase();
 
+  return (
+    t === "instant premium" ||
+    t === "premium" ||
+    t === "premium funding"
+  );
+});
   const PlanCard = ({ plan, color = "blue" }) => {
     const isGreen = color === "green";
+    const isGold = color === "gold";
 
     return (
       <div
-        className={`bg-gray-900 border border-gray-800 rounded-2xl p-6 transition hover:-translate-y-1 ${
-          isGreen ? "hover:border-green-500" : "hover:border-blue-500"
-        }`}
+       className={`bg-gray-900 border border-gray-800 rounded-2xl p-6 transition hover:-translate-y-1 ${
+  isGold
+    ? "hover:border-yellow-500"
+    : isGreen
+    ? "hover:border-green-500"
+    : "hover:border-blue-500"
+}`}
       >
         {plan.popular && (
           <span className="absolute top-3 right-3 bg-yellow-500 text-black text-xs px-2 py-1 rounded-full">
@@ -69,33 +82,90 @@ const Pricing = () => {
         <p className="mt-3 text-3xl font-bold">
           {formatMoney(plan.price)}
         </p>
+         {String(plan.type).toLowerCase() === "instant premium" ? (
+  <ul className="mt-6 space-y-3 text-gray-400 text-sm">
+    <li className="flex justify-between">
+      <span>Profit Target</span>
+      <span className="text-white">{plan.target}%</span>
+    </li>
 
-        <ul className="mt-6 space-y-3 text-gray-400 text-sm">
-          <li className="flex justify-between">
-            <span>Profit Target</span>
-            <span className="text-white">{plan.target}%</span>
-          </li>
-            <li className="flex justify-between">
-            <span>Phase</span>
-            <span className="text-white">{plan.type === "Challenge" ?"1/2" : "Instant"}</span>
-          </li>
-          <li className="flex justify-between">
-            <span>Max Loss</span>
-            <span className="text-white">{plan.loss}%</span>
-          </li>
-          <li className="flex justify-between">
-            <span>Split</span>
-            <span className="text-white">{plan.split}%</span>
-          </li>
-        </ul>
+    <li className="flex justify-between">
+      <span>Phase</span>
+      <span className="text-white">Instant Premium</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Max Drawdown</span>
+      <span className="text-white">{plan.loss}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Split</span>
+      <span className="text-white">{plan.split}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Daily Loss</span>
+      <span className="text-white">No Limit</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Minimum Days</span>
+      <span className="text-white">No Limit</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Payout</span>
+      <span className="text-white">5 Mins</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Period</span>
+      <span className="text-white">Unlimited</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Weekend Holding</span>
+      <span className="text-white">YES 100%</span>
+    </li>
+  </ul>
+) : (
+  <ul className="mt-6 space-y-3 text-gray-400 text-sm">
+    <li className="flex justify-between">
+      <span>Profit Target</span>
+      <span className="text-white">{plan.target}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Phase</span>
+      <span className="text-white">
+        {String(plan.type).toLowerCase() === "challenge"
+          ? "1/2"
+          : "Instant"}
+      </span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Max Loss</span>
+      <span className="text-white">{plan.loss}%</span>
+    </li>
+
+    <li className="flex justify-between">
+      <span>Split</span>
+      <span className="text-white">{plan.split}%</span>
+    </li>
+  </ul>
+)}
 
         <Link
           to="/auth"
-          className={`mt-8 block text-center py-3 rounded-xl font-medium ${
-            isGreen
-              ? "bg-green-600 hover:bg-green-700"
-              : "bg-blue-600 hover:bg-blue-700"
-          }`}
+         className={`mt-8 block text-center py-3 rounded-xl font-medium ${
+  isGold
+    ? "bg-yellow-500 text-black hover:bg-yellow-400"
+    : isGreen
+    ? "bg-green-600 hover:bg-green-700"
+    : "bg-blue-600 hover:bg-blue-700"
+}`}
         >
           Buy Now
         </Link>
@@ -147,6 +217,25 @@ const Pricing = () => {
                 <PlanCard key={i} plan={plan} color="green" />
               ))}
             </div>
+            {/* PREMIUM */}
+<div className="mt-16">
+
+  <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+    <span className="w-1 h-6 bg-yellow-500"></span>
+    Instant Premium Accounts
+  </h3>
+
+  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    {premiumPlans.map((plan, i) => (
+      <PlanCard
+        key={i}
+        plan={plan}
+        color="gold"
+      />
+    ))}
+  </div>
+
+</div>
           </>
         )}
       </div>

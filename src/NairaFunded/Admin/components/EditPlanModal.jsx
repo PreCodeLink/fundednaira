@@ -51,6 +51,7 @@ const EditPlanModal = ({
             <option value="">Select Type</option>
             <option value="Instant">Instant</option>
             <option value="Challenge">Challenge</option>
+            <option value="instant premium">Instant Premium</option>
           </select>
 
           <input

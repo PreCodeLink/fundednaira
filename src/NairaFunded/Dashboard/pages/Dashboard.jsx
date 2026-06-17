@@ -150,7 +150,6 @@ const Dashboard = () => {
                   <th className="py-2 text-left">Account ID</th>
                   <th className="text-left">Login</th>
                   <th className="text-left">Server</th>
-                  <th className="text-left">Phase</th>
                   <th className="text-left">Status</th>
                 </tr>
               </thead>
@@ -162,7 +161,7 @@ const Dashboard = () => {
                       <td className="py-3">{acc.id}</td>
                       <td>{acc.login || "Not Assigned"}</td>
                       <td>{acc.server || "Not Assigned"}</td>
-                      <td>{acc.phase || "N/A"}</td>
+                     
                       <td>
                         <span
                           className={`px-2 py-1 rounded text-xs ${

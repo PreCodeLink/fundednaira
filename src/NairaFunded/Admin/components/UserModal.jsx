@@ -194,7 +194,28 @@ const UserToggleModal = ({ user, onClose }) => {
                 {user.account_number || "N/A"}
               </p>
             </div>
+          {/* TRADING ACCOUNTS */}
+<div className="bg-white/[0.03] border border-white/10 rounded-3xl p-5 md:col-span-2">
+  <div className="flex items-center gap-2 text-gray-400 text-sm mb-3">
+    <Briefcase size={16} />
+    Trading Accounts
+  </div>
 
+  <div className="flex flex-wrap gap-2">
+    {user.user_accounts?.length ? (
+      user.user_accounts.map((acc, index) => (
+        <span
+          key={index}
+          className="px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm"
+        >
+          {String(acc.id).padStart(3, "0")} ({acc.size})
+        </span>
+      ))
+    ) : (
+      <span className="text-gray-500">No Accounts</span>
+    )}
+  </div>
+</div>
           </div>
         </div>
       </div>
