@@ -115,11 +115,6 @@ const premiumPlans = plans.filter((p) => {
     </li>
 
     <li className="flex justify-between">
-      <span>Payout</span>
-      <span className="text-white">5 Mins</span>
-    </li>
-
-    <li className="flex justify-between">
       <span>Period</span>
       <span className="text-white">Unlimited</span>
     </li>

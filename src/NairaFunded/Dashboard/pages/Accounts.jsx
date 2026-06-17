@@ -180,11 +180,6 @@ const buttonClass =
     </li>
 
     <li className="flex justify-between">
-      <span>Payout</span>
-      <span className="text-white">5 Minutes</span>
-    </li>
-
-    <li className="flex justify-between">
       <span>Period</span>
       <span className="text-white">Unlimited</span>
     </li>
