@@ -48,7 +48,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
         setType("");
 
         const res = await fetch(
-          `https://api.fundednaira.ng/api/dashboard/get-user-accounts-for-payout.php?user_id=${userId}`
+          `https://api.fundednaira.net/api/dashboard/get-user-accounts-for-payout.php?user_id=${userId}`
         );
 
         const text = await res.text();
@@ -153,7 +153,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
       setMessage("");
 
       const res = await fetch(
-        "https://api.fundednaira.ng/api/dashboard/request-payout.php",
+        "https://api.fundednaira.net/api/dashboard/request-payout.php",
         {
           method: "POST",
           headers: {

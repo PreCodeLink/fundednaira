@@ -83,7 +83,7 @@ const StaffUploadAccount = () => {
 
     try {
       const res = await fetch(
-        "https://api.fundednaira.ng/api/admin/get-trading-accounts.php"
+        "https://api.fundednaira.net/api/admin/get-trading-accounts.php"
       );
 
       const text = await res.text();
@@ -131,7 +131,7 @@ const StaffUploadAccount = () => {
 
     try {
       const res = await fetch(
-        "https://api.fundednaira.ng/api/admin/add-trading-account.php",
+        "https://api.fundednaira.net/api/admin/add-trading-account.php",
         {
           method: "POST",
           headers: {
@@ -174,7 +174,7 @@ const StaffUploadAccount = () => {
 
     try {
       const res = await fetch(
-        "https://api.fundednaira.ng/api/admin/edit-trading-account.php",
+        "https://api.fundednaira.net/api/admin/edit-trading-account.php",
         {
           method: "POST",
           headers: {

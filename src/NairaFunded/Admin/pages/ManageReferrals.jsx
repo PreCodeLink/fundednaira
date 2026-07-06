@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AdminLayout from "../Layout";
 
 const ManageReferrals = () => {
-  const API_BASE = "https://api.fundednaira.ng/api/admin";
+  const API_BASE = "https://api.fundednaira.net/api/admin";
 
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);

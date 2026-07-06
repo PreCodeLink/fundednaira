@@ -15,7 +15,7 @@ const Feedback = () => {
       setLoading(true);
 
       const res = await fetch(
-        "https://api.fundednaira.ng/api/admin/get-feedbacks.php"
+        "https://api.fundednaira.net/api/admin/get-feedbacks.php"
       );
 
       const text = await res.text();

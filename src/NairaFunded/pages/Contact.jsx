@@ -54,7 +54,7 @@ const Feedback = () => {
       setLoading(true);
 
       const res = await fetch(
-        "https://api.fundednaira.ng/api/feedback/create-feedback.php",
+        "https://api.fundednaira.net/api/feedback/create-feedback.php",
         {
           method: "POST",
           headers: {

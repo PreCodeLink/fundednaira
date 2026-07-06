@@ -6,7 +6,7 @@ const ReferralClaims = () => {
   const [loading, setLoading] = useState(true);
 
   const API =
-    "https://api.fundednaira.ng/api/admin/claim-referral-account.php";
+    "https://api.fundednaira.net/api/admin/claim-referral-account.php";
 
   useEffect(() => {
     fetchClaims();

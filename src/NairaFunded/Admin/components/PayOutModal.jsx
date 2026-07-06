@@ -18,7 +18,7 @@ const PayoutModal = ({ payout, setPayout, updatePayout }) => {
         setLoadingDetails(true);
 
         const res = await fetch(
-          `https://api.fundednaira.ng//api/admin/get-payout-account-details.php?account_id=${payout.account_id}`
+          `https://api.fundednaira.net//api/admin/get-payout-account-details.php?account_id=${payout.account_id}`
         );
         const data = await res.json();
 
@@ -58,7 +58,7 @@ const PayoutModal = ({ payout, setPayout, updatePayout }) => {
       }
 
       const res = await fetch(
-        "https://api.fundednaira.ng/api/admin/update-payout-request.php",
+        "https://api.fundednaira.net/api/admin/update-payout-request.php",
         {
           method: "POST",
           body: formData,
@@ -93,7 +93,7 @@ const submitBreach = async () => {
     setLoading(true);
 
     const res = await fetch(
-      "https://api.fundednaira.ng/api/admin/update-account-status.php",
+      "https://api.fundednaira.net/api/admin/update-account-status.php",
       {
         method: "POST",
         headers: {

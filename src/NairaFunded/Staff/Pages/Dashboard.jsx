@@ -31,7 +31,7 @@ const StaffDashboard = () => {
   const fetchDashboard = async () => {
     try {
       const res = await fetch(
-        "https://api.fundednaira.ng/api/Staff/dashboard.php"
+        "https://api.fundednaira.net/api/Staff/dashboard.php"
       );
 
       const data = await res.json();

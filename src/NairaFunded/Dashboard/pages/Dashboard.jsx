@@ -51,7 +51,7 @@ const Dashboard = () => {
     setUser(savedUser);
 
     fetch(
-      `https://api.fundednaira.ng/api/dashboard/dashboard.php?user_id=${savedUser.id}`
+      `https://api.fundednaira.net/api/dashboard/dashboard.php?user_id=${savedUser.id}`
     )
       .then((res) => res.text())
       .then((text) => {

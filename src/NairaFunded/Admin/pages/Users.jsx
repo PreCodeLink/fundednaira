@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import UserToggleModal from "../components/UserModal";
 
 const AdminUsers = () => {
-  const API_BASE = "https://api.fundednaira.ng/api/admin";
+  const API_BASE = "https://api.fundednaira.net/api/admin";
    
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");

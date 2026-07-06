@@ -33,7 +33,7 @@ const AdminNotifications = () => {
   const fetchUsers = async () => {
     try {
       setLoadingUsers(true);
-      const res = await fetch("https://api.fundednaira.ng/api/admin/get-users.php");
+      const res = await fetch("https://api.fundednaira.net/api/admin/get-users.php");
       const data = await res.json();
 
       if (data.success) {
@@ -99,7 +99,7 @@ const AdminNotifications = () => {
         message,
       };
 
-      const res = await fetch("https://api.fundednaira.ng/api/admin/send-bulk-message.php", {
+      const res = await fetch("https://api.fundednaira.net/api/admin/send-bulk-message.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

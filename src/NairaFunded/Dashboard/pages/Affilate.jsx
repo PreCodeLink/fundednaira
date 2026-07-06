@@ -6,7 +6,7 @@ import TopSection from "../companent/TopSection";
 
 const Affiliate = () => {
   const navigate = useNavigate();
-  const API_BASE = "https://api.fundednaira.ng/api/dashboard";
+  const API_BASE = "https://api.fundednaira.net/api/dashboard";
 
   const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,7 @@ const Affiliate = () => {
   const [claimed, setClaimed] = useState([]);
 
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const referralLink = `https://www.fundednaira.ng/auth?ref=${referralCode}`;
+  const referralLink = `https://www.fundednaira.net/auth?ref=${referralCode}`;
 
   const [withdrawData, setWithdrawData] = useState({
     account_name: "",
@@ -153,7 +153,7 @@ const Affiliate = () => {
 
     try {
       await navigator.clipboard.writeText(
-  `https://www.fundednaira.ng/auth?ref=${referralCode}`
+  `https://www.fundednaira.net/auth?ref=${referralCode}`
 );
 
       setMessage(
@@ -342,7 +342,7 @@ const Affiliate = () => {
 
 <div className="flex gap-3">
   <input
-    value={`https://www.fundednaira.ng/auth?ref=${referralCode}`}
+    value={`https://www.fundednaira.net/auth?ref=${referralCode}`}
     readOnly
     className="flex-1 bg-gray-800 p-3 rounded-lg"
   />

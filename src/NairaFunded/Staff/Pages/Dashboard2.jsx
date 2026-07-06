@@ -20,7 +20,7 @@ const MPDashboard = () => {
   const fetchDashboard = async () => {
     try {
       const res = await fetch(
-        "https://api.fundednaira.ng/api/Staff/mp_dashboard.php"
+        "https://api.fundednaira.net/api/Staff/mp_dashboard.php"
       );
 
       const data = await res.json();

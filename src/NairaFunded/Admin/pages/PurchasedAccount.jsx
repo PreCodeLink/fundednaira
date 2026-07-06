@@ -77,7 +77,7 @@ const [sizeFilter, setSizeFilter] = useState("All");
 
   const fetchAccounts = async () => {
     try {
-      const res = await fetch("https://api.fundednaira.ng/api/admin/get-accounts.php");
+      const res = await fetch("https://api.fundednaira.net/api/admin/get-accounts.php");
       const data = await res.json();
 
       if (Array.isArray(data)) {
@@ -109,7 +109,7 @@ const [sizeFilter, setSizeFilter] = useState("All");
     }
 
     try {
-      const res = await fetch("https://api.fundednaira.ng/api/admin/update-account.php", {
+      const res = await fetch("https://api.fundednaira.net/api/admin/update-account.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -157,7 +157,7 @@ const [sizeFilter, setSizeFilter] = useState("All");
         payload.reason = reason;
       }
 
-      const res = await fetch("https://api.fundednaira.ng/api/admin/update-account-status.php", {
+      const res = await fetch("https://api.fundednaira.net/api/admin/update-account-status.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

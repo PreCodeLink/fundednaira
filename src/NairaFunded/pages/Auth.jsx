@@ -25,7 +25,7 @@ const referralFromUrl =
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const API_BASE = "https://api.fundednaira.ng/api/user";
+  const API_BASE = "https://api.fundednaira.net/api/user";
 
   const handleChange = (e) => {
     setFormData((prev) => ({

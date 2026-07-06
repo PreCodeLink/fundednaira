@@ -15,7 +15,7 @@ const Payouts = () => {
       setLoading(true);
 
       const res = await fetch(
-        "https://api.fundednaira.ng/api/admin/get-payout-requests.php"
+        "https://api.fundednaira.net/api/admin/get-payout-requests.php"
       );
       const data = await res.json();
 

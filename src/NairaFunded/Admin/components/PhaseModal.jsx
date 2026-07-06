@@ -29,7 +29,7 @@ const PhaseModal = ({ data, onClose, onUpdated }) => {
         setLoadingDetails(true);
 
         const res = await fetch(
-          `https://api.fundednaira.ng/api/admin/get-phase-request-account-details.php?account_id=${data.account_id}`
+          `https://api.fundednaira.net/api/admin/get-phase-request-account-details.php?account_id=${data.account_id}`
         );
 
         const text = await res.text();
@@ -109,7 +109,7 @@ const PhaseModal = ({ data, onClose, onUpdated }) => {
       console.log("PHASE ACTION PAYLOAD:", payload);
 
       const res = await fetch(
-        "https://api.fundednaira.ng/api/admin/update-phase-request.php",
+        "https://api.fundednaira.net/api/admin/update-phase-request.php",
         {
           method: "POST",
           headers: {
@@ -154,7 +154,7 @@ const submitFailedReason = async () => {
     setLoadingAction(true);
 
     const res = await fetch(
-      "https://api.fundednaira.ng/api/admin/update-account-status.php",
+      "https://api.fundednaira.net/api/admin/update-account-status.php",
       {
         method: "POST",
         headers: {

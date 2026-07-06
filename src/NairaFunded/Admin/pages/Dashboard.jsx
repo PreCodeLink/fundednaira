@@ -35,7 +35,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    fetch("https://api.fundednaira.ng/api/admin/dashboard.php")
+    fetch("https://api.fundednaira.net/api/admin/dashboard.php")
       .then((res) => res.json())
       .then((data) => {
         if (!data.success) {

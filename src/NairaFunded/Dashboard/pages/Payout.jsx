@@ -36,7 +36,7 @@ const Payout = () => {
 
     try {
       const res = await fetch(
-        `https://api.fundednaira.ng/api/dashboard/get-payment-details.php?user_id=${userId}`
+        `https://api.fundednaira.net/api/dashboard/get-payment-details.php?user_id=${userId}`
       );
       const data = await res.json();
 
@@ -57,7 +57,7 @@ const Payout = () => {
 
     try {
       const res = await fetch(
-        `https://api.fundednaira.ng/api/dashboard/get-payout-history.php?user_id=${userId}`
+        `https://api.fundednaira.net/api/dashboard/get-payout-history.php?user_id=${userId}`
       );
       const data = await res.json();
       setHistory(Array.isArray(data) ? data : []);
@@ -139,7 +139,7 @@ const Payout = () => {
   const downloadCertificate = (item) => {
     if (!item.certificate) return;
 
-    const fileUrl = `https://api.fundednaira.ng/item.certificate}`;
+    const fileUrl = `https://api.fundednaira.net/item.certificate}`;
     window.open(fileUrl, "_blank");
   };
 

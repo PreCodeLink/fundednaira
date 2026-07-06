@@ -52,7 +52,7 @@ const PhaseRequests = () => {
       setLoading(true);
 
       const res = await fetch(
-        "https://api.fundednaira.ng/api/admin/get-phase-requests.php"
+        "https://api.fundednaira.net/api/admin/get-phase-requests.php"
       );
       const data = await res.json();
 

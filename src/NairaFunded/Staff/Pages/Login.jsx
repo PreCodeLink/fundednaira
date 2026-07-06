@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 const StaffLogin = () => {
   const navigate = useNavigate();
 
-  const API_BASE = "https://api.fundednaira.ng/api/Staff";
+  const API_BASE = "https://api.fundednaira.net/api/Staff";
 
   const [formData, setFormData] = useState({
     email: "",
