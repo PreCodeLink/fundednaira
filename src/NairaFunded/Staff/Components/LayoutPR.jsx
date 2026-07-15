@@ -4,59 +4,44 @@ import {
   Menu,
   X,
   LayoutDashboard,
-  ClipboardCheck,
+  Wallet,
+  Users,
   LogOut,
 } from "lucide-react";
 
-const MPLayout = ({ children }) => {
+const StaffLayoutPR = ({ children }) => {
   const [open, setOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
-
-  const staff = JSON.parse(
-    localStorage.getItem("staff") || "{}"
-  );
 
   const logout = () => {
     localStorage.removeItem("staff");
     localStorage.removeItem("staff_token");
     navigate("/auth/staff");
   };
-const role = staff?.role || "";
 
-const roleConfig = {
-  mp: {
-    title: "Phase 2 Management",
-    subtitle: "Manage Phase 2",
-    dashboard: "/staff/dashboard2",
-    requests: "/staff/phase-requests",
-  },
-
-  mp2: {
-    title: "Funded Management",
-    subtitle: "Manage Funded Accounts",
-    dashboard: "/staff/dashboard/pr2",
-    requests: "/staff/phase2-requests",
-  },
-};
-
-const config = roleConfig[role] || roleConfig.mp;
-const menus = [
+  const menus = [
   {
     name: "Dashboard",
     icon: LayoutDashboard,
-    path: config.dashboard,
+    path: "/staff/dashboard/prw",
   },
   {
-    name: "Requests",
-    icon: ClipboardCheck,
-    path: config.requests,
+    name: "Payout Requests",
+    icon: Wallet,
+    path: "/staff/payout-requests",
+  },
+  {
+    name: "Referral Withdrawals",
+    icon: Users,
+    path: "/staff/referral-withdrawals",
   },
 ];
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-white">
+      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 z-50 h-full w-64 bg-gray-900 border-r border-gray-800 transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
@@ -82,12 +67,8 @@ const menus = [
             </p>
 
             <h3 className="font-semibold">
-              {staff.name || "MP Staff"}
+              Payout And Ref Withdraw Staff
             </h3>
-
-            <p className="text-blue-400 text-sm">
-              Manage Phase
-            </p>
           </div>
 
           <nav className="space-y-2">
@@ -121,6 +102,7 @@ const menus = [
         </div>
       </aside>
 
+      {/* Mobile Overlay */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -128,7 +110,9 @@ const menus = [
         />
       )}
 
+      {/* Main */}
       <div className="lg:ml-64">
+        {/* Navbar */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-800 bg-gray-900 px-6">
           <div className="flex items-center gap-3">
             <button
@@ -139,17 +123,18 @@ const menus = [
             </button>
 
             <h1 className="text-lg font-semibold">
-              Phase Management
+              Upload Account Manegement
             </h1>
           </div>
 
-          <div className="h-10 w-10 rounded-full bg-green-600 flex items-center justify-center font-bold">
-            {staff.name
-              ? staff.name.charAt(0).toUpperCase()
-              : "M"}
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">
+              S
+            </div>
           </div>
         </header>
 
+        {/* Page Content */}
         <main className="p-6">
           {children}
         </main>
@@ -158,4 +143,4 @@ const menus = [
   );
 };
 
-export default MPLayout;
+export default StaffLayoutPR;

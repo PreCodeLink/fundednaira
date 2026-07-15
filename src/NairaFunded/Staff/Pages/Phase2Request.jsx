@@ -37,7 +37,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const PhaseRequests = () => {
+const PhaseRequests2 = () => {
   const [requests, setRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -60,7 +60,7 @@ if (Array.isArray(data)) {
 
   const fundedRequests = data.filter(
     (item) =>
-      String(item.requested_phase || "").toLowerCase() === "funded"
+      String(item.requested_phase || "").toLowerCase() === "2"
   );
 
   setRequests(fundedRequests);
@@ -294,4 +294,4 @@ if (Array.isArray(data)) {
   );
 };
 
-export default PhaseRequests;
+export default PhaseRequests2;

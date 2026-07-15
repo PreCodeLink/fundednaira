@@ -42,6 +42,11 @@ import StaffProtectedRoute from "./NairaFunded/StaffProtectedRoute.jsx"
 import StaffUploadAccount from "./NairaFunded/Staff/Pages/UploadAccounts.jsx";
 import MPDashboard from "./NairaFunded/Staff/Pages/Dashboard2.jsx";
 import PhaseRequests from "./NairaFunded/Staff/Pages/PhaseRequest.jsx";
+import DasboardPR2 from "./NairaFunded/Staff/Pages/DasboardPR2.jsx";
+import DashboardPRW from "./NairaFunded/Staff/Pages/DashboardPRW.jsx";
+import PhaseRequests2 from "./NairaFunded/Staff/Pages/Phase2Request.jsx";
+import Payouts from "./NairaFunded/Staff/Pages/Payout.jsx";
+import StaffManageReferrals from "./NairaFunded/Staff/Pages/ManageReferrals.jsx";
 
 function App() {
   return (
@@ -79,8 +84,13 @@ function App() {
 <Route element={<StaffProtectedRoute />}>
   <Route path="/staff/dashboard" element={<StaffDashboard />} />
   <Route path="/staff/dashboard2" element={<MPDashboard />} />
+  <Route path="/staff/dashboard/pr2" element={ <DasboardPR2 />} />
+  <Route path="/staff/dashboard/prw" element={<DashboardPRW />} />
   <Route path="/staff/upload-account" element={<StaffUploadAccount />} />
   <Route path="/staff/phase-requests" element={<PhaseRequests />} />
+  <Route path="/staff/phase2-requests" element={<PhaseRequests2 />} />
+  <Route path="/staff/payout-requests" element={<Payouts />} />
+  <Route path="/staff/referral-withdrawals" element={<StaffManageReferrals />} />
 </Route>
           
         {/* Admin login page - keep public if admin needs to login first */}

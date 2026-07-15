@@ -59,12 +59,25 @@ const StaffLogin = () => {
         JSON.stringify(data.staff)
       );
 
-      if (data.staff.role === "ua") {
-  navigate("/staff/dashboard");
-} else if (data.staff.role === "mp") {
-  navigate("/staff/dashboard2");
-} else {
-  setError("Invalid staff role");
+    switch (data.staff.role) {
+  case "ua":
+    navigate("/staff/dashboard");
+    break;
+
+  case "mp":
+    navigate("/staff/dashboard2");
+    break;
+
+  case "mp2":
+    navigate("/staff/dashboard/pr2");
+    break;
+
+  case "pr":
+    navigate("/staff/dashboard/prw");
+    break;
+
+  default:
+    setError("Invalid staff role");
 }
     } catch (error) {
       console.log(error);
