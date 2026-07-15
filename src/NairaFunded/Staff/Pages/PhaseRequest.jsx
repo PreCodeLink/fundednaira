@@ -54,18 +54,11 @@ const PhaseRequests = () => {
       const res = await fetch(
         "https://api.fundednaira.net/api/admin/get-phase-requests.php"
       );
-     const data = await res.json();
+  const data = await res.json();
 
 if (Array.isArray(data)) {
-
-  const fundedRequests = data.filter(
-    (item) =>
-      String(item.requested_phase || "").toLowerCase() === "funded"
-  );
-
-  setRequests(fundedRequests);
-  setFilteredRequests(fundedRequests);
-
+  setRequests(data);
+  setFilteredRequests(data);
 } else {
   setRequests([]);
   setFilteredRequests([]);
