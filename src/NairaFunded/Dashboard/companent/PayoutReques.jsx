@@ -18,12 +18,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
 
       const user = JSON.parse(rawUser);
 
-      return (
-        user?.id ||
-        user?.user_id ||
-        user?.userId ||
-        null
-      );
+      return user?.id || user?.user_id || user?.userId || null;
     } catch (error) {
       console.error("getUserId error:", error);
       return null;
@@ -82,15 +77,12 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
         setAccounts(normalized);
 
         const firstValid = normalized.find(
-          (acc) =>
-            String(acc.status || "").toLowerCase() !== "failed"
+          (acc) => String(acc.status || "").toLowerCase() !== "failed"
         );
 
         console.log("FIRST VALID ACCOUNT:", firstValid);
 
-        setSelectedAccount(
-          firstValid?.id ? String(firstValid.id) : ""
-        );
+        setSelectedAccount(firstValid?.id ? String(firstValid.id) : "");
       } catch (error) {
         console.error("fetchAccounts error:", error);
         setAccounts([]);
@@ -108,8 +100,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
   }, [isOpen]);
 
   const validAccounts = accounts.filter(
-    (acc) =>
-      String(acc.status || "").toLowerCase() !== "failed"
+    (acc) => String(acc.status || "").toLowerCase() !== "failed"
   );
 
   const handleSubmit = async (e) => {
@@ -183,10 +174,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
       if (result.success) {
         setType("success");
 
-        setMessage(
-          result.message ||
-            "Payout request submitted successfully"
-        );
+        setMessage(result.message || "Payout request submitted successfully");
 
         setAmount("");
         setSelectedAccount("");
@@ -201,9 +189,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
       } else {
         setType("error");
 
-        setMessage(
-          result.message || "Something went wrong"
-        );
+        setMessage(result.message || "Something went wrong");
       }
     } catch (error) {
       console.error("submit payout error:", error);
@@ -218,16 +204,16 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-md border border-gray-800 text-white">
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-semibold">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0B0F19]/95 p-6 text-[#F3EFE6] backdrop-blur-xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-serif text-xl font-semibold tracking-tight">
             Request Payout
           </h2>
 
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="rounded-lg p-1.5 text-[#5B6B82] transition hover:bg-white/[0.06] hover:text-[#F3EFE6]"
           >
             <X size={20} />
           </button>
@@ -235,10 +221,10 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
 
         {message && (
           <div
-            className={`mb-4 p-3 rounded-lg text-sm ${
+            className={`mb-4 rounded-lg p-3 text-sm ${
               type === "success"
-                ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                : "bg-red-500/10 text-red-400 border border-red-500/20"
+                ? "bg-emerald-400/10 text-emerald-300 ring-1 ring-inset ring-emerald-400/30"
+                : "bg-red-400/10 text-red-300 ring-1 ring-inset ring-red-400/30"
             }`}
           >
             {message}
@@ -246,21 +232,18 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
         )}
 
         {!hasPaymentDetails ? (
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+          <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-4">
             <div className="flex items-start gap-2">
-              <CircleAlert
-                size={18}
-                className="text-yellow-400 mt-0.5"
-              />
+              <CircleAlert size={18} className="mt-0.5 shrink-0 text-amber-300" />
 
               <div>
-                <p className="text-sm text-yellow-200">
+                <p className="text-sm text-amber-200">
                   No bank details found in your profile.
                 </p>
 
                 <Link
                   to="/profile"
-                  className="inline-block mt-3 px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-sm font-medium"
+                  className="mt-3 inline-block rounded-lg bg-amber-400/15 px-4 py-2 text-sm font-medium text-amber-200 ring-1 ring-inset ring-amber-400/30 transition hover:bg-amber-400/25"
                 >
                   Add Bank Details
                 </Link>
@@ -268,60 +251,51 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
             </div>
           </div>
         ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4"
-          >
-            <div className="bg-gray-800 rounded-xl p-4 space-y-2 text-sm">
-              <p className="text-gray-400">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-4 font-mono text-sm">
+              <p className="text-[0.65rem] uppercase tracking-[0.15em] text-[#5B6B82]">
                 Saved Bank Details
               </p>
 
-              <p>
+              <p className="text-[#93A0B4]">
                 Account Name:{" "}
-                <span className="text-white">
+                <span className="text-[#F3EFE6]">
                   {paymentDetails.account_name}
                 </span>
               </p>
 
-              <p>
+              <p className="text-[#93A0B4]">
                 Bank Name:{" "}
-                <span className="text-white">
+                <span className="text-[#F3EFE6]">
                   {paymentDetails.bank_name}
                 </span>
               </p>
 
-              <p>
+              <p className="text-[#93A0B4]">
                 Account Number:{" "}
-                <span className="text-white">
+                <span className="text-[#F3EFE6]">
                   {paymentDetails.account_number}
                 </span>
               </p>
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
+              <label className="mb-2 block text-sm text-[#93A0B4]">
                 Select Trading Account
               </label>
 
               <select
                 value={selectedAccount}
                 onChange={(e) => {
-                  console.log(
-                    "dropdown changed to:",
-                    e.target.value
-                  );
+                  console.log("dropdown changed to:", e.target.value);
 
                   setSelectedAccount(e.target.value);
                 }}
-                className="w-full bg-gray-800 p-3 rounded-lg outline-none text-white border border-gray-700"
+                className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-[#F3EFE6] outline-none transition focus:border-[#38BDF8]/50 focus:ring-1 focus:ring-[#38BDF8]/30 disabled:opacity-50"
                 required
-                disabled={
-                  loadingAccounts ||
-                  validAccounts.length === 0
-                }
+                disabled={loadingAccounts || validAccounts.length === 0}
               >
-                <option value="">
+                <option value="" className="bg-[#0B0F19]">
                   Select trading account
                 </option>
 
@@ -329,27 +303,26 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
                   <option
                     key={acc.id}
                     value={String(acc.id)}
+                    className="bg-[#0B0F19]"
                   >
-                    Account ID: {acc.id} | Phase:{" "}
-                    {acc.phase || "N/A"} | Status:{" "}
-                    {acc.status || "N/A"}
+                    Account ID: {acc.id} | Phase: {acc.phase || "N/A"} |
+                    Status: {acc.status || "N/A"}
                   </option>
                 ))}
               </select>
 
               {loadingAccounts && (
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="mt-2 font-mono text-xs text-[#5B6B82]">
                   Loading accounts...
                 </p>
               )}
 
-              {!loadingAccounts &&
-                validAccounts.length === 0 && (
-                  <p className="text-xs text-red-400 mt-2">
-                    No eligible accounts available.
-                    Failed accounts cannot request payout.
-                  </p>
-                )}
+              {!loadingAccounts && validAccounts.length === 0 && (
+                <p className="mt-2 text-xs text-red-300">
+                  No eligible accounts available. Failed accounts cannot
+                  request payout.
+                </p>
+              )}
             </div>
 
             <input
@@ -357,23 +330,17 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
               placeholder="Enter payout amount (₦)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-gray-800 p-3 rounded-lg outline-none text-white border border-gray-700"
+              className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-[#F3EFE6] outline-none transition placeholder:text-[#5B6B82] focus:border-[#38BDF8]/50 focus:ring-1 focus:ring-[#38BDF8]/30 disabled:opacity-50"
               required
               disabled={validAccounts.length === 0}
             />
 
             <button
               type="submit"
-              disabled={
-                loading ||
-                loadingAccounts ||
-                validAccounts.length === 0
-              }
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-medium"
+              disabled={loading || loadingAccounts || validAccounts.length === 0}
+              className="w-full rounded-lg bg-emerald-400/15 py-3 font-medium text-emerald-200 ring-1 ring-inset ring-emerald-400/30 transition-all duration-200 hover:bg-emerald-400/25 hover:shadow-[0_0_24px_rgba(52,211,153,0.15)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
             >
-              {loading
-                ? "Submitting..."
-                : "Submit Request"}
+              {loading ? "Submitting..." : "Submit Request"}
             </button>
           </form>
         )}

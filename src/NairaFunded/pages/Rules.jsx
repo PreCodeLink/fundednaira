@@ -94,7 +94,7 @@ const Rules = () => {
 
     {
       title: "Profit Split",
-      value: "80% Trader / 20% Firm",
+      value: "100% Trader",
     },
 
     {
@@ -120,75 +120,153 @@ const Rules = () => {
 
         <div className="relative max-w-7xl mx-auto">
           {/* HERO */}
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 text-sky-400 px-5 py-2 rounded-full text-sm font-medium">
-              <FaCheckCircle />
-              Simple Prop Trading Rules
-            </div>
 
-            <h1 className="mt-6 text-5xl md:text-7xl font-bold leading-tight">
-              Trading Rules
-            </h1>
+<div className="relative overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-br from-slate-900 via-[#081120] to-[#050816] px-6 py-16 md:px-12 md:py-24">
 
-            <p className="mt-6 text-gray-400 max-w-3xl mx-auto text-lg leading-8">
-              The prop firm with just 2 simple rules. We removed the
-              noise from traditional prop trading so you can focus on
-              getting funded and paid.
+  {/* Background Glow */}
+  <div className="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-sky-500/20 blur-[120px]" />
+  <div className="absolute -right-32 bottom-0 h-72 w-72 rounded-full bg-cyan-500/20 blur-[120px]" />
+
+  {/* Grid */}
+  <div className="relative grid items-center gap-16 lg:grid-cols-2">
+
+    {/* LEFT */}
+
+    <div>
+
+      <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-5 py-2 text-sm text-sky-300">
+
+        <FaCheckCircle />
+
+        Trusted by Nigerian Traders
+
+      </div>
+
+      <h1 className="mt-8 text-5xl font-black leading-none md:text-7xl">
+
+        Trade With
+
+        <br />
+
+        <span className="bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">
+
+          Simple Rules
+
+        </span>
+
+      </h1>
+
+      <p className="mt-8 max-w-xl text-lg leading-8 text-slate-400">
+
+        No confusing restrictions.
+
+        No daily drawdown.
+
+        Just simple trading rules designed to help you become a funded trader and receive payouts quickly.
+
+      </p>
+
+      <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+
+        <Link
+          to="/auth"
+          className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-sky-400 px-8 py-4 font-semibold text-black transition hover:scale-105"
+        >
+
+          Buy Challenge
+
+          <FaArrowRight className="transition group-hover:translate-x-1" />
+
+        </Link>
+
+        <Link
+          to="/buy-acc"
+          className="rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-center transition hover:border-sky-400/40 hover:bg-white/10"
+        >
+
+          View Plans
+
+        </Link>
+
+      </div>
+
+    </div>
+
+    {/* RIGHT */}
+
+    <div>
+
+      <div className="rounded-[32px] border border-sky-500/20 bg-white/5 p-8 backdrop-blur-xl">
+
+        <div className="mb-8 flex items-center gap-3">
+
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-400">
+
+            <FaShieldAlt size={30} />
+
+          </div>
+
+          <div>
+
+            <p className="text-slate-400">
+
+              Trading Challenge
+
             </p>
+
+            <h2 className="text-3xl font-bold">
+
+              FundedNaira
+
+            </h2>
+
           </div>
 
-          {/* QUICK STATS */}
-          <div className="mt-20 grid grid-cols-2 md:grid-cols-5 gap-5">
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center backdrop-blur">
-              <h3 className="text-3xl font-bold text-sky-400">
-                10%
-              </h3>
+        </div>
 
-              <p className="text-gray-400 mt-2 text-sm">
-                Profit Target
-              </p>
+        <div className="space-y-5">
+
+          {[
+            ["Profit Target", "10%"],
+            ["Maximum Drawdown", "20%"],
+            ["Daily Drawdown", "None"],
+            ["Minimum Trading Days", "No Minimum"],
+            ["Profit Split", "100%"],
+            ["Payout Time", "Within 5 Minutes"],
+          ].map(([title, value]) => (
+
+            <div
+              key={title}
+              className="flex items-center justify-between rounded-2xl border border-white/5 bg-[#0f172a] px-5 py-4"
+            >
+
+              <span className="text-slate-400">
+
+                {title}
+
+              </span>
+
+              <span className="font-bold text-sky-400">
+
+                {value}
+
+              </span>
+
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center backdrop-blur">
-              <h3 className="text-3xl font-bold text-sky-400">
-                20%
-              </h3>
+          ))}
 
-              <p className="text-gray-400 mt-2 text-sm">
-                Overall Max DD
-              </p>
-            </div>
+        </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center backdrop-blur">
-              <h3 className="text-3xl font-bold text-sky-400">
-                No
-              </h3>
+      </div>
 
-              <p className="text-gray-400 mt-2 text-sm">
-                Daily DD
-              </p>
-            </div>
+    </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center backdrop-blur">
-              <h3 className="text-3xl font-bold text-sky-400">
-                5 Days
-              </h3>
+  </div>
 
-              <p className="text-gray-400 mt-2 text-sm">
-                Activity Rule
-              </p>
-            </div>
+</div>
 
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center backdrop-blur">
-              <h3 className="text-3xl font-bold text-sky-400">
-                5 Min
-              </h3>
 
-              <p className="text-gray-400 mt-2 text-sm">
-                Instant Payout
-              </p>
-            </div>
-          </div>
 
           {/* FAST PAYOUT */}
           <div className="mt-16 bg-gradient-to-r from-sky-500/10 to-purple-500/10 border border-white/10 rounded-3xl p-8 md:p-10">
@@ -246,153 +324,473 @@ const Rules = () => {
               </button>
             </div>
 
-            {/* RULES TAB */}
-            {activeTab === "rules" && (
-              <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {rulesData.map((rule, index) => (
-                  <div
-                    key={index}
-                    className="bg-white/5 border border-white/10 rounded-3xl p-7 backdrop-blur hover:border-sky-400/40 transition"
-                  >
-                    <div className="w-14 h-14 rounded-2xl bg-sky-500/10 flex items-center justify-center text-sky-400 text-2xl mb-5">
-                      {rule.icon}
-                    </div>
+           {/* RULES TAB */}
+{activeTab === "rules" && (
+  <div className="mt-16">
 
-                    <h3 className="text-xl font-semibold">
-                      {rule.title}
-                    </h3>
+    {/* Section Heading */}
+    <div className="text-center max-w-3xl mx-auto mb-14">
+      <span className="inline-flex px-4 py-2 rounded-full border border-sky-400/20 bg-sky-500/10 text-sky-300 text-sm font-medium">
+        Trading Rules
+      </span>
 
-                    <div className="mt-3 text-gray-400 leading-7 text-sm">
-                      {rule.desc}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-    {/* HOW IT WORKS TAB */}
-{activeTab === "how" && (
-  <div className="mt-14">
-    <div className="text-center">
-      <div className="inline-flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 text-sky-400 px-5 py-2 rounded-full text-sm font-medium">
-        🚀 Simple Trader Journey
-      </div>
-
-      <h2 className="mt-6 text-4xl font-bold">
-        Buy, Trade, Pass, Verify & Withdraw
+      <h2 className="mt-5 text-4xl md:text-5xl font-bold">
+        Everything You Need
+        <span className="text-sky-400"> To Stay Funded</span>
       </h2>
+
+      <p className="mt-5 text-gray-400 leading-8">
+        We've simplified prop trading with only a few important rules.
+        Follow these guidelines to protect your account and receive payouts.
+      </p>
     </div>
 
-    <div className="mt-12 grid gap-6 md:grid-cols-2">
-      {[
-        "Buy an account to trade any pair or commodity.",
-        "Hit 10% profit, migrate to the next phase.",
-        "Pass KYC with just your bank account number.",
-        "Request payout and keep trading with confidence.",
-      ].map((step, index) => (
+    {/* Cards */}
+    <div className="grid lg:grid-cols-2 gap-8">
+
+      {rulesData.map((rule, index) => (
         <div
           key={index}
-          className="bg-white/5 border border-white/10 rounded-3xl p-6"
+          className="
+          group
+          relative
+          overflow-hidden
+          rounded-[30px]
+          border border-white/10
+          bg-gradient-to-br
+          from-white/[0.06]
+          to-white/[0.02]
+          backdrop-blur-xl
+          p-8
+          hover:border-sky-400/40
+          hover:-translate-y-2
+          transition-all
+          duration-500
+        "
         >
-          <div className="w-12 h-12 rounded-xl bg-sky-400 text-black flex items-center justify-center font-bold text-lg">
-            {index + 1}
+
+          {/* Glow */}
+          <div className="absolute -top-16 -right-16 w-40 h-40 bg-sky-500/10 blur-3xl rounded-full group-hover:bg-sky-500/20 transition"></div>
+
+          {/* Number */}
+          <div className="absolute top-6 right-6 text-6xl font-black text-white/5">
+            0{index + 1}
           </div>
 
-          <p className="mt-5 text-lg text-gray-300">
-            {step}
-          </p>
+          {/* Icon */}
+          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-black text-2xl shadow-xl">
+            {rule.icon}
+          </div>
+
+          {/* Title */}
+          <h3 className="mt-8 text-2xl font-bold">
+            {rule.title}
+          </h3>
+
+          {/* Line */}
+          <div className="mt-4 h-px w-20 bg-gradient-to-r from-sky-400 to-transparent"></div>
+
+          {/* Description */}
+          <div className="mt-6 text-gray-400 leading-8">
+            {rule.desc}
+          </div>
+
         </div>
       ))}
+
     </div>
 
-    {/* Phase 2 */}
-    <div className="mt-12 bg-white/5 border border-white/10 rounded-3xl p-8">
-      <h3 className="text-3xl font-bold">
-        ✅ Phase 2 / Funded
+    {/* Bottom Notice */}
+    <div className="mt-16 rounded-[28px] border border-sky-500/20 bg-gradient-to-r from-sky-500/10 to-cyan-500/10 p-8 text-center">
+
+      <h3 className="text-2xl font-bold">
+        Trade Like a Professional
       </h3>
 
-      <p className="mt-4 text-gray-400 leading-8">
-        Hit 10% profit target and stay within the
-        20% max drawdown to progress.
-        Each new phase gives you fresh login details,
-        resetting your drawdown and scalping count to zero.
+      <p className="mt-4 max-w-3xl mx-auto text-gray-300 leading-8">
+        Every rule is designed to help you develop consistent trading habits,
+        manage risk properly, and qualify for fast payouts without unnecessary restrictions.
       </p>
+
     </div>
 
-    {/* Inactive Rule */}
-    <div className="mt-8 bg-white/5 border border-white/10 rounded-3xl p-8">
-      <h3 className="text-3xl font-bold">
-        🪪 Inactive Rule
-      </h3>
-
-      <p className="mt-4 text-gray-400 leading-8">
-        Place at least <strong>one trade every 5 days</strong>
-        to keep your account active.
-        This is not a NairaTrader rule; inactive accounts
-        may be removed by the broker.
-      </p>
-    </div>
   </div>
 )}
-          {/* PAYOUT TAB */}
-{activeTab === "payout" && (
-  <div className="mt-14">
-    <div className="text-center">
-      <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 text-green-400 px-5 py-2 rounded-full text-sm font-medium">
-        💰 Payout Policy
-      </div>
+          </div>
+{/* HOW IT WORKS TAB */}
+{activeTab === "how" && (
+  <div className="mt-16">
 
-      <h2 className="mt-6 text-4xl font-bold">
-        Designed to keep withdrawals clear,
-        simple and fair
+    {/* Header */}
+    <div className="text-center max-w-3xl mx-auto">
+
+      <span className="inline-flex px-4 py-2 rounded-full border border-sky-400/20 bg-sky-500/10 text-sky-300 text-sm font-medium">
+        Trading Journey
+      </span>
+
+      <h2 className="mt-5 text-4xl md:text-5xl font-bold">
+        From Purchase
+        <span className="text-sky-400"> to Your First Payout</span>
       </h2>
+
+      <p className="mt-5 text-gray-400 leading-8">
+        Getting funded is simple. Complete each milestone and start
+        earning real payouts.
+      </p>
+
     </div>
 
-    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {/* Timeline */}
+
+    <div className="relative mt-20 max-w-5xl mx-auto">
+
+      {/* Vertical Line */}
+      <div className="absolute left-7 top-0 bottom-0 w-[2px] bg-gradient-to-b from-sky-400 via-cyan-500 to-transparent"></div>
+
       {[
         {
-          title: "Minimum Payout",
-          value: "10% Profit",
+          title: "Purchase an Account",
+          desc: "Choose the account size that matches your trading experience and objectives.",
+          icon: "🛒",
         },
         {
-          title: "Maximum Payout Cap",
-          value: "50% Profit",
+          title: "Trade & Reach 10%",
+          desc: "Trade responsibly and hit the required profit target while respecting all trading rules.",
+          icon: "📈",
+        },
+        {
+          title: "Complete Verification",
+          desc: "Verify your identity with your bank account details and complete the KYC process.",
+          icon: "🛡️",
+        },
+        {
+          title: "Receive Your Funded Account",
+          desc: "You'll receive fresh MT5 credentials and begin trading funded capital.",
+          icon: "💼",
+        },
+        {
+          title: "Request Your Payout",
+          desc: "Withdraw your profit quickly with our fast payout processing system.",
+          icon: "💰",
+        },
+      ].map((step, index) => (
+
+        <div
+          key={index}
+          className="relative flex gap-8 pb-12 group"
+        >
+
+          {/* Circle */}
+
+          <div className="relative z-10 w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-2xl shadow-xl group-hover:scale-110 transition">
+
+            {step.icon}
+
+          </div>
+
+          {/* Card */}
+
+          <div className="flex-1 rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-xl p-7 hover:border-sky-400/40 hover:-translate-y-1 transition">
+
+            <div className="flex items-center justify-between">
+
+              <h3 className="text-2xl font-bold">
+                {step.title}
+              </h3>
+
+              <span className="text-sky-400 font-bold">
+                0{index + 1}
+              </span>
+
+            </div>
+
+            <p className="mt-5 text-gray-400 leading-8">
+              {step.desc}
+            </p>
+
+          </div>
+
+        </div>
+
+      ))}
+
+    </div>
+
+    {/* Success Banner */}
+
+    <div className="mt-20 rounded-[32px] overflow-hidden border border-green-500/20 bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-cyan-500/10">
+
+      <div className="p-10 md:p-14 text-center">
+
+        <div className="text-6xl">
+          🎉
+        </div>
+
+        <h3 className="mt-6 text-4xl font-bold">
+          Congratulations!
+        </h3>
+
+        <p className="mt-6 max-w-3xl mx-auto text-gray-300 leading-8">
+          After completing the challenge and passing verification,
+          you'll become an official FundedNaira trader with access
+          to funded capital and fast profit withdrawals.
+        </p>
+
+        <div className="mt-10 flex flex-wrap justify-center gap-4">
+
+          <div className="px-6 py-4 rounded-2xl bg-black/20 border border-white/10">
+            <p className="text-gray-400 text-sm">
+              Profit Target
+            </p>
+
+            <h4 className="mt-2 text-2xl font-bold text-sky-400">
+              10%
+            </h4>
+          </div>
+
+          <div className="px-6 py-4 rounded-2xl bg-black/20 border border-white/10">
+            <p className="text-gray-400 text-sm">
+              Max Drawdown
+            </p>
+
+            <h4 className="mt-2 text-2xl font-bold text-sky-400">
+              20%
+            </h4>
+          </div>
+
+          <div className="px-6 py-4 rounded-2xl bg-black/20 border border-white/10">
+            <p className="text-gray-400 text-sm">
+              Payout Time
+            </p>
+
+            <h4 className="mt-2 text-2xl font-bold text-green-400">
+              5 Minutes
+            </h4>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
+{/* PAYOUT TAB */}
+{activeTab === "payout" && (
+  <div className="mt-16">
+
+    {/* Header */}
+
+    <div className="text-center max-w-3xl mx-auto">
+
+      <span className="inline-flex items-center px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium">
+        💸 Fast Withdrawals
+      </span>
+
+      <h2 className="mt-6 text-4xl md:text-5xl font-bold">
+        Get Paid
+        <span className="text-green-400"> Fast & Securely</span>
+      </h2>
+
+      <p className="mt-5 text-gray-400 leading-8">
+        We believe traders deserve quick withdrawals.
+        Our payout system is designed to be transparent,
+        reliable and simple.
+      </p>
+
+    </div>
+
+    {/* Metrics */}
+
+    <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mt-16">
+
+      {[
+        {
+          title: "Minimum Profit",
+          value: "10%",
+          icon: "📈",
+          color: "green",
+        },
+        {
+          title: "Maximum Cap",
+          value: "50%",
+          icon: "🚀",
+          color: "blue",
         },
         {
           title: "Profit Split",
-          value: "80% Trader / 20% NairaTrader",
+          value: "100%",
+          icon: "💰",
+          color: "yellow",
         },
         {
-          title: "Processing Time",
-          value: "Within 12 Hours",
+          title: "Processing",
+          value: "12 Hours",
+          icon: "⚡",
+          color: "purple",
         },
       ].map((item, index) => (
+
         <div
           key={index}
-          className="bg-white/5 border border-white/10 rounded-3xl p-6 text-center"
+          className="group rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-xl p-7 hover:-translate-y-2 hover:border-green-400/30 transition"
         >
-          <h3 className="text-gray-400 text-sm">
+
+          <div
+            className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl
+            ${
+              item.color === "green"
+                ? "bg-green-500/15"
+                : item.color === "blue"
+                ? "bg-sky-500/15"
+                : item.color === "yellow"
+                ? "bg-yellow-500/15"
+                : "bg-purple-500/15"
+            }`}
+          >
+            {item.icon}
+          </div>
+
+          <p className="mt-8 text-gray-400">
             {item.title}
+          </p>
+
+          <h3 className="mt-2 text-4xl font-bold">
+            {item.value}
           </h3>
 
-          <p className="mt-3 text-2xl font-bold text-sky-400">
-            {item.value}
-          </p>
         </div>
+
       ))}
+
     </div>
 
-    <div className="mt-10 bg-yellow-500/10 border border-yellow-500/20 rounded-3xl p-8">
-      <h3 className="text-2xl font-bold text-yellow-400">
-        Important Note
-      </h3>
+    {/* Split Card */}
 
-      <p className="mt-4 text-gray-300 leading-8">
-        Earning above the maximum profit limit is
-        not a breach. Profits above the cap may be
-        removed during payout processing.
-      </p>
+    <div className="mt-20 grid lg:grid-cols-2 gap-8">
+
+      <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-green-500/10 to-emerald-500/5 p-10">
+
+        <p className="text-green-400 font-semibold">
+          PROFIT DISTRIBUTION
+        </p>
+
+        <h2 className="mt-5 text-5xl font-black">
+          100%
+        </h2>
+
+        <p className="text-2xl mt-2">
+          Goes To You
+        </p>
+
+        <div className="mt-8 h-4 rounded-full bg-white/10 overflow-hidden">
+
+          <div className="h-full w-4/5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+
+        </div>
+
+        <p className="mt-8 text-gray-400 leading-8">
+          Keep the majority of your trading profits while we provide
+          the capital and infrastructure.
+        </p>
+
+      </div>
+
+      <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-sky-500/10 to-cyan-500/5 p-10">
+
+        <p className="text-sky-400 font-semibold">
+          PAYOUT POLICY
+        </p>
+
+        <div className="space-y-5 mt-8">
+
+          {[
+            "Minimum payout starts from 10% profit.",
+            "Maximum payout cap is 50% profit.",
+            "Withdrawals processed within 12 hours.",
+            "Payments sent directly to your bank account.",
+            "Fast approval after verification.",
+          ].map((item, i) => (
+
+            <div
+              key={i}
+              className="flex gap-4 items-start"
+            >
+
+              <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-black text-sm font-bold">
+                ✓
+              </div>
+
+              <p className="text-gray-300">
+                {item}
+              </p>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
     </div>
+
+    {/* Warning */}
+
+    <div className="mt-20 rounded-[32px] border border-yellow-500/20 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 p-10">
+
+      <div className="flex items-start gap-6">
+
+        <div className="text-5xl">
+          ⚠️
+        </div>
+
+        <div>
+
+          <h3 className="text-3xl font-bold text-yellow-300">
+            Important Notice
+          </h3>
+
+          <p className="mt-5 text-gray-300 leading-8">
+            Making more than the payout cap is <strong>not a rule violation.</strong>
+            During payout processing, any profit above the current maximum payout
+            limit may be removed according to our payout policy.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    {/* CTA */}
+
+    <div className="mt-20 rounded-[40px] bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 p-[1px]">
+
+      <div className="rounded-[40px] bg-[#081018] px-10 py-16 text-center">
+
+        <h2 className="text-5xl font-bold">
+          Ready To Get Paid?
+        </h2>
+
+        <p className="mt-6 max-w-2xl mx-auto text-gray-400 leading-8">
+          Complete your trading challenge, stay within the rules,
+          and enjoy one of the fastest payout systems available.
+        </p>
+
+        <Link
+          to="/buy-acc"
+          className="inline-flex items-center gap-3 mt-10 px-8 py-4 rounded-2xl bg-green-500 hover:bg-green-400 text-black font-bold transition"
+        >
+          Start Trading
+          <FaArrowRight />
+        </Link>
+
+      </div>
+
+    </div>
+
   </div>
 )}
          {/* RISK DETAILS TAB */}

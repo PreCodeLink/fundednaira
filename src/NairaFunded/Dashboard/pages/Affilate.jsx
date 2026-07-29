@@ -33,32 +33,14 @@ const Affiliate = () => {
   });
 
   const rewards = [
-  {
-    id: 1,
-    account: "₦200K Account",
-    size: "200000",
-    required: 5,
-  },
-  {
-    id: 2,
-    account: "₦400K Account",
-    size: "400000",
-    required: 10,
-  },
-  {
-    id: 3,
-    account: "₦600K Account",
-    size: "600000",
-    required: 15,
-  },
-  {
-    id: 4,
-    account: "₦800K Account",
-    size: "800000",
-    required: 20,
-  },
-];
-   const [transactions, setTransactions] = useState([]);
+    { id: 1, account: "₦200K Account", size: "200000", required: 5 },
+    { id: 2, account: "₦400K Account", size: "400000", required: 10 },
+    { id: 3, account: "₦600K Account", size: "600000", required: 15 },
+    { id: 4, account: "₦800K Account", size: "800000", required: 20 },
+  ];
+
+  const [transactions, setTransactions] = useState([]);
+
   const getUserId = () => {
     try {
       const rawUser = localStorage.getItem("user");
@@ -95,39 +77,22 @@ const Affiliate = () => {
         }
 
         if (!data.success) {
-          console.error(
-            "Affiliate fetch failed:",
-            data.message
-          );
+          console.error("Affiliate fetch failed:", data.message);
           return;
         }
 
-        setReferralCode(
-          data.affiliate?.referral_code || ""
-        );
+        setReferralCode(data.affiliate?.referral_code || "");
 
         setStats({
-          invitedUsers:
-            data.affiliate?.invitedUsers || 0,
-
-          accountEarned:
-            data.affiliate?.accountEarned || 0,
-
-          referralBalance:
-            data.affiliate?.referral_balance || 0,  
+          invitedUsers: data.affiliate?.invitedUsers || 0,
+          accountEarned: data.affiliate?.accountEarned || 0,
+          referralBalance: data.affiliate?.referral_balance || 0,
         });
-        setTransactions(
-        data.affiliate?.transactions || []
-      );
-        setClaimed(
-          data.affiliate?.claimedRewards || []
-        );
+        setTransactions(data.affiliate?.transactions || []);
+        setClaimed(data.affiliate?.claimedRewards || []);
       })
       .catch((error) => {
-        console.error(
-          "Affiliate fetch error:",
-          error
-        );
+        console.error("Affiliate fetch error:", error);
       })
       .finally(() => {
         setLoading(false);
@@ -153,24 +118,20 @@ const Affiliate = () => {
 
     try {
       await navigator.clipboard.writeText(
-  `https://www.fundednaira.net/auth?ref=${referralCode}`
-);
-
-      setMessage(
-        "Referral link copied successfully"
+        `https://www.fundednaira.net/auth?ref=${referralCode}`
       );
+
+      setMessage("Referral link copied successfully");
     } catch {
       setError("Failed to copy referral link");
     }
   };
 
   const handleClaim = async (reward) => {
-  const userId = getUserId();
+    const userId = getUserId();
 
-  try {
-    const res = await fetch(
-      `${API_BASE}/claim-affiliate-account.php`,
-      {
+    try {
+      const res = await fetch(`${API_BASE}/claim-affiliate-account.php`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -179,104 +140,98 @@ const Affiliate = () => {
           user_id: userId,
           size: reward.size,
         }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        setError(data.message);
+        return;
       }
-    );
 
-    const data = await res.json();
+      setClaimed((prev) => [...prev, reward.account]);
 
-    if (!data.success) {
-      setError(data.message);
+      setMessage(data.message);
+
+      if (data.status === "claimed") {
+        setMessage(`Account claimed successfully.`);
+      }
+    } catch (err) {
+      console.log(err);
+      setError("Server error. Please try again.");
+    }
+  };
+
+  const handleWithdraw = async () => {
+    const userId = getUserId();
+
+    if (
+      !withdrawData.account_name ||
+      !withdrawData.account_number ||
+      !withdrawData.bank_name ||
+      !withdrawData.amount
+    ) {
+      setError("Please fill all fields");
       return;
     }
 
-    setClaimed((prev) => [
-      ...prev,
-      reward.account,
-    ]);
-
-    setMessage(data.message);
-
-    if (data.status === "claimed") {
-      setMessage(
-        `Account claimed successfully.`
-      );
+    if (Number(withdrawData.amount) > Number(stats.referralBalance)) {
+      setError("Insufficient balance");
+      return;
     }
-  } catch (err) {
-    console.log(err);
-    setError("Server error. Please try again.");
-  }
-};
-
- const handleWithdraw = async () => {
-  const userId = getUserId();
-
-  if (
-    !withdrawData.account_name ||
-    !withdrawData.account_number ||
-    !withdrawData.bank_name ||
-    !withdrawData.amount
-  ) {
-    setError("Please fill all fields");
-    return;
-  }
-
-  if (Number(withdrawData.amount) > Number(stats.referralBalance)) {
-    setError("Insufficient balance");
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/request-withdrawal.php`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userId,
-        account_name: withdrawData.account_name,
-        account_number: withdrawData.account_number,
-        bank_name: withdrawData.bank_name,
-        amount: withdrawData.amount,
-      }),
-    });
-
-    const text = await res.text();
-    let data;
 
     try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.log("RAW RESPONSE:", text);
-      setError("Server returned invalid response");
-      return;
+      const res = await fetch(`${API_BASE}/request-withdrawal.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          account_name: withdrawData.account_name,
+          account_number: withdrawData.account_number,
+          bank_name: withdrawData.bank_name,
+          amount: withdrawData.amount,
+        }),
+      });
+
+      const text = await res.text();
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.log("RAW RESPONSE:", text);
+        setError("Server returned invalid response");
+        return;
+      }
+
+      if (!data.success) {
+        setError(data.message || "Withdrawal failed");
+        return;
+      }
+
+      setMessage("Withdrawal request submitted");
+
+      setStats((prev) => ({
+        ...prev,
+        referralBalance:
+          Number(prev.referralBalance) - Number(withdrawData.amount),
+      }));
+
+      setWithdrawData({
+        account_name: "",
+        account_number: "",
+        bank_name: "",
+        amount: "",
+      });
+
+      setShowWithdrawModal(false);
+    } catch (err) {
+      console.log(err);
+      setError("Network error");
     }
-
-    if (!data.success) {
-      setError(data.message || "Withdrawal failed");
-      return;
-    }
-
-    setMessage("Withdrawal request submitted");
-
-    setStats((prev) => ({
-      ...prev,
-      referralBalance:
-        Number(prev.referralBalance) - Number(withdrawData.amount),
-    }));
-
-    setWithdrawData({
-      account_name: "",
-      account_number: "",
-      bank_name: "",
-      amount: "",
-    });
-
-    setShowWithdrawModal(false);
-  } catch (err) {
-    console.log(err);
-    setError("Network error");
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -284,8 +239,13 @@ const Affiliate = () => {
         <div className="flex pt-16">
           <Sidebar />
 
-          <div className="flex-1 p-6 md:p-10 bg-gray-950 min-h-screen text-white flex items-center justify-center">
-            Loading affiliate dashboard...
+          <div className="flex flex-1 items-center justify-center bg-[#05070D] text-[#38BDF8]">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#38BDF8]/20 border-t-[#38BDF8]" />
+              <p className="font-mono text-xs uppercase tracking-[0.3em] text-[#5B6B82]">
+                Loading affiliate dashboard
+              </p>
+            </div>
           </div>
         </div>
       </Layout>
@@ -294,25 +254,40 @@ const Affiliate = () => {
 
   return (
     <Layout>
-      <div className="flex pt-16">
+      <div
+        className="relative flex min-h-screen pt-16"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56,189,248,0.12), transparent), #05070D",
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#38BDF8 1px, transparent 1px), linear-gradient(90deg, #38BDF8 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+
         <Sidebar />
 
-        <div className="flex-1 p-6 md:p-10 bg-gray-950 min-h-screen text-white">
+        <div className="relative z-10 mx-auto w-full flex-1 md:ml-72 space-y-6 p-4 text-[#F3EFE6] md:max-w-4xl md:p-6">
           <TopSection />
+
+          {/* ALERT MODAL */}
           {(message || error) && (
-            <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black/50 backdrop-blur-sm">
-              <div className="bg-[#111827] border border-gray-700 rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-xl">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0B0F19]/95 p-6 text-center backdrop-blur-xl">
                 <div
-                  className={`text-lg font-semibold mb-3 ${
-                    error
-                      ? "text-red-400"
-                      : "text-green-400"
+                  className={`mb-3 text-lg font-semibold ${
+                    error ? "text-red-300" : "text-emerald-300"
                   }`}
                 >
                   {error ? "Error" : "Success"}
                 </div>
 
-                <p className="text-gray-300 text-sm mb-5">
+                <p className="mb-5 text-sm text-[#93A0B4]">
                   {error || message}
                 </p>
 
@@ -321,7 +296,7 @@ const Affiliate = () => {
                     setMessage("");
                     setError("");
                   }}
-                  className="w-full bg-gradient-to-r from-blue-600 to-sky-400 py-2 rounded-lg text-white font-medium hover:opacity-90"
+                  className="w-full rounded-lg bg-[#38BDF8]/15 py-2 font-medium text-[#38BDF8] ring-1 ring-inset ring-[#38BDF8]/30 transition hover:bg-[#38BDF8]/25"
                 >
                   OK
                 </button>
@@ -329,241 +304,202 @@ const Affiliate = () => {
             </div>
           )}
 
-          <h1 className="text-3xl font-bold mb-8">
-            Affiliate Dashboard
-          </h1>
+          <div>
+            <p className="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-[#38BDF8]/70">
+              Growth
+            </p>
+            <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight md:text-3xl">
+              Affiliate Dashboard
+            </h1>
+          </div>
 
-          {/* Referral Code */}
+          {/* REFERRAL LINK */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl md:p-6">
+            <h2 className="mb-3 font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#5B6B82]">
+              Your Referral Link
+            </h2>
 
-          <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mb-8">
-           <h2 className="text-gray-400 mb-2">
-  Your Referral Link
-</h2>
-
-<div className="flex gap-3">
-  <input
-    value={`https://www.fundednaira.net/auth?ref=${referralCode}`}
-    readOnly
-    className="flex-1 bg-gray-800 p-3 rounded-lg"
-  />
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                value={`https://www.fundednaira.net/auth?ref=${referralCode}`}
+                readOnly
+                className="flex-1 rounded-lg border border-white/10 bg-white/[0.03] p-3 font-mono text-sm text-[#93A0B4] outline-none"
+              />
 
               <button
                 onClick={copyCode}
-                className="bg-blue-600 px-5 rounded-lg hover:bg-blue-700 transition"
+                className="rounded-lg bg-[#38BDF8]/15 px-5 py-3 text-sm font-medium text-[#38BDF8] ring-1 ring-inset ring-[#38BDF8]/30 transition hover:bg-[#38BDF8]/25"
               >
                 Copy
               </button>
             </div>
           </div>
 
-          {/* Stats */}
-
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
-            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-              <p className="text-gray-400">
+          {/* STATS */}
+          <div className="grid gap-4 md:grid-cols-3 md:gap-5">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl">
+              <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[#5B6B82]">
                 Invited Users
               </p>
-
-              <h3 className="text-2xl font-bold">
+              <h3 className="mt-2 font-mono text-2xl font-semibold text-[#F3EFE6]">
                 {stats.invitedUsers}
               </h3>
             </div>
 
-            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-              <p className="text-gray-400">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl">
+              <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[#5B6B82]">
                 Total Account Earned
               </p>
-
-              <h3 className="text-2xl font-bold text-green-500">
+              <h3 className="mt-2 font-mono text-2xl font-semibold text-emerald-300">
                 {stats.accountEarned}
               </h3>
             </div>
 
-            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-              <p className="text-gray-400">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl">
+              <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[#5B6B82]">
                 Referral Balance
               </p>
-
-              <h3 className="text-2xl font-bold text-yellow-400">
+              <h3 className="mt-2 font-mono text-2xl font-semibold text-amber-300">
                 ₦{stats.referralBalance}
               </h3>
 
               <button
-                onClick={() =>
-                  setShowWithdrawModal(true)
-                }
-                className="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm"
+                onClick={() => setShowWithdrawModal(true)}
+                className="mt-4 rounded-lg bg-emerald-400/15 px-4 py-2 text-sm font-medium text-emerald-200 ring-1 ring-inset ring-emerald-400/30 transition hover:bg-emerald-400/25"
               >
                 Request Withdrawal
               </button>
             </div>
           </div>
 
-          {/* Rewards */}
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {/* REWARDS */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {rewards.map((reward) => {
-              const isUnlocked =
-                stats.invitedUsers >=
-                reward.required;
-
-              const isClaimed =
-                claimed.includes(
-                  reward.account
-                );
+              const isUnlocked = stats.invitedUsers >= reward.required;
+              const isClaimed = claimed.includes(reward.account);
 
               return (
                 <div
                   key={reward.id}
-                  className="bg-gray-900 p-6 rounded-2xl border border-gray-800"
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl"
                 >
-                  <h3 className="text-lg font-semibold">
+                  <h3 className="text-base font-semibold text-[#F3EFE6]">
                     {reward.account}
                   </h3>
 
-                  <p className="text-gray-400 text-sm mt-2">
+                  <p className="mt-2 text-xs text-[#93A0B4]">
                     Requires {reward.required} referrals
                   </p>
 
                   <div className="mt-4">
                     {isClaimed ? (
-                      <span className="text-green-400 text-sm">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
                         ✔ Claimed
                       </span>
                     ) : isUnlocked ? (
                       <button
-                        onClick={() =>
-                          handleClaim(reward)
-                        }
-                        className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm"
+                        onClick={() => handleClaim(reward)}
+                        className="rounded-lg bg-emerald-400/15 px-4 py-2 text-xs font-medium text-emerald-200 ring-1 ring-inset ring-emerald-400/30 transition hover:bg-emerald-400/25"
                       >
                         Claim
                       </button>
                     ) : (
-                      <span className="text-gray-500 text-sm">
-                        🔒 Locked
-                      </span>
+                      <span className="text-xs text-[#5B6B82]">🔒 Locked</span>
                     )}
                   </div>
 
-                  <div className="mt-4 bg-gray-800 rounded-full h-2">
+                  <div className="mt-4 h-1.5 rounded-full bg-white/[0.06]">
                     <div
-                      className="bg-blue-500 h-2 rounded-full"
+                      className="h-1.5 rounded-full bg-[#38BDF8] transition-all"
                       style={{
                         width: `${Math.min(
-                          (stats.invitedUsers /
-                            reward.required) *
-                            100,
+                          (stats.invitedUsers / reward.required) * 100,
                           100
                         )}%`,
                       }}
-                    ></div>
+                    />
                   </div>
                 </div>
               );
             })}
           </div>
-          {/* Referral Transactions */}
 
-<div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mb-10">
-  <div className="flex items-center justify-between mb-6">
-    <div>
-      <h2 className="text-2xl font-bold">
-        Referral Transactions
-      </h2>
+          {/* TRANSACTIONS */}
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl">
+            <div className="border-b border-white/[0.06] px-5 py-4 md:px-6">
+              <h2 className="text-lg font-semibold text-[#F3EFE6]">
+                Referral Transactions
+              </h2>
+              <p className="mt-1 text-sm text-[#93A0B4]">
+                All commissions earned from referrals
+              </p>
+            </div>
 
-      <p className="text-gray-400 text-sm mt-1">
-        All commissions earned from referrals
-      </p>
-    </div>
-  </div>
+            {transactions.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/[0.06] text-left font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#5B6B82]">
+                      <th className="px-4 py-3 md:px-6">Ref User</th>
+                      <th className="px-4 py-3">Purchase</th>
+                      <th className="px-4 py-3">Commission</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Date</th>
+                    </tr>
+                  </thead>
 
-  {transactions.length > 0 ? (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="border-b border-gray-800 text-gray-400">
-          <tr>
-            <th className="text-left py-3 px-4">
-              Ref User
-            </th>
+                  <tbody>
+                    {transactions.map((item, index) => (
+                      <tr
+                        key={index}
+                        className="border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]"
+                      >
+                        <td className="px-4 py-4 text-[#F3EFE6] md:px-6">
+                          {item.referred_name}
+                        </td>
 
-            <th className="text-left py-3 px-4">
-              Purchase
-            </th>
+                        <td className="px-4 py-4 font-mono font-medium text-[#38BDF8]">
+                          ₦{Number(item.purchase_amount).toLocaleString()}
+                        </td>
 
-            <th className="text-left py-3 px-4">
-              Commission
-            </th>
+                        <td className="px-4 py-4 font-mono font-semibold text-emerald-300">
+                          ₦{Number(item.commission).toLocaleString()}
+                        </td>
 
-            <th className="text-left py-3 px-4">
-              Status
-            </th>
+                        <td className="px-4 py-4">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${
+                              item.status === "paid"
+                                ? "bg-emerald-400/10 text-emerald-300 ring-1 ring-inset ring-emerald-400/30"
+                                : "bg-amber-400/10 text-amber-300 ring-1 ring-inset ring-amber-400/30"
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
 
-            <th className="text-left py-3 px-4">
-              Date
-            </th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {transactions.map((item, index) => (
-            <tr
-              key={index}
-              className="border-b border-gray-800 hover:bg-gray-800/40"
-            >
-              <td className="py-4 px-4">
-                {item.referred_name}
-              </td>
-
-              <td className="py-4 px-4 text-blue-400 font-medium">
-                ₦
-                {Number(
-                  item.purchase_amount
-                ).toLocaleString()}
-              </td>
-
-              <td className="py-4 px-4 text-green-400 font-semibold">
-                ₦
-                {Number(
-                  item.commission
-                ).toLocaleString()}
-              </td>
-
-              <td className="py-4 px-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs ${
-                    item.status === "paid"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-yellow-500/20 text-yellow-400"
-                  }`}
-                >
-                  {item.status}
-                </span>
-              </td>
-
-              <td className="py-4 px-4 text-gray-400">
-                {item.created_at}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ) : (
-    <div className="text-center py-10 text-gray-500">
-      No referral transactions found
-    </div>
-  )}
-</div>
+                        <td className="px-4 py-4 font-mono text-[#93A0B4]">
+                          {item.created_at}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-10 text-center font-mono text-xs text-[#5B6B82]">
+                No referral transactions found
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Withdraw Modal */}
-
+      {/* WITHDRAW MODAL */}
       {showWithdrawModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-900 w-[95%] max-w-md rounded-2xl border border-gray-800 p-6">
-            <h2 className="text-2xl font-bold mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0B0F19]/95 p-6 text-[#F3EFE6] backdrop-blur-xl">
+            <h2 className="mb-6 font-serif text-xl font-semibold tracking-tight">
               Withdrawal Request
             </h2>
 
@@ -571,49 +507,40 @@ const Affiliate = () => {
               <input
                 type="text"
                 placeholder="Account Name"
-                value={
-                  withdrawData.account_name
-                }
+                value={withdrawData.account_name}
                 onChange={(e) =>
                   setWithdrawData({
                     ...withdrawData,
-                    account_name:
-                      e.target.value,
+                    account_name: e.target.value,
                   })
                 }
-                className="w-full bg-gray-800 p-3 rounded-lg"
+                className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-[#F3EFE6] outline-none transition placeholder:text-[#5B6B82] focus:border-[#38BDF8]/50 focus:ring-1 focus:ring-[#38BDF8]/30"
               />
 
               <input
                 type="number"
                 placeholder="Account Number"
-                value={
-                  withdrawData.account_number
-                }
+                value={withdrawData.account_number}
                 onChange={(e) =>
                   setWithdrawData({
                     ...withdrawData,
-                    account_number:
-                      e.target.value,
+                    account_number: e.target.value,
                   })
                 }
-                className="w-full bg-gray-800 p-3 rounded-lg"
+                className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-[#F3EFE6] outline-none transition placeholder:text-[#5B6B82] focus:border-[#38BDF8]/50 focus:ring-1 focus:ring-[#38BDF8]/30"
               />
 
               <input
                 type="text"
                 placeholder="Bank Name"
-                value={
-                  withdrawData.bank_name
-                }
+                value={withdrawData.bank_name}
                 onChange={(e) =>
                   setWithdrawData({
                     ...withdrawData,
-                    bank_name:
-                      e.target.value,
+                    bank_name: e.target.value,
                   })
                 }
-                className="w-full bg-gray-800 p-3 rounded-lg"
+                className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-[#F3EFE6] outline-none transition placeholder:text-[#5B6B82] focus:border-[#38BDF8]/50 focus:ring-1 focus:ring-[#38BDF8]/30"
               />
 
               <input
@@ -626,23 +553,21 @@ const Affiliate = () => {
                     amount: e.target.value,
                   })
                 }
-                className="w-full bg-gray-800 p-3 rounded-lg"
+                className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-[#F3EFE6] outline-none transition placeholder:text-[#5B6B82] focus:border-[#38BDF8]/50 focus:ring-1 focus:ring-[#38BDF8]/30"
               />
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="mt-6 flex gap-3">
               <button
-                onClick={() =>
-                  setShowWithdrawModal(false)
-                }
-                className="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl"
+                onClick={() => setShowWithdrawModal(false)}
+                className="flex-1 rounded-xl border border-white/10 bg-white/[0.03] py-3 text-[#93A0B4] transition hover:bg-white/[0.06] hover:text-[#F3EFE6]"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleWithdraw}
-                className="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-xl"
+                className="flex-1 rounded-xl bg-emerald-400/15 py-3 font-medium text-emerald-200 ring-1 ring-inset ring-emerald-400/30 transition hover:bg-emerald-400/25"
               >
                 Submit
               </button>

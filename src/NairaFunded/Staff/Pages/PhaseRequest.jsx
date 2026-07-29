@@ -64,12 +64,12 @@ if (Array.isArray(data)) {
   setFilteredRequests([]);
 }
 
-      setCurrentPage(1);
+     
     } catch (error) {
       console.error("fetchRequests error:", error);
       setRequests([]);
       setFilteredRequests([]);
-      setCurrentPage(1);
+
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,6 @@ if (Array.isArray(data)) {
     });
 
     setFilteredRequests(filtered);
-    setCurrentPage(1);
   }, [search, requests]);
 
   const handleUpdated = (id, status, note) => {
@@ -122,6 +121,11 @@ if (Array.isArray(data)) {
   const indexOfLast = currentPage * perPage;
   const indexOfFirst = indexOfLast - perPage;
   const currentData = filteredRequests.slice(indexOfFirst, indexOfLast);
+  useEffect(() => {
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(totalPages);
+  }
+}, [totalPages, currentPage]);
 
   return (
     <MPLayout>

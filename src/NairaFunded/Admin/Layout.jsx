@@ -13,7 +13,8 @@ import {
   ArrowBigRight,
   Mail,
   ArrowBigUpIcon,
-  Gift
+  Gift,
+  MoveUpRight
 } from "lucide-react";
 
 const AdminLayout = ({children}) => {
@@ -41,8 +42,7 @@ const AdminLayout = ({children}) => {
       <NavItem to="/auth/admin/referral-claims" icon={<Gift />} label="Referral Claims"/>
       <NavItem to="/auth/admin/feedback" icon={<MessageSquare />} label="Feedback" />
       <NavItem to="/auth/admin/upload-acc" icon={<ArrowBigUpIcon />} label="Upload Account" />
-      <NavItem to="/auth/admin/notifications" icon={<Mail />} label="Send Email" />
-      <NavItem to="/auth/admin/settings" icon={<Settings />} label="Settings" />
+      <NavItem to="/auth/admin/upgrade-account" icon={<MoveUpRight />} label="Upgrade Account" />
         </nav>
       </div>
 

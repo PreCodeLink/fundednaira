@@ -72,9 +72,7 @@ const Profile = () => {
     }
 
     try {
-      const res = await fetch(
-        `${API_BASE}/profile.php?user_id=${userId}`
-      );
+      const res = await fetch(`${API_BASE}/profile.php?user_id=${userId}`);
 
       const text = await res.text();
 
@@ -96,10 +94,7 @@ const Profile = () => {
 
       const normalizedUser = {
         ...fetchedUser,
-        full_name:
-          fetchedUser.full_name ||
-          fetchedUser.name ||
-          "",
+        full_name: fetchedUser.full_name || fetchedUser.name || "",
       };
 
       setUser(normalizedUser);
@@ -115,10 +110,7 @@ const Profile = () => {
         account_name: normalizedUser.account_name || "",
       });
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(normalizedUser)
-      );
+      localStorage.setItem("user", JSON.stringify(normalizedUser));
     } catch (err) {
       console.error("Profile fetch error:", err);
     } finally {
@@ -171,20 +163,17 @@ const Profile = () => {
     const userId = getUserId();
 
     try {
-      const res = await fetch(
-        `${API_BASE}/update-profile.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            full_name: profileForm.full_name,
-            email: profileForm.email,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/update-profile.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          full_name: profileForm.full_name,
+          email: profileForm.email,
+        }),
+      });
 
       const text = await res.text();
 
@@ -203,14 +192,9 @@ const Profile = () => {
 
       setUser(updatedUser);
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(updatedUser)
-      );
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      setMessage(
-        data.message || "Profile updated successfully."
-      );
+      setMessage(data.message || "Profile updated successfully.");
 
       fetchProfile();
     } catch (err) {
@@ -228,19 +212,16 @@ const Profile = () => {
     const userId = getUserId();
 
     try {
-      const res = await fetch(
-        `${API_BASE}/change-password.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            ...password,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/change-password.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          ...password,
+        }),
+      });
 
       const text = await res.text();
 
@@ -275,36 +256,29 @@ const Profile = () => {
       payment.account_name.trim().toLowerCase() !==
       profileForm.full_name.trim().toLowerCase()
     ) {
-      setError(
-        "Account name must match your registered name."
-      );
+      setError("Account name must match your registered name.");
 
       return;
     }
 
     try {
-      const res = await fetch(
-        `${API_BASE}/save-payment-method.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            ...payment,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/save-payment-method.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          ...payment,
+        }),
+      });
 
       const text = await res.text();
 
       const data = JSON.parse(text);
 
       if (!data.success) {
-        setError(
-          data.message || "Failed to save payment method."
-        );
+        setError(data.message || "Failed to save payment method.");
 
         return;
       }
@@ -318,15 +292,9 @@ const Profile = () => {
 
       setUser(updatedUser);
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(updatedUser)
-      );
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      setMessage(
-        data.message ||
-          "Payment method updated successfully."
-      );
+      setMessage(data.message || "Payment method updated successfully.");
 
       fetchProfile();
     } catch (err) {
@@ -335,14 +303,22 @@ const Profile = () => {
     }
   };
 
+  const inputClass =
+    "w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-[#F3EFE6] outline-none transition placeholder:text-[#5B6B82] focus:border-[#38BDF8]/50 focus:ring-1 focus:ring-[#38BDF8]/30";
+
   if (loading) {
     return (
       <Layout>
         <div className="flex pt-16">
           <Sidebar />
 
-          <div className="flex-1 min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white flex items-center justify-center">
-            Loading profile...
+          <div className="flex flex-1 items-center justify-center bg-[#05070D] text-[#38BDF8]">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#38BDF8]/20 border-t-[#38BDF8]" />
+              <p className="font-mono text-xs uppercase tracking-[0.3em] text-[#5B6B82]">
+                Loading profile
+              </p>
+            </div>
           </div>
         </div>
       </Layout>
@@ -351,24 +327,37 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="flex pt-16">
+      <div
+        className="relative flex min-h-screen pt-16"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56,189,248,0.12), transparent), #05070D",
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#38BDF8 1px, transparent 1px), linear-gradient(90deg, #38BDF8 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+
         <Sidebar />
 
-        <div className="flex-1 p-6 md:p-10 bg-gradient-to-br from-gray-950 via-gray-900 to-black min-h-screen text-white">
+        <div className="relative z-10 mx-auto w-full flex-1 md:ml-72 space-y-6 p-4 text-[#F3EFE6] md:max-w-4xl md:p-6">
           {(message || error) && (
-            <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black/50 backdrop-blur-sm">
-              <div className="bg-[#111827] border border-gray-700 rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-xl">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0B0F19]/95 p-6 text-center backdrop-blur-xl">
                 <div
-                  className={`text-lg font-semibold mb-3 ${
-                    error
-                      ? "text-red-400"
-                      : "text-green-400"
+                  className={`mb-3 text-lg font-semibold ${
+                    error ? "text-red-300" : "text-emerald-300"
                   }`}
                 >
                   {error ? "Error" : "Success"}
                 </div>
 
-                <p className="text-gray-300 text-sm mb-5">
+                <p className="mb-5 text-sm text-[#93A0B4]">
                   {error || message}
                 </p>
 
@@ -377,7 +366,7 @@ const Profile = () => {
                     setMessage("");
                     setError("");
                   }}
-                  className="w-full bg-gradient-to-r from-blue-600 to-sky-400 py-2 rounded-lg text-white font-medium hover:opacity-90"
+                  className="w-full rounded-lg bg-[#38BDF8]/15 py-2 font-medium text-[#38BDF8] ring-1 ring-inset ring-[#38BDF8]/30 transition hover:bg-[#38BDF8]/25"
                 >
                   OK
                 </button>
@@ -385,43 +374,44 @@ const Profile = () => {
             </div>
           )}
 
-          <h1 className="text-3xl font-bold mb-10">
-            Profile
-          </h1>
+          <div>
+            <p className="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-[#38BDF8]/70">
+              Account
+            </p>
+            <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight md:text-3xl">
+              Profile
+            </h1>
+          </div>
 
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl mb-10 flex flex-col md:flex-row items-center gap-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-3xl font-bold">
+          {/* AVATAR HEADER */}
+          <div className="flex flex-col items-center gap-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl md:flex-row">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#38BDF8]/50 bg-[#0F1A2E] font-serif text-2xl font-semibold text-[#38BDF8]">
               {getInitials(user.full_name)}
             </div>
 
             <div className="text-center md:text-left">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-xl font-semibold text-[#F3EFE6]">
                 {user.full_name}
               </h2>
-
-              <p className="text-gray-400">
-                {user.email}
-              </p>
+              <p className="text-[#93A0B4]">{user.email}</p>
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
-              <h2 className="text-lg font-semibold mb-5">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* EDIT PROFILE */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl">
+              <h2 className="mb-5 text-lg font-semibold text-[#F3EFE6]">
                 Edit Profile
               </h2>
 
-              <form
-                className="space-y-4"
-                onSubmit={handleProfileSubmit}
-              >
+              <form className="space-y-4" onSubmit={handleProfileSubmit}>
                 <input
                   type="text"
                   name="full_name"
                   value={profileForm.full_name}
                   onChange={handleProfileChange}
                   placeholder="Full Name"
-                  className="w-full bg-gray-800/60 p-3 rounded-xl"
+                  className={inputClass}
                 />
 
                 <input
@@ -430,31 +420,29 @@ const Profile = () => {
                   value={profileForm.email}
                   onChange={handleProfileChange}
                   placeholder="Email"
-                  className="w-full bg-gray-800/60 p-3 rounded-xl"
+                  className={inputClass}
                 />
 
-                <button className="w-full bg-gradient-to-r from-blue-600 to-sky-400 py-3 rounded-xl">
+                <button className="w-full rounded-xl bg-[#38BDF8]/15 py-3 font-medium text-[#38BDF8] ring-1 ring-inset ring-[#38BDF8]/30 transition-all duration-200 hover:bg-[#38BDF8]/25 hover:shadow-[0_0_24px_rgba(56,189,248,0.15)]">
                   Save Changes
                 </button>
               </form>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
-              <h2 className="text-lg font-semibold mb-5">
+            {/* SECURITY */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl">
+              <h2 className="mb-5 text-lg font-semibold text-[#F3EFE6]">
                 Security
               </h2>
 
-              <form
-                className="space-y-4"
-                onSubmit={handlePasswordSubmit}
-              >
+              <form className="space-y-4" onSubmit={handlePasswordSubmit}>
                 <input
                   type="password"
                   name="current_password"
                   placeholder="Current Password"
                   value={password.current_password}
                   onChange={handlePasswordChange}
-                  className="w-full bg-gray-800/60 p-3 rounded-xl"
+                  className={inputClass}
                 />
 
                 <input
@@ -463,24 +451,25 @@ const Profile = () => {
                   placeholder="New Password"
                   value={password.new_password}
                   onChange={handlePasswordChange}
-                  className="w-full bg-gray-800/60 p-3 rounded-xl"
+                  className={inputClass}
                 />
 
-                <button className="w-full bg-gradient-to-r from-blue-500 to-sky-400 py-3 rounded-xl">
+                <button className="w-full rounded-xl bg-[#38BDF8]/15 py-3 font-medium text-[#38BDF8] ring-1 ring-inset ring-[#38BDF8]/30 transition-all duration-200 hover:bg-[#38BDF8]/25 hover:shadow-[0_0_24px_rgba(56,189,248,0.15)]">
                   Update Password
                 </button>
               </form>
             </div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl mb-10">
-            <h2 className="text-lg font-semibold mb-5">
+          {/* PAYMENT METHOD FORM */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl">
+            <h2 className="mb-5 text-lg font-semibold text-[#F3EFE6]">
               Payment Method
             </h2>
 
             <form
               onSubmit={handlePaymentSubmit}
-              className="grid md:grid-cols-2 gap-4"
+              className="grid gap-4 md:grid-cols-2"
             >
               <input
                 type="text"
@@ -488,7 +477,7 @@ const Profile = () => {
                 placeholder="Bank Name"
                 value={payment.bank_name}
                 onChange={handlePaymentChange}
-                className="bg-gray-800/60 p-3 rounded-xl"
+                className={inputClass}
                 required
               />
 
@@ -498,7 +487,7 @@ const Profile = () => {
                 placeholder="Account Number"
                 value={payment.account_number}
                 onChange={handlePaymentChange}
-                className="bg-gray-800/60 p-3 rounded-xl"
+                className={inputClass}
                 required
               />
 
@@ -508,54 +497,50 @@ const Profile = () => {
                 placeholder="Account Name"
                 value={payment.account_name}
                 onChange={handlePaymentChange}
-                className="bg-gray-800/60 p-3 rounded-xl md:col-span-2"
+                className={`${inputClass} md:col-span-2`}
                 required
               />
 
-              <p className="text-yellow-400 text-sm md:col-span-2">
-                ⚠️ Account name must match your
-                registered name
+              <p className="text-sm text-amber-300 md:col-span-2">
+                ⚠️ Account name must match your registered name
               </p>
 
-              <button className="bg-gradient-to-r from-blue-500 to-sky-400 py-3 rounded-xl md:col-span-2">
-                {user.bank_name ||
-                user.account_number ||
-                user.account_name
+              <button className="rounded-xl bg-emerald-400/15 py-3 font-medium text-emerald-200 ring-1 ring-inset ring-emerald-400/30 transition-all duration-200 hover:bg-emerald-400/25 hover:shadow-[0_0_24px_rgba(52,211,153,0.15)] md:col-span-2">
+                {user.bank_name || user.account_number || user.account_name
                   ? "Update Payment Method"
                   : "Save Payment Method"}
               </button>
             </form>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
-            <h2 className="text-lg font-semibold mb-5">
+          {/* SAVED PAYMENT METHOD */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl">
+            <h2 className="mb-5 text-lg font-semibold text-[#F3EFE6]">
               Saved Payment Method
             </h2>
 
-            {user.bank_name ||
-            user.account_number ||
-            user.account_name ? (
-              <div className="bg-gray-800/60 p-5 rounded-2xl border border-gray-700">
-                <h3 className="font-semibold text-lg mb-2">
+            {user.bank_name || user.account_number || user.account_name ? (
+              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 font-mono text-sm">
+                <h3 className="mb-2 text-lg font-semibold text-[#F3EFE6]">
                   {payment.bank_name}
                 </h3>
 
-                <p className="text-gray-400 text-sm">
+                <p className="text-[#93A0B4]">
                   Account No:{" "}
-                  <span className="text-white">
+                  <span className="text-[#F3EFE6]">
                     {payment.account_number}
                   </span>
                 </p>
 
-                <p className="text-gray-400 text-sm">
+                <p className="text-[#93A0B4]">
                   Name:{" "}
-                  <span className="text-white">
+                  <span className="text-[#F3EFE6]">
                     {payment.account_name}
                   </span>
                 </p>
               </div>
             ) : (
-              <p className="text-gray-400 text-sm">
+              <p className="font-mono text-sm text-[#5B6B82]">
                 No payment method saved yet.
               </p>
             )}

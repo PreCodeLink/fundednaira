@@ -2,243 +2,163 @@ import { useEffect, useState } from "react";
 import Layout from "../companent/Layout";
 import Sidebar from "../companent/Sidebar";
 import { useNavigate } from "react-router-dom";
-import { X, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  X,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  Check,
+  Crown,
+  Trophy,
+  Zap,
+} from "lucide-react";
 import TopSection from "../companent/TopSection";
 
-const AccountDetailsModal = ({
-  isOpen,
-  onClose,
-  account,
-  requestPhase,
-  loadingRequest,
-}) => {
-  if (!isOpen || !account) return null;
-
-  const currentPhase = String(account.phase || "").toLowerCase();
-
-  const canRequestPhase =
-    String(account.status || "").toLowerCase() === "active" &&
-    currentPhase !== "funded";
-
-  const nextPhase =
-    String(account.phase) === "1"
-      ? "2"
-      : String(account.phase) === "2"
-      ? "funded"
-      : "";
-
-
-  return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-      <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-lg border border-gray-800 text-white relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
-        >
-          <X size={22} />
-        </button>
-
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-semibold">Account Details</h2>
-        </div>
-
-        <div className="space-y-3 mb-6">
-          <p className="text-gray-400">
-            Type: <span className="text-white">{account.type || "N/A"}</span>
-          </p>
-          <p className="text-gray-400">
-            Balance: <span className="text-white">{account.balance || "₦0"}</span>
-          </p>
-          <p className="text-gray-400">
-            Equity: <span className="text-white">{account.equity || "₦0"}</span>
-          </p>
-         <p className="text-gray-400 text-sm">
-                    Phase: {account.type == "Challenge" ? <span className="text-white capitalize">{account.phase}</span> : <span className="text-white capitalize">{account.type}</span>}
-                  </p>
-          <p className="text-gray-400">
-            Status: <span className="text-white capitalize">{account.status}</span>
-          </p>
-        </div>
-
-        <div className="bg-gray-800 p-4 rounded-xl mb-5">
-          <h3 className="text-sm text-gray-400 mb-3">MT5 Login Details</h3>
-
-          <p className="text-sm">
-            Login: <span className="text-green-400">{account.login || "Not assigned"}</span>
-          </p>
-          <p className="text-sm">
-            Password: <span className="text-green-400">{account.password || "Not assigned"}</span>
-          </p>
-          <p className="text-sm">
-            Server: <span className="text-green-400">{account.server || "Not assigned"}</span>
-          </p>
-        </div>
-         {canRequestPhase ? (
-  String(account.type).toLowerCase() === "challenge" ? (
-    <button
-      onClick={() => requestPhase(account, nextPhase)}
-      disabled={loadingRequest}
-      className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 py-3 rounded-lg font-medium"
-    >
-      {loadingRequest ? "Submitting..." : `Request Phase ${nextPhase}`}
-    </button>
-  ) : (
-    <button
-      className="w-full text-sm text-gray-400 bg-gray-800 rounded-lg p-3"
-    >
-      Phase requests are only available for Challenge accounts
-    </button>
-  )
-          
-        ) : (
-          <div className="text-sm text-gray-400 bg-gray-800 rounded-lg p-3">
-            {currentPhase === "funded"
-              ? "This account is already funded."
-              : "Only active accounts can request the next phase."}
-              
-          </div>
-        )}
-      </div>
+const Feature = ({ label, value }) => (
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      <Check size={15} className="text-emerald-400" />
+      <span className="text-sm text-[#93A0B4]">{label}</span>
     </div>
-  );
-};
 
-const PlanCard = ({
-  plan,
-  formatMoney,
-  buttonColor = "blue",
-  buttonText,
-  onBuy,
-  buyingPlanId,
-}) => {
-const buttonClass =
-  buttonColor === "gold"
-    ? "bg-yellow-500 text-black hover:bg-yellow-400"
-    : buttonColor === "green"
-    ? "bg-green-600 hover:bg-green-700"
-    : "bg-blue-600 hover:bg-blue-700";
+    <span className="font-mono text-sm font-semibold text-[#F3EFE6]">
+      {value}
+    </span>
+  </div>
+);
 
-  const badgeClass =
-  buttonColor === "gold"
-    ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-    : buttonColor === "green"
-    ? "bg-green-500/20 text-green-400 border border-green-500/30"
-    : "bg-blue-500/20 text-blue-400 border border-blue-500/30";
+const PlanCard = ({ plan, color = "sky", onBuy, buyingPlanId, formatMoney }) => {
+  const type = String(plan.type).toLowerCase();
+
+  const isChallenge = type === "challenge";
+
+  const isPremium =
+    type === "premium" ||
+    type === "instant premium" ||
+    type === "premium funding";
+
   const isLoading = Number(buyingPlanId) === Number(plan.id);
+
+  const accent = isPremium
+    ? "from-amber-400 to-orange-500"
+    : color === "green"
+    ? "from-emerald-400 to-emerald-600"
+    : "from-[#38BDF8] to-blue-600";
+
+  const glow = isPremium
+    ? "hover:shadow-[0_0_40px_rgba(251,191,36,0.15)] hover:border-amber-400/40"
+    : color === "green"
+    ? "hover:shadow-[0_0_40px_rgba(52,211,153,0.15)] hover:border-emerald-400/40"
+    : "hover:shadow-[0_0_40px_rgba(56,189,248,0.15)] hover:border-[#38BDF8]/40";
+
+  const orb = isPremium
+    ? "bg-amber-400/10"
+    : color === "green"
+    ? "bg-emerald-400/10"
+    : "bg-[#38BDF8]/10";
+
+  const badge = isPremium ? (
+    <Crown size={15} />
+  ) : isChallenge ? (
+    <Trophy size={15} />
+  ) : (
+    <Zap size={15} />
+  );
 
   return (
     <div
-      className={`relative bg-gray-900 border border-gray-800 rounded-2xl p-6 transition hover:-translate-y-1 ${
-        buttonColor === "green" ? "hover:border-green-500" : "hover:border-blue-500"
-      } ${plan.popular ? "scale-[1.02]" : ""}`}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 ${glow}`}
     >
-      {plan.popular && (
-        <div className="absolute top-[-10px] right-4 bg-yellow-500 text-black text-xs font-semibold px-3 py-1 rounded-full">
-          Most Popular
-        </div>
-      )}
+      <div
+        className={`absolute -right-24 -top-24 h-56 w-56 rounded-full ${orb} opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100`}
+      />
 
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold">{formatMoney(plan.size)} Account</h3>
-        <span className={`text-xs px-3 py-1 rounded-full ${badgeClass}`}>
-          {plan.type}
-        </span>
+      <div className="relative p-6 md:p-7">
+        <div className="flex items-center justify-between">
+          <div
+            className={`flex items-center gap-1.5 rounded-full bg-gradient-to-r px-3 py-1 text-xs font-medium text-white ${accent}`}
+          >
+            {badge}
+            {plan.type}
+          </div>
+
+          {plan.popular && (
+            <div className="rounded-full bg-amber-400 px-3 py-1 text-[0.65rem] font-bold text-black">
+              POPULAR
+            </div>
+          )}
+        </div>
+
+        <h2 className="mt-7 font-mono text-3xl font-bold text-[#F3EFE6] md:text-4xl">
+          {formatMoney(plan.size)}
+        </h2>
+        <p className="mt-1 text-sm text-[#5B6B82]">Trading Capital</p>
+
+        <div className="mt-6">
+          <h3 className="font-mono text-2xl font-semibold text-[#F3EFE6]">
+            {formatMoney(plan.price)}
+          </h3>
+          <p className="mt-0.5 text-xs text-[#5B6B82]">One-Time Fee</p>
+        </div>
       </div>
 
-      <p className="mt-2 text-3xl font-bold">{formatMoney(plan.price)}</p>
+      <div className="relative space-y-4 border-y border-white/[0.06] p-6 md:p-7">
+        <Feature label="Profit Target" value={`${plan.target}%`} />
+        <Feature label="Max Drawdown" value={`${plan.loss}%`} />
+        <Feature label="Profit Split" value={`${plan.split}%`} />
+        <Feature
+          label="Minimum Days"
+          value={isPremium ? "Unlimited" : isChallenge ? "5 Days" : "Instant"}
+        />
+        <Feature
+          label="Weekend Holding"
+          value={isPremium ? "Allowed" : "Available"}
+        />
+      </div>
 
-     {String(plan.type).toLowerCase() === "instant premium" ? (
-  <ul className="mt-6 space-y-3 text-gray-400 text-sm">
-    <li className="flex justify-between">
-      <span>Profit Target</span>
-      <span className="text-white">{plan.target}%</span>
-    </li>
+      <div className="relative p-6 md:p-7">
+        <button
+          onClick={() => onBuy(plan)}
+          disabled={isLoading}
+          className={`group flex w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r py-3.5 font-semibold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${accent}`}
+        >
+          {isLoading ? "Processing..." : "Buy Account"}
 
-    <li className="flex justify-between">
-      <span>Phase</span>
-      <span className="text-white">Instant Premium</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Max Drawdown</span>
-      <span className="text-white">{plan.loss}%</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Profit Split</span>
-      <span className="text-white">{plan.split}%</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Daily Loss</span>
-      <span className="text-white">No Limit</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Minimum Days</span>
-      <span className="text-white">No Limit</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Period</span>
-      <span className="text-white">Unlimited</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Weekend Holding</span>
-      <span className="text-white">Yes</span>
-    </li>
-  </ul>
-) : (
-  <ul className="mt-6 space-y-3 text-gray-400 text-sm">
-    <li className="flex justify-between">
-      <span>Profit Target</span>
-      <span className="text-white font-medium">{plan.target}%</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Phase</span>
-      <span className="text-white">
-        {plan.type === "Challenge" ? "1/2" : "Instant"}
-      </span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Max Loss</span>
-      <span className="text-white font-medium">{plan.loss}%</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Profit Split</span>
-      <span className="text-white font-medium">{plan.split}%</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Type</span>
-      <span className="text-white font-medium">{plan.type}</span>
-    </li>
-  </ul>
-)}
-
-      <button
-        onClick={() => onBuy(plan)}
-        disabled={isLoading}
-        className={`mt-8 w-full py-3 rounded-xl transition text-white font-medium disabled:opacity-50 ${buttonClass}`}
-      >
-        {isLoading ? "Processing..." : buttonText}
-      </button>
+          {!isLoading && (
+            <ArrowRight
+              size={17}
+              className="transition-transform group-hover:translate-x-1"
+            />
+          )}
+        </button>
+      </div>
     </div>
   );
 };
+
+const SectionHeader = ({ title, subtitle, accentColor }) => (
+  <div className="mb-6 flex items-center gap-3">
+    <div className={`h-8 w-1 rounded-full ${accentColor}`} />
+    <div>
+      <h3 className="text-xl font-semibold text-[#F3EFE6] md:text-2xl">
+        {title}
+      </h3>
+      <p className="mt-1 text-sm text-[#93A0B4]">{subtitle}</p>
+    </div>
+  </div>
+);
+
+const EmptyState = ({ text }) => (
+  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center font-mono text-xs text-[#5B6B82]">
+    {text}
+  </div>
+);
 
 const Accounts = () => {
   const navigate = useNavigate();
 
-  const [selectedAccount, setSelectedAccount] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
-  const [accounts, setAccounts] = useState([]);
   const [plans, setPlans] = useState([]);
-  const [loadingRequest, setLoadingRequest] = useState(false);
+  const [loadingPlans, setLoadingPlans] = useState(true);
   const [buyingPlanId, setBuyingPlanId] = useState(null);
 
   const [message, setMessage] = useState({
@@ -278,114 +198,24 @@ const Accounts = () => {
     return user?.id || user?.user_id || null;
   };
 
-  const fetchAccounts = async () => {
-    const userId = getUserId();
-
-    if (!userId) {
-      setAccounts([]);
-      return;
-    }
-
-    try {
-      const res = await fetch(
-        `https://api.fundednaira.net/api/dashboard/get-user-accounts.php?user_id=${userId}`
-      );
-
-      const text = await res.text();
-      const data = JSON.parse(text);
-
-      if (Array.isArray(data)) {
-        setAccounts(data);
-      } else {
-        setAccounts([]);
-      }
-    } catch (error) {
-      console.error("fetchAccounts error:", error);
-      showMessage("error", "Server error while loading accounts");
-    }
-  };
-
   const fetchPlans = async () => {
     try {
-      const res = await fetch("https://api.fundednaira.net/api/dashboard/get-plans.php");
+      const res = await fetch(
+        "https://api.fundednaira.net/api/dashboard/get-plans.php"
+      );
       const data = await res.json();
       setPlans(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("fetchPlans error:", error);
       setPlans([]);
+    } finally {
+      setLoadingPlans(false);
     }
   };
 
   useEffect(() => {
-    fetchAccounts();
     fetchPlans();
   }, []);
-
-  const handleViewDetails = (acc) => {
-    setSelectedAccount(acc);
-    setOpenModal(true);
-  };
-
-  const requestPhase = async (account, requestedPhase) => {
-    const userId = getUserId();
-    if (!userId) {
-      showMessage("error", "User not logged in");
-      return;
-    }
-
-    const currentPhase = account?.phase || "";
-
-    if (!account?.id) {
-      showMessage("error", "Missing account id");
-      return;
-    }
-
-    if (!currentPhase) {
-      showMessage("error", "Missing current phase");
-      return;
-    }
-
-    if (!requestedPhase) {
-      showMessage("error", "Missing requested phase");
-      return;
-    }
-
-    try {
-      setLoadingRequest(true);
-
-      const payload = {
-        user_id: userId,
-        account_id: account.id,
-        current_phase: String(currentPhase),
-        requested_phase: String(requestedPhase),
-      };
-
-      const res = await fetch("https://api.fundednaira.net/api/dashboard/request-phase.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const text = await res.text();
-      const data = JSON.parse(text);
-
-      if (data.success) {
-        showMessage("success", data.message || "Phase request submitted");
-        setOpenModal(false);
-        setSelectedAccount(null);
-        fetchAccounts();
-      } else {
-        showMessage("error", data.message || "Failed to submit request");
-      }
-    } catch (error) {
-      console.error(error);
-      showMessage("error", "Server error");
-    } finally {
-      setLoadingRequest(false);
-    }
-  };
 
   const handleBuyPlan = async (plan) => {
     const user = getUser();
@@ -403,16 +233,19 @@ const Accounts = () => {
     try {
       setBuyingPlanId(plan.id);
 
-      const res = await fetch("https://api.fundednaira.net/api/payments/initialize-payment.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: user.id || user.user_id,
-          plan_id: plan.id,
-        }),
-      });
+      const res = await fetch(
+        "https://api.fundednaira.net/api/payments/initialize-payment.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: user.id || user.user_id,
+            plan_id: plan.id,
+          }),
+        }
+      );
 
       const text = await res.text();
       console.log("initialize payment raw:", text);
@@ -432,7 +265,7 @@ const Accounts = () => {
 
       const payment = result.data;
 
-     const squadInstance = new window.squad({
+      const squadInstance = new window.squad({
         key: payment.public_key,
         email: payment.email,
         amount: payment.amount,
@@ -442,19 +275,16 @@ const Accounts = () => {
         callback_url: payment.callback_url,
         payment_channels: payment.payment_channels,
         metadata: payment.metadata,
-  onClose: () => {
-    setBuyingPlanId(null);
-  },
-  onLoad: () => {
-    console.log("Squad modal loaded");
-  },
-  onSuccess: () => {
-    window.location.href = `/dashboard/payment/callback?reference=${payment.reference}`;
-  },
-});
-
-squadInstance.setup();
-squadInstance.open();
+        onClose: () => {
+          setBuyingPlanId(null);
+        },
+        onLoad: () => {
+          console.log("Squad modal loaded");
+        },
+        onSuccess: () => {
+          window.location.href = `/dashboard/payment/callback?reference=${payment.reference}`;
+        },
+      });
 
       squadInstance.setup();
       squadInstance.open();
@@ -474,49 +304,67 @@ squadInstance.open();
       String(plan.type || "").toLowerCase() === "instant" ||
       String(plan.type || "").toLowerCase() === "instant funding"
   );
+
   const premiumPlans = plans.filter((plan) => {
-  const t = String(plan.type).toLowerCase();
-  return (
-    t === "instant premium" ||
-    t === "premium" ||
-    t === "instant-premium"
-  );
-});
+    const t = String(plan.type).toLowerCase();
+    return (
+      t === "instant premium" || t === "premium" || t === "instant-premium"
+    );
+  });
 
   return (
     <Layout>
-      <div className="flex pt-16">
+      <div
+        className="relative flex min-h-screen pt-16"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56,189,248,0.12), transparent), #05070D",
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#38BDF8 1px, transparent 1px), linear-gradient(90deg, #38BDF8 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+
         <Sidebar />
 
-        <div className="flex-1 p-6 md:p-10 bg-gray-950 min-h-screen text-white relative">
+        <div className="relative z-10 mx-auto w-full flex-1 md:ml-72 p-4 text-[#F3EFE6] md:max-w-6xl md:p-8">
           <TopSection />
+
+          {/* TOAST */}
           {message.show && (
-            <div className="fixed top-5 right-5 z-[100]">
+            <div className="fixed right-5 top-5 z-[100]">
               <div
-                className={`flex items-start gap-3 min-w-[300px] max-w-[420px] rounded-2xl border px-4 py-4 shadow-2xl ${
+                className={`flex min-w-[300px] max-w-[420px] items-start gap-3 rounded-2xl border px-4 py-4 backdrop-blur-xl ${
                   message.type === "success"
-                    ? "bg-green-950/90 border-green-700 text-green-200"
-                    : "bg-red-950/90 border-red-700 text-red-200"
+                    ? "border-emerald-400/30 bg-[#0B0F19]/95 text-emerald-200"
+                    : "border-red-400/30 bg-[#0B0F19]/95 text-red-200"
                 }`}
               >
                 <div className="mt-0.5">
                   {message.type === "success" ? (
-                    <CheckCircle2 size={20} />
+                    <CheckCircle2 size={20} className="text-emerald-300" />
                   ) : (
-                    <AlertCircle size={20} />
+                    <AlertCircle size={20} className="text-red-300" />
                   )}
                 </div>
 
                 <div className="flex-1">
-                  <h4 className="font-semibold mb-1">
+                  <h4 className="mb-1 font-semibold">
                     {message.type === "success" ? "Success" : "Error"}
                   </h4>
-                  <p className="text-sm">{message.text}</p>
+                  <p className="text-sm text-[#93A0B4]">{message.text}</p>
                 </div>
 
                 <button
-                  onClick={() => setMessage({ show: false, type: "", text: "" })}
-                  className="text-gray-300 hover:text-white"
+                  onClick={() =>
+                    setMessage({ show: false, type: "", text: "" })
+                  }
+                  className="text-[#5B6B82] transition hover:text-[#F3EFE6]"
                 >
                   <X size={18} />
                 </button>
@@ -524,175 +372,104 @@ squadInstance.open();
             </div>
           )}
 
-          <h1 className="text-3xl font-bold mb-8">Accounts Dashboard</h1>
-
-          <div className="mb-12">
-            <h2 className="text-xl font-semibold mb-4">My Accounts</h2>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {accounts.map((acc) => (
-                <div
-                  key={acc.id}
-                  className="bg-gray-900 p-6 rounded-2xl border border-gray-800 hover:border-blue-500 transition"
-                >
-                  <h3 className="text-lg font-semibold mb-2">{acc.type || "Account"}</h3>
-
-                  <p className="text-gray-400 text-sm">
-                    Balance: <span className="text-white">{formatMoney(acc.balance)}</span>
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    Equity: <span className="text-white">{formatMoney(acc.equity)}</span>
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    Phase: {acc.type == "Challenge" ? <span className="text-white capitalize">{acc.phase}</span> : <span className="text-white capitalize">{acc.type}</span>}
-                  </p>
-
-                  <span
-                    className={`inline-block mt-3 px-3 py-1 text-xs rounded-full ${
-                      String(acc.status).toLowerCase() === "active"
-                        ? "bg-green-500/20 text-green-400"
-                        : String(acc.status).toLowerCase() === "pending"
-                        ? "bg-yellow-500/20 text-yellow-300"
-                        : "bg-red-500/20 text-red-400"
-                    }`}
-                  >
-                    {acc.status}
-                  </span>
-
-                  <button
-                    onClick={() => handleViewDetails(acc)}
-                    className="mt-5 w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg"
-                  >
-                    View Details
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {accounts.length === 0 && (
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400">
-                No accounts found
-              </div>
-            )}
-          </div>
-
-          <section className="mt-16">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-5xl font-bold">Buy Trading Account</h2>
-              <p className="mt-4 text-gray-400 max-w-2xl mx-auto">
-                Choose your preferred account size and start your journey to becoming a funded trader.
+          <section className="relative mt-6 overflow-hidden">
+            <div className="mx-auto mb-14 max-w-3xl text-center">
+              <p className="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-[#38BDF8]/70">
+                Funding Plans
               </p>
+              <h2 className="mt-3 font-serif text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+                Choose Your{" "}
+                <span className="bg-gradient-to-r from-[#38BDF8] via-cyan-300 to-blue-500 bg-clip-text text-transparent">
+                  Trading Account
+                </span>
+              </h2>
             </div>
 
-            <div className="mb-16">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-8 w-1 rounded-full bg-blue-500"></div>
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold">Challenge Accounts</h3>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Pass the evaluation and move to the next phase.
-                  </p>
-                </div>
+            {loadingPlans ? (
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center font-mono text-xs uppercase tracking-[0.2em] text-[#5B6B82]">
+                Loading plans
               </div>
+            ) : (
+              <>
+                <div className="mb-14">
+                  <SectionHeader
+                    title="Challenge Accounts"
+                    subtitle="Pass the evaluation and move to the next phase."
+                    accentColor="bg-[#38BDF8]"
+                  />
 
-              {challengePlans.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {challengePlans.map((plan, index) => (
-                    <PlanCard
-                      key={plan.id || index}
-                      plan={plan}
-                      formatMoney={formatMoney}
-                      buttonColor="blue"
-                      buttonText="Buy Challenge"
-                      onBuy={handleBuyPlan}
-                      buyingPlanId={buyingPlanId}
-                    />
-                  ))}
+                  {challengePlans.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                      {challengePlans.map((plan, index) => (
+                        <PlanCard
+                          key={plan.id || index}
+                          plan={plan}
+                          color="sky"
+                          formatMoney={formatMoney}
+                          onBuy={handleBuyPlan}
+                          buyingPlanId={buyingPlanId}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState text="No challenge plans available" />
+                  )}
                 </div>
-              ) : (
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400">
-                  No challenge plans available
+
+                <div className="mb-14">
+                  <SectionHeader
+                    title="Instant Funding Accounts"
+                    subtitle="Get faster access with instant funding options."
+                    accentColor="bg-emerald-400"
+                  />
+
+                  {instantPlans.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                      {instantPlans.map((plan, index) => (
+                        <PlanCard
+                          key={plan.id || index}
+                          plan={plan}
+                          color="green"
+                          formatMoney={formatMoney}
+                          onBuy={handleBuyPlan}
+                          buyingPlanId={buyingPlanId}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState text="No instant funding plans available" />
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-8 w-1 rounded-full bg-green-500"></div>
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold">Instant Funding Accounts</h3>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Get faster access with instant funding options.
-                  </p>
+                <div className="mb-10">
+                  <SectionHeader
+                    title="Instant Premium Accounts"
+                    subtitle="Premium funding accounts with exclusive benefits."
+                    accentColor="bg-amber-400"
+                  />
+
+                  {premiumPlans.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                      {premiumPlans.map((plan, index) => (
+                        <PlanCard
+                          key={plan.id || index}
+                          plan={plan}
+                          color="gold"
+                          formatMoney={formatMoney}
+                          onBuy={handleBuyPlan}
+                          buyingPlanId={buyingPlanId}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState text="No premium plans available" />
+                  )}
                 </div>
-              </div>
-
-              {instantPlans.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {instantPlans.map((plan, index) => (
-                    <PlanCard
-                      key={plan.id || index}
-                      plan={plan}
-                      formatMoney={formatMoney}
-                      buttonColor="green"
-                      buttonText="Buy Instant"
-                      onBuy={handleBuyPlan}
-                      buyingPlanId={buyingPlanId}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400">
-                  No instant funding plans available
-                </div>
-              )}
-            </div>
-            <div className="mb-10">
-  <div className="flex items-center gap-3 mb-6">
-    <div className="h-8 w-1 rounded-full bg-yellow-500"></div>
-
-    <div>
-      <h3 className="text-2xl md:text-3xl font-bold">
-        Instant Premium Accounts
-      </h3>
-
-      <p className="text-gray-400 text-sm mt-1">
-        Premium funding accounts with exclusive benefits.
-      </p>
-    </div>
-  </div>
-
-  {premiumPlans.length > 0 ? (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-      {premiumPlans.map((plan, index) => (
-        <PlanCard
-          key={plan.id || index}
-          plan={plan}
-          formatMoney={formatMoney}
-          buttonColor="gold"
-          buttonText="Buy Premium"
-          onBuy={handleBuyPlan}
-          buyingPlanId={buyingPlanId}
-        />
-      ))}
-    </div>
-  ) : (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400">
-      No premium plans available
-    </div>
-  )}
-</div>
+              </>
+            )}
           </section>
         </div>
       </div>
-
-      <AccountDetailsModal
-        isOpen={openModal}
-        onClose={() => setOpenModal(false)}
-        account={selectedAccount}
-        requestPhase={requestPhase}
-        loadingRequest={loadingRequest}
-      />
     </Layout>
   );
 };

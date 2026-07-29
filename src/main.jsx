@@ -47,6 +47,8 @@ import DashboardPRW from "./NairaFunded/Staff/Pages/DashboardPRW.jsx";
 import PhaseRequests2 from "./NairaFunded/Staff/Pages/Phase2Request.jsx";
 import Payouts from "./NairaFunded/Staff/Pages/Payout.jsx";
 import StaffManageReferrals from "./NairaFunded/Staff/Pages/ManageReferrals.jsx";
+import MyAccounts from "./NairaFunded/Dashboard/pages/MyAccounts.jsx";
+import UpgardeAccount from "./NairaFunded/Admin/pages/UpgardeAccount.jsx";
 
 function App() {
   return (
@@ -70,6 +72,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/acc" element={<Accounts />} />
+          <Route path="/dashboard/my-acc" element={<MyAccounts />} />
           <Route
             path="/dashboard/payment/callback"
             element={<PaymentCallback />}
@@ -106,12 +109,11 @@ function App() {
           />
           <Route path="/auth/admin/payments" element={<AdminPayments />} />
           <Route path="/auth/admin/feedback" element={<AdminFeedBack />} />
-          <Route path="/auth/admin/settings" element={<AdminSettings />} />
           <Route path="/auth/admin/accounts" element={<AdminAccountPlans />} />
           <Route path="/auth/admin/payouts" element={<AdminPayout />} />
           <Route path="/auth/admin/phase" element={<PhaseRequest />} />
           <Route path="/auth/admin/referrals" element={<ManageReferrals />} />
-          <Route path="/auth/admin/notifications" element={<AdminNotifications />} />
+          <Route path="/auth/admin/upgrade-account" element={<UpgardeAccount />} />
           <Route path="/auth/admin/upload-acc" element={<UplaodAccount />} />
           <Route path="/auth/admin/referral-claims" element={<ReffaralClaims />}
 />

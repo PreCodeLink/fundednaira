@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
+import {
+  ArrowRight,
+  Check,
+  Crown,
+  Zap,
+  Trophy,
+} from "lucide-react";
 const Pricing = () => {
   const [plans, setPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
@@ -45,197 +51,456 @@ const premiumPlans = plans.filter((p) => {
     t === "premium funding"
   );
 });
-  const PlanCard = ({ plan, color = "blue" }) => {
-    const isGreen = color === "green";
-    const isGold = color === "gold";
+const Feature = ({ label, value }) => (
+  <div className="flex justify-between items-center">
 
-    return (
-      <div
-       className={`bg-gray-900 border border-gray-800 rounded-2xl p-6 transition hover:-translate-y-1 ${
-  isGold
-    ? "hover:border-yellow-500"
-    : isGreen
-    ? "hover:border-green-500"
-    : "hover:border-blue-500"
-}`}
-      >
-        {plan.popular && (
-          <span className="absolute top-3 right-3 bg-yellow-500 text-black text-xs px-2 py-1 rounded-full">
-            Popular
-          </span>
-        )}
+    <div className="flex items-center gap-2">
 
-        <span
-          className={`text-xs px-3 py-1 rounded-full ${
-            isGreen
-              ? "bg-green-500/20 text-green-400"
-              : "bg-blue-500/20 text-blue-400"
-          }`}
-        >
-          {plan.type}
-        </span>
+      <Check
+        size={16}
+        className="text-green-400"
+      />
 
-        <h3 className="text-xl font-semibold mt-4">
-          {formatMoney(plan.size)} Account
-        </h3>
-
-        <p className="mt-3 text-3xl font-bold">
-          {formatMoney(plan.price)}
-        </p>
-         {String(plan.type).toLowerCase() === "instant premium" ? (
-  <ul className="mt-6 space-y-3 text-gray-400 text-sm">
-    <li className="flex justify-between">
-      <span>Profit Target</span>
-      <span className="text-white">{plan.target}%</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Phase</span>
-      <span className="text-white">Instant Premium</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Max Drawdown</span>
-      <span className="text-white">{plan.loss}%</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Split</span>
-      <span className="text-white">{plan.split}%</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Daily Loss</span>
-      <span className="text-white">No Limit</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Minimum Days</span>
-      <span className="text-white">No Limit</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Period</span>
-      <span className="text-white">Unlimited</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Weekend Holding</span>
-      <span className="text-white">YES 100%</span>
-    </li>
-  </ul>
-) : (
-  <ul className="mt-6 space-y-3 text-gray-400 text-sm">
-    <li className="flex justify-between">
-      <span>Profit Target</span>
-      <span className="text-white">{plan.target}%</span>
-    </li>
-
-    <li className="flex justify-between">
-      <span>Phase</span>
-      <span className="text-white">
-        {String(plan.type).toLowerCase() === "challenge"
-          ? "1/2"
-          : "Instant"}
+      <span className="text-slate-400">
+        {label}
       </span>
-    </li>
 
-    <li className="flex justify-between">
-      <span>Max Loss</span>
-      <span className="text-white">{plan.loss}%</span>
-    </li>
+    </div>
 
-    <li className="flex justify-between">
-      <span>Split</span>
-      <span className="text-white">{plan.split}%</span>
-    </li>
-  </ul>
-)}
+    <span className="font-semibold text-white">
+      {value}
+    </span>
+
+  </div>
+);
+ const PlanCard = ({ plan, color = "blue" }) => {
+  const type = String(plan.type).toLowerCase();
+
+  const isChallenge = type === "challenge";
+  const isPremium =
+    type === "premium" ||
+    type === "instant premium" ||
+    type === "premium funding";
+
+  const accent = isPremium
+    ? "from-yellow-400 to-orange-500"
+    : color === "green"
+    ? "from-green-400 to-emerald-500"
+    : "from-sky-400 to-blue-600";
+
+  const badge = isPremium ? (
+    <Crown size={16} />
+  ) : isChallenge ? (
+    <Trophy size={16} />
+  ) : (
+    <Zap size={16} />
+  );
+
+  return (
+    <div
+      className="
+      group
+      relative
+      overflow-hidden
+      rounded-3xl
+      border
+      border-white/10
+      bg-white/5
+      backdrop-blur-2xl
+      transition-all
+      duration-500
+      hover:-translate-y-3
+      hover:border-sky-400/40
+      "
+    >
+      {/* Glow */}
+
+      <div
+        className="
+        absolute
+        -top-32
+        -right-32
+        w-64
+        h-64
+        rounded-full
+        bg-sky-500/10
+        blur-3xl
+        opacity-0
+        group-hover:opacity-100
+        transition
+        duration-700
+        "
+      />
+
+      {/* Top */}
+
+      <div className="p-8">
+
+        <div className="flex justify-between items-center">
+
+          <div
+            className={`
+            flex
+            items-center
+            gap-2
+            px-3
+            py-1
+            rounded-full
+            text-sm
+            bg-gradient-to-r
+            ${accent}
+            text-white
+            `}
+          >
+            {badge}
+            {plan.type}
+          </div>
+
+          {plan.popular && (
+            <div className="px-3 py-1 rounded-full bg-yellow-400 text-black text-xs font-bold">
+              POPULAR
+            </div>
+          )}
+
+        </div>
+
+        <h2 className="mt-8 text-5xl font-black">
+          {formatMoney(plan.size)}
+        </h2>
+
+        <p className="text-slate-400 mt-2">
+          Trading Capital
+        </p>
+
+        <div className="mt-8">
+
+          <h3 className="text-4xl font-bold">
+            {formatMoney(plan.price)}
+          </h3>
+
+          <p className="text-slate-500 text-sm mt-1">
+            One-Time Fee
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* Features */}
+
+      <div className="border-y border-white/10 p-8">
+
+        <div className="space-y-5">
+
+          <Feature
+            label="Profit Target"
+            value={`${plan.target}%`}
+          />
+
+          <Feature
+            label="Max Drawdown"
+            value={`${plan.loss}%`}
+          />
+
+          <Feature
+            label="Profit Split"
+            value="100%"
+          />
+
+          <Feature
+            label="Minimum Days"
+            value={
+              isPremium
+                ? "Unlimited"
+                : isChallenge
+                ? "5 Days"
+                : "Instant"
+            }
+          />
+
+          <Feature
+            label="Weekend Holding"
+            value={
+              isPremium
+                ? "Allowed"
+                : "Available"
+            }
+          />
+
+        </div>
+
+      </div>
+
+      {/* Button */}
+
+      <div className="p-8">
 
         <Link
           to="/auth"
-         className={`mt-8 block text-center py-3 rounded-xl font-medium ${
-  isGold
-    ? "bg-yellow-500 text-black hover:bg-yellow-400"
-    : isGreen
-    ? "bg-green-600 hover:bg-green-700"
-    : "bg-blue-600 hover:bg-blue-700"
-}`}
+          className={`
+          group
+          flex
+          justify-center
+          items-center
+          gap-3
+          rounded-2xl
+          py-4
+          font-semibold
+          text-white
+          bg-gradient-to-r
+          ${accent}
+          transition-all
+          duration-300
+          hover:scale-[1.03]
+          `}
         >
-          Buy Now
+          Start Now
+
+          <ArrowRight
+            size={18}
+            className="group-hover:translate-x-1 transition"
+          />
+
         </Link>
+
       </div>
-    );
-  };
 
-  return (
-    <div className="bg-gray-950 text-white min-h-screen px-6 py-16">
-      <div className="max-w-7xl mx-auto">
-
-        {/* HEADER */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold">
-            Choose Your Trading Account
-          </h2>
-          <p className="mt-4 text-gray-400 max-w-xl mx-auto">
-            Start your trading journey with flexible funding options.
-          </p>
-        </div>
-
-        {/* LOADING */}
-        {loadingPlans && (
-          <p className="text-center text-gray-400">Loading plans...</p>
-        )}
-
-        {/* CHALLENGE */}
-        {!loadingPlans && (
-          <>
-            <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-blue-500"></span>
-              Challenge Accounts
-            </h3>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-              {challengePlans.map((plan, i) => (
-                <PlanCard key={i} plan={plan} color="blue" />
-              ))}
-            </div>
-
-            {/* INSTANT */}
-            <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-green-500"></span>
-              Instant Funding Accounts
-            </h3>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {instantPlans.map((plan, i) => (
-                <PlanCard key={i} plan={plan} color="green" />
-              ))}
-            </div>
-            {/* PREMIUM */}
-<div className="mt-16">
-
-  <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-    <span className="w-1 h-6 bg-yellow-500"></span>
-    Instant Premium Accounts
-  </h3>
-
-  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {premiumPlans.map((plan, i) => (
-      <PlanCard
-        key={i}
-        plan={plan}
-        color="gold"
-      />
-    ))}
-  </div>
-
-</div>
-          </>
-        )}
-      </div>
     </div>
   );
+};
+
+  return (
+  <section className="relative overflow-hidden bg-[#050816] py-24">
+
+    {/* Background */}
+    <div className="absolute inset-0">
+
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-sky-500/10 blur-[180px] rounded-full" />
+
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/10 blur-[180px] rounded-full" />
+
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)] bg-[size:55px_55px]" />
+
+    </div>
+
+    <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+
+      {/* Heading */}
+
+      <div className="text-center max-w-3xl mx-auto">
+
+        <span className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-5 py-2 text-sky-300 text-sm">
+
+          FUNDING PROGRAMS
+
+        </span>
+
+        <h2 className="mt-8 text-4xl sm:text-5xl lg:text-6xl font-black text-white">
+
+          Choose Your
+
+          <span className="block bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent">
+
+            Trading Account
+
+          </span>
+
+        </h2>
+
+        <p className="mt-6 text-slate-400 text-lg leading-relaxed">
+
+          Whether you're a beginner or an experienced trader,
+          choose the funding model that fits your strategy and
+          start trading with FundedNaira capital.
+
+        </p>
+
+      </div>
+
+      {/* Benefits */}
+
+      <div className="mt-14 flex flex-wrap justify-center gap-4">
+
+        {[
+          "Up To ₦800,000 Capital",
+          "Fast Naira Payouts",
+          "100% Profit Split",
+          "Instant Funding",
+          "24/7 Support",
+        ].map((item) => (
+
+          <div
+            key={item}
+            className="
+            px-5
+            py-3
+            rounded-2xl
+            bg-white/5
+            border
+            border-white/10
+            text-slate-300
+            backdrop-blur-xl
+            "
+          >
+            ✓ {item}
+          </div>
+
+        ))}
+
+      </div>
+
+      {/* Loading */}
+
+      {loadingPlans && (
+
+        <div className="text-center mt-20">
+
+          <div className="inline-block h-10 w-10 rounded-full border-4 border-sky-500 border-t-transparent animate-spin"></div>
+
+          <p className="mt-5 text-slate-400">
+            Loading trading accounts...
+          </p>
+
+        </div>
+
+      )}
+
+      {!loadingPlans && (
+        <>
+
+          {/* Challenge */}
+
+          <section className="mt-24">
+
+            <div className="flex items-center gap-3 mb-10">
+
+              <div className="w-2 h-10 rounded-full bg-blue-500" />
+
+              <div>
+
+                <h3 className="text-3xl font-bold text-white">
+
+                  Challenge Accounts
+
+                </h3>
+
+                <p className="text-slate-400">
+
+                  Complete the evaluation and get funded.
+
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+
+              {challengePlans.map((plan, index) => (
+
+                <PlanCard
+                  key={index}
+                  plan={plan}
+                  color="blue"
+                />
+
+              ))}
+
+            </div>
+
+          </section>
+
+          {/* Instant */}
+
+          <section className="mt-24">
+
+            <div className="flex items-center gap-3 mb-10">
+
+              <div className="w-2 h-10 rounded-full bg-green-500" />
+
+              <div>
+
+                <h3 className="text-3xl font-bold text-white">
+
+                  Instant Funding
+
+                </h3>
+
+                <p className="text-slate-400">
+
+                  Skip evaluation and trade immediately.
+
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+
+              {instantPlans.map((plan, index) => (
+
+                <PlanCard
+                  key={index}
+                  plan={plan}
+                  color="green"
+                />
+
+              ))}
+
+            </div>
+
+          </section>
+
+          {/* Premium */}
+
+          <section className="mt-24">
+
+            <div className="flex items-center gap-3 mb-10">
+
+              <div className="w-2 h-10 rounded-full bg-yellow-500" />
+
+              <div>
+
+                <h3 className="text-3xl font-bold text-white">
+
+                  Premium Funding
+
+                </h3>
+
+                <p className="text-slate-400">
+
+                  Maximum flexibility with premium benefits.
+
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+
+              {premiumPlans.map((plan, index) => (
+
+                <PlanCard
+                  key={index}
+                  plan={plan}
+                  color="gold"
+                />
+
+              ))}
+
+            </div>
+
+          </section>
+
+        </>
+      )}
+
+    </div>
+
+  </section>
+);
 };
 
 export default Pricing;
