@@ -1,77 +1,144 @@
-import { useEffect, useState } from "react";
-import { Eye, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Eye,
+  Search,
+  RefreshCw,
+  FileText,
+  Clock3,
+  CheckCircle2,
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+
 import PhaseModal from "../Components/PhaseModal";
 import MPLayout from "../Components/Layout2";
 
 const StatusBadge = ({ status }) => {
   const value = String(status || "").toLowerCase();
 
-  if (value === "approved") {
-    return (
-      <span className="px-3 py-1 rounded-full text-xs bg-green-500/20 text-green-400 border border-green-500/30">
-        Approved
-      </span>
-    );
-  }
+  const config = {
+    approved: {
+      label: "Approved",
+      icon: CheckCircle2,
+      className:
+        "border-green-500/20 bg-green-500/10 text-green-400",
+    },
 
-  if (value === "rejected") {
-    return (
-      <span className="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-400 border border-red-500/30">
-        Rejected
-      </span>
-    );
-  }
+    rejected: {
+      label: "Rejected",
+      icon: XCircle,
+      className:
+        "border-red-500/20 bg-red-500/10 text-red-400",
+    },
 
-  if (value === "suspended") {
-    return (
-      <span className="px-3 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-        Suspended
-      </span>
-    );
-  }
+    suspended: {
+      label: "Suspended",
+      icon: Clock3,
+      className:
+        "border-yellow-500/20 bg-yellow-500/10 text-yellow-400",
+    },
+
+    pending: {
+      label: "Pending",
+      icon: Clock3,
+      className:
+        "border-blue-500/20 bg-blue-500/10 text-blue-400",
+    },
+  };
+
+  const current = config[value] || config.pending;
+  const Icon = current.icon;
 
   return (
-    <span className="px-3 py-1 rounded-full text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30">
-      Pending
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${current.className}`}
+    >
+      <Icon size={13} />
+      {current.label}
     </span>
+  );
+};
+
+const StatCard = ({
+  title,
+  value,
+  icon: Icon,
+  iconClass,
+}) => {
+  return (
+    <div className="rounded-2xl border border-gray-800 bg-gray-900 p-5 transition hover:border-gray-700">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-400">
+            {title}
+          </p>
+
+          <h3 className="mt-2 text-3xl font-bold text-white">
+            {value}
+          </h3>
+        </div>
+
+        <div className={`rounded-xl p-3 ${iconClass}`}>
+          <Icon size={22} />
+        </div>
+      </div>
+    </div>
   );
 };
 
 const PhaseRequests = () => {
   const [requests, setRequests] = useState([]);
-  const [filteredRequests, setFilteredRequests] = useState([]);
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState(null);
+
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] =
+    useState("all");
+
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] =
+    useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
 
   const perPage = 10;
 
-  const fetchRequests = async () => {
+  /* =========================
+     FETCH REQUESTS
+  ========================= */
+
+  const fetchRequests = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
 
       const res = await fetch(
         "https://api.fundednaira.net/api/admin/get-phase-requests.php"
       );
-  const data = await res.json();
 
-if (Array.isArray(data)) {
-  setRequests(data);
-  setFilteredRequests(data);
-} else {
-  setRequests([]);
-  setFilteredRequests([]);
-}
+      const data = await res.json();
 
-     
+      if (Array.isArray(data)) {
+        setRequests(data);
+      } else {
+        setRequests([]);
+      }
+
+      setCurrentPage(1);
     } catch (error) {
-      console.error("fetchRequests error:", error);
-      setRequests([]);
-      setFilteredRequests([]);
+      console.error(
+        "fetchRequests error:",
+        error
+      );
 
+      setRequests([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -79,210 +146,679 @@ if (Array.isArray(data)) {
     fetchRequests();
   }, []);
 
-  useEffect(() => {
-    const keyword = search.toLowerCase();
+  /* =========================
+     FILTER
+  ========================= */
 
-    const filtered = requests.filter((item) => {
-      return (
-        String(item.full_name || "").toLowerCase().includes(keyword) ||
-        String(item.email || "").toLowerCase().includes(keyword) ||
-        String(item.status || "").toLowerCase().includes(keyword) ||
-        String(item.current_phase || "").toLowerCase().includes(keyword) ||
-        String(item.requested_phase || "").toLowerCase().includes(keyword)
-      );
+  const filteredRequests = useMemo(() => {
+    const keyword = search
+      .toLowerCase()
+      .trim();
+
+    return requests.filter((item) => {
+      const matchesSearch =
+        !keyword ||
+        String(item.full_name || "")
+          .toLowerCase()
+          .includes(keyword) ||
+        String(item.email || "")
+          .toLowerCase()
+          .includes(keyword) ||
+        String(item.status || "")
+          .toLowerCase()
+          .includes(keyword) ||
+        String(item.current_phase || "")
+          .toLowerCase()
+          .includes(keyword) ||
+        String(item.requested_phase || "")
+          .toLowerCase()
+          .includes(keyword);
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        String(item.status || "")
+          .toLowerCase() === statusFilter;
+
+      return matchesSearch && matchesStatus;
     });
+  }, [requests, search, statusFilter]);
 
-    setFilteredRequests(filtered);
-  }, [search, requests]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
 
-  const handleUpdated = (id, status, note) => {
-    const updatedRequests = requests.map((item) =>
-      item.id === id ? { ...item, status, admin_note: note } : item
+  /* =========================
+     UPDATE REQUEST
+  ========================= */
+
+  const handleUpdated = (
+    id,
+    status,
+    note
+  ) => {
+    const updatedRequests = requests.map(
+      (item) =>
+        String(item.id) === String(id)
+          ? {
+              ...item,
+              status,
+              admin_note: note,
+            }
+          : item
     );
 
     setRequests(updatedRequests);
-
-    const keyword = search.toLowerCase();
-    const filtered = updatedRequests.filter((item) => {
-      return (
-        String(item.full_name || "").toLowerCase().includes(keyword) ||
-        String(item.email || "").toLowerCase().includes(keyword) ||
-        String(item.status || "").toLowerCase().includes(keyword) ||
-        String(item.current_phase || "").toLowerCase().includes(keyword) ||
-        String(item.requested_phase || "").toLowerCase().includes(keyword)
-      );
-    });
-
-    setFilteredRequests(filtered);
     setSelectedRequest(null);
   };
 
-  const totalPages = Math.ceil(filteredRequests.length / perPage);
-  const indexOfLast = currentPage * perPage;
-  const indexOfFirst = indexOfLast - perPage;
-  const currentData = filteredRequests.slice(indexOfFirst, indexOfLast);
+  /* =========================
+     STATISTICS
+  ========================= */
+
+  const totalRequests = requests.length;
+
+  const pendingRequests = requests.filter(
+    (item) =>
+      String(item.status || "")
+        .toLowerCase() === "pending"
+  ).length;
+
+  const approvedRequests = requests.filter(
+    (item) =>
+      String(item.status || "")
+        .toLowerCase() === "approved"
+  ).length;
+
+  const rejectedRequests = requests.filter(
+    (item) =>
+      String(item.status || "")
+        .toLowerCase() === "rejected"
+  ).length;
+
+  /* =========================
+     PAGINATION
+  ========================= */
+
+  const totalPages = Math.ceil(
+    filteredRequests.length / perPage
+  );
+
+  const indexOfLast =
+    currentPage * perPage;
+
+  const indexOfFirst =
+    indexOfLast - perPage;
+
+  const currentData =
+    filteredRequests.slice(
+      indexOfFirst,
+      indexOfLast
+    );
+
   useEffect(() => {
-  if (currentPage > totalPages && totalPages > 0) {
-    setCurrentPage(totalPages);
-  }
-}, [totalPages, currentPage]);
+    if (
+      totalPages > 0 &&
+      currentPage > totalPages
+    ) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  /* =========================
+     DATE
+  ========================= */
+
+  const formatDate = (date) => {
+    if (!date) return "—";
+
+    const parsed = new Date(date);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return date;
+    }
+
+    return parsed.toLocaleDateString(
+      "en-NG",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }
+    );
+  };
 
   return (
     <MPLayout>
-      <div className="min-h-screen bg-gray-950 text-white p-6 md:p-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Phase Requests</h1>
-            <p className="text-gray-400 mt-2">
-              View full login details and manage trader phase requests.
-            </p>
-          </div>
+      <div className="min-h-screen bg-[#0B0F19] text-white">
+        <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
 
-          <div className="relative w-full md:w-80">
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              placeholder="Search requests..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-gray-800 bg-gray-900 py-3 pl-10 pr-4 outline-none focus:border-blue-500"
-            />
-          </div>
-        </div>
+          {/* =========================
+              HEADER
+          ========================= */}
 
-        <div className="overflow-x-auto rounded-2xl border border-gray-800 bg-gray-900">
-          <table className="w-full min-w-[900px]">
-            <thead className="bg-gray-800/70">
-              <tr className="text-left text-sm text-gray-300">
-                <th className="px-6 py-4">Trader</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4">Current Phase</th>
-                <th className="px-6 py-4">Requested Phase</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Action</th>
-              </tr>
-            </thead>
+          <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <div className="rounded-lg bg-blue-600/10 p-2 text-blue-400">
+                  <FileText size={20} />
+                </div>
 
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-10 text-center text-gray-400">
-                    Loading phase requests...
-                  </td>
-                </tr>
-              ) : currentData.length > 0 ? (
-                currentData.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-t border-gray-800 text-sm hover:bg-gray-800/40"
-                  >
-                    <td className="px-6 py-4 font-medium">{item.full_name}</td>
-                    <td className="px-6 py-4 text-gray-300">{item.email}</td>
-                    <td className="px-6 py-4 text-gray-300">{item.current_phase}</td>
-                    <td className="px-6 py-4 text-gray-300">{item.requested_phase}</td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={item.status} />
-                    </td>
-                    <td className="px-6 py-4 text-gray-300">{item.created_at}</td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => setSelectedRequest(item)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 hover:bg-blue-700"
-                      >
-                        <Eye size={16} />
-                        Manage
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="px-6 py-10 text-center text-gray-400">
-                    No phase requests found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                <span className="text-sm font-medium text-blue-400">
+                  Request Management
+                </span>
+              </div>
 
-      {totalPages > 0 && (
-  <div className="flex flex-wrap justify-center items-center gap-2 mt-6">
-    
-    <button
-      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-      className="px-4 py-2 bg-gray-800 rounded-lg disabled:opacity-50"
-      disabled={currentPage === 1}
-    >
-      Prev
-    </button>
+              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+                Phase Requests
+              </h1>
 
-    <div className="flex items-center gap-2 flex-wrap justify-center">
-      {Array.from(
-        { length: Math.min(totalPages, 5) },
-        (_, i) => {
-          let pageNumber;
+              <p className="mt-2 text-sm text-gray-400 md:text-base">
+                Review and manage trader phase
+                upgrade requests.
+              </p>
+            </div>
 
-          if (totalPages <= 5) {
-            pageNumber = i + 1;
-          } else if (currentPage <= 3) {
-            pageNumber = i + 1;
-          } else if (currentPage >= totalPages - 2) {
-            pageNumber = totalPages - 4 + i;
-          } else {
-            pageNumber = currentPage - 2 + i;
-          }
-
-          return (
             <button
-              key={pageNumber}
-              onClick={() => setCurrentPage(pageNumber)}
-              className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
-                currentPage === pageNumber
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
+              onClick={() =>
+                fetchRequests(true)
+              }
+              disabled={refreshing}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm font-medium text-gray-200 transition hover:border-gray-600 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {pageNumber}
+              <RefreshCw
+                size={17}
+                className={
+                  refreshing
+                    ? "animate-spin"
+                    : ""
+                }
+              />
+
+              {refreshing
+                ? "Refreshing..."
+                : "Refresh"}
             </button>
-          );
-        }
-      )}
+          </div>
 
-      {totalPages > 5 && currentPage < totalPages - 2 && (
-        <>
-          <span className="text-gray-500 px-1">...</span>
+          {/* =========================
+              STATISTICS
+          ========================= */}
 
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            className="w-10 h-10 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700"
-          >
-            {totalPages}
-          </button>
-        </>
-      )}
-    </div>
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-    <button
-      onClick={() =>
-        setCurrentPage((p) => Math.min(p + 1, totalPages))
-      }
-      className="px-4 py-2 bg-gray-800 rounded-lg disabled:opacity-50"
-      disabled={currentPage === totalPages}
-    >
-      Next
-    </button>
-  </div>
-)}
+            <StatCard
+              title="Total Requests"
+              value={totalRequests}
+              icon={FileText}
+              iconClass="bg-blue-500/10 text-blue-400"
+            />
+
+            <StatCard
+              title="Pending Requests"
+              value={pendingRequests}
+              icon={Clock3}
+              iconClass="bg-yellow-500/10 text-yellow-400"
+            />
+
+            <StatCard
+              title="Approved Requests"
+              value={approvedRequests}
+              icon={CheckCircle2}
+              iconClass="bg-green-500/10 text-green-400"
+            />
+
+            <StatCard
+              title="Rejected Requests"
+              value={rejectedRequests}
+              icon={XCircle}
+              iconClass="bg-red-500/10 text-red-400"
+            />
+
+          </div>
+
+          {/* =========================
+              REQUEST TABLE
+          ========================= */}
+
+          <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900">
+
+            {/* Toolbar */}
+            <div className="border-b border-gray-800 p-4 md:p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+                <div>
+                  <h2 className="font-semibold text-white">
+                    All Phase Requests
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    {filteredRequests.length}{" "}
+                    request
+                    {filteredRequests.length !==
+                    1
+                      ? "s"
+                      : ""}{" "}
+                    found
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+
+                  {/* Search */}
+                  <div className="relative w-full sm:w-72">
+                    <Search
+                      size={17}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    />
+
+                    <input
+                      type="text"
+                      placeholder="Search trader or email..."
+                      value={search}
+                      onChange={(e) =>
+                        setSearch(
+                          e.target.value
+                        )
+                      }
+                      className="w-full rounded-xl border border-gray-700 bg-gray-950 py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Status */}
+                  <select
+                    value={statusFilter}
+                    onChange={(e) =>
+                      setStatusFilter(
+                        e.target.value
+                      )
+                    }
+                    className="rounded-xl border border-gray-700 bg-gray-950 px-4 py-2.5 text-sm text-gray-300 outline-none focus:border-blue-500"
+                  >
+                    <option value="all">
+                      All Status
+                    </option>
+
+                    <option value="pending">
+                      Pending
+                    </option>
+
+                    <option value="approved">
+                      Approved
+                    </option>
+
+                    <option value="rejected">
+                      Rejected
+                    </option>
+
+                    <option value="suspended">
+                      Suspended
+                    </option>
+                  </select>
+
+                </div>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1000px]">
+
+                <thead>
+                  <tr className="border-b border-gray-800 bg-gray-950/50 text-left">
+
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      Trader
+                    </th>
+
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      Email
+                    </th>
+
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      Current Phase
+                    </th>
+
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      Requested Phase
+                    </th>
+
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      Status
+                    </th>
+
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      Submitted
+                    </th>
+
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      Action
+                    </th>
+
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  {/* Loading */}
+                  {loading ? (
+                    Array.from({
+                      length: 6,
+                    }).map((_, index) => (
+                      <tr
+                        key={index}
+                        className="border-b border-gray-800/70"
+                      >
+                        {Array.from({
+                          length: 7,
+                        }).map(
+                          (_, column) => (
+                            <td
+                              key={column}
+                              className="px-6 py-5"
+                            >
+                              <div className="h-4 w-24 animate-pulse rounded bg-gray-800" />
+                            </td>
+                          )
+                        )}
+                      </tr>
+                    ))
+                  ) : currentData.length >
+                    0 ? (
+
+                    currentData.map(
+                      (item) => (
+                        <tr
+                          key={item.id}
+                          className="border-b border-gray-800/70 transition hover:bg-gray-800/30"
+                        >
+
+                          {/* Trader */}
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600/10 text-sm font-bold text-blue-400">
+                                {String(
+                                  item.full_name ||
+                                    "U"
+                                )
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </div>
+
+                              <div>
+                                <p className="font-medium text-white">
+                                  {item.full_name ||
+                                    "Unknown"}
+                                </p>
+
+                                <p className="text-xs text-gray-600">
+                                  Request #
+                                  {
+                                    item.id
+                                  }
+                                </p>
+                              </div>
+
+                            </div>
+                          </td>
+
+                          {/* Email */}
+                          <td className="px-6 py-4 text-sm text-gray-400">
+                            {item.email ||
+                              "—"}
+                          </td>
+
+                          {/* Current Phase */}
+                          <td className="px-6 py-4">
+                            <span className="inline-flex rounded-lg bg-gray-800 px-3 py-1.5 text-xs font-medium text-gray-300">
+                              Phase{" "}
+                              {item.current_phase ||
+                                "—"}
+                            </span>
+                          </td>
+
+                          {/* Requested Phase */}
+                          <td className="px-6 py-4">
+                            <span className="inline-flex rounded-lg bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-400">
+                              Phase{" "}
+                              {item.requested_phase ||
+                                "—"}
+                            </span>
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-6 py-4">
+                            <StatusBadge
+                              status={
+                                item.status
+                              }
+                            />
+                          </td>
+
+                          {/* Date */}
+                          <td className="px-6 py-4 text-sm text-gray-400">
+                            {formatDate(
+                              item.created_at
+                            )}
+                          </td>
+
+                          {/* Action */}
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() =>
+                                setSelectedRequest(
+                                  item
+                                )
+                              }
+                              className="inline-flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-600/10 px-3.5 py-2 text-sm font-medium text-blue-400 transition hover:border-blue-500/40 hover:bg-blue-600 hover:text-white"
+                            >
+                              <Eye size={16} />
+                              Manage
+                            </button>
+                          </td>
+
+                        </tr>
+                      )
+                    )
+
+                  ) : (
+
+                    /* Empty */
+                    <tr>
+                      <td
+                        colSpan="7"
+                        className="px-6 py-16 text-center"
+                      >
+                        <div className="mx-auto flex max-w-sm flex-col items-center">
+
+                          <div className="mb-4 rounded-2xl bg-gray-800 p-4 text-gray-500">
+                            <FileText
+                              size={28}
+                            />
+                          </div>
+
+                          <h3 className="font-semibold text-gray-300">
+                            No requests found
+                          </h3>
+
+                          <p className="mt-2 text-sm text-gray-500">
+                            Try changing your
+                            search or status
+                            filter.
+                          </p>
+
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+
+                </tbody>
+              </table>
+            </div>
+
+            {/* =========================
+                PAGINATION
+            ========================= */}
+
+            {!loading &&
+              totalPages > 0 && (
+                <div className="flex flex-col gap-4 border-t border-gray-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+
+                  <p className="text-sm text-gray-500">
+                    Showing{" "}
+                    <span className="font-medium text-gray-300">
+                      {indexOfFirst + 1}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-medium text-gray-300">
+                      {Math.min(
+                        indexOfLast,
+                        filteredRequests.length
+                      )}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-medium text-gray-300">
+                      {
+                        filteredRequests.length
+                      }
+                    </span>
+                  </p>
+
+                  <div className="flex items-center gap-2">
+
+                    <button
+                      onClick={() =>
+                        setCurrentPage(
+                          (p) =>
+                            Math.max(
+                              p - 1,
+                              1
+                            )
+                        )
+                      }
+                      disabled={
+                        currentPage ===
+                        1
+                      }
+                      className="inline-flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-300 transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <ChevronLeft
+                        size={16}
+                      />
+                      Prev
+                    </button>
+
+                    <div className="hidden items-center gap-1 sm:flex">
+
+                      {Array.from(
+                        {
+                          length: Math.min(
+                            totalPages,
+                            5
+                          ),
+                        },
+                        (_, i) => {
+                          let pageNumber;
+
+                          if (
+                            totalPages <=
+                            5
+                          ) {
+                            pageNumber =
+                              i + 1;
+                          } else if (
+                            currentPage <=
+                            3
+                          ) {
+                            pageNumber =
+                              i + 1;
+                          } else if (
+                            currentPage >=
+                            totalPages -
+                              2
+                          ) {
+                            pageNumber =
+                              totalPages -
+                              4 +
+                              i;
+                          } else {
+                            pageNumber =
+                              currentPage -
+                              2 +
+                              i;
+                          }
+
+                          return (
+                            <button
+                              key={
+                                pageNumber
+                              }
+                              onClick={() =>
+                                setCurrentPage(
+                                  pageNumber
+                                )
+                              }
+                              className={`h-9 w-9 rounded-lg text-sm font-medium transition ${
+                                currentPage ===
+                                pageNumber
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
+                              }`}
+                            >
+                              {
+                                pageNumber
+                              }
+                            </button>
+                          );
+                        }
+                      )}
+
+                    </div>
+
+                    <span className="text-sm text-gray-500 sm:hidden">
+                      Page{" "}
+                      {currentPage} of{" "}
+                      {totalPages}
+                    </span>
+
+                    <button
+                      onClick={() =>
+                        setCurrentPage(
+                          (p) =>
+                            Math.min(
+                              p + 1,
+                              totalPages
+                            )
+                        )
+                      }
+                      disabled={
+                        currentPage ===
+                        totalPages
+                      }
+                      className="inline-flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-300 transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Next
+                      <ChevronRight
+                        size={16}
+                      />
+                    </button>
+
+                  </div>
+                </div>
+              )}
+          </div>
+        </div>
+
+        {/* =========================
+            PHASE MODAL
+        ========================= */}
 
         {selectedRequest && (
           <PhaseModal
             data={selectedRequest}
-            onClose={() => setSelectedRequest(null)}
+            onClose={() =>
+              setSelectedRequest(null)
+            }
             onUpdated={handleUpdated}
           />
         )}

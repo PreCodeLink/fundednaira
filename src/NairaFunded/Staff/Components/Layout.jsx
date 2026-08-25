@@ -6,6 +6,9 @@ import {
   LayoutDashboard,
   Upload,
   LogOut,
+  ChevronRight,
+  ShieldCheck,
+  Circle,
 } from "lucide-react";
 
 const StaffLayout = ({ children }) => {
@@ -14,9 +17,45 @@ const StaffLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const staff = JSON.parse(localStorage.getItem("staff") || "null");
+
+  const staffName = staff?.name || staff?.full_name || "Staff";
+  const staffRole = staff?.role || "Staff";
+
+  const getInitials = (name) => {
+    if (!name) return "S";
+
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  };
+
+  const getRoleName = (role) => {
+    switch (role) {
+      case "ua":
+        return "Upload Account Staff";
+
+      case "mp":
+        return "Management Staff";
+
+      case "mp2":
+        return "Phase 2 Manager";
+
+      case "pr":
+        return "Payout Staff";
+
+      default:
+        return "Staff Member";
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("staff");
     localStorage.removeItem("staff_token");
+
     navigate("/auth/staff");
   };
 
@@ -33,106 +72,334 @@ const StaffLayout = ({ children }) => {
     },
   ];
 
+  const currentMenu =
+    menus.find((item) => location.pathname === item.path);
+
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-white">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-[#05070D] text-white">
+
+      {/* ================= SIDEBAR ================= */}
+
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-gray-900 border-r border-gray-800 transition-transform duration-300 ${
-          open ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
+        className={`
+          fixed top-0 left-0 z-50 h-screen w-72
+          bg-[#0B0F19]
+          border-r border-white/[0.07]
+          transition-transform duration-300
+          ${open ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0
+        `}
       >
-        <div className="flex h-16 items-center justify-between border-b border-gray-800 px-5">
-          <h2 className="text-xl font-bold">
-            Staff Panel
-          </h2>
 
-          <button
-            className="lg:hidden"
-            onClick={() => setOpen(false)}
-          >
-            <X size={22} />
-          </button>
-        </div>
+        {/* Logo */}
 
-        <div className="p-4">
-          <div className="mb-6 rounded-xl bg-gray-800 p-4">
-            <p className="text-xs text-gray-400">
-              Logged in as
-            </p>
+        <div className="h-20 flex items-center justify-between px-6 border-b border-white/[0.07]">
 
-            <h3 className="font-semibold">
-              Upload Account Staff
-            </h3>
+          <div className="flex items-center gap-3">
+
+            <div className="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
+
+              <ShieldCheck
+                size={21}
+                className="text-blue-400"
+              />
+
+            </div>
+
+            <div>
+
+              <h1 className="font-bold text-lg tracking-tight">
+                FundedNaira
+              </h1>
+
+              <p className="text-[10px] uppercase tracking-widest text-gray-500">
+                Staff Portal
+              </p>
+
+            </div>
+
           </div>
 
-          <nav className="space-y-2">
-            {menus.map((item, index) => {
+          <button
+            onClick={() => setOpen(false)}
+            className="lg:hidden text-gray-500 hover:text-white"
+          >
+            <X size={21} />
+          </button>
+
+        </div>
+
+
+        {/* Staff Profile */}
+
+        <div className="p-5">
+
+          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
+
+            <div className="flex items-center gap-3">
+
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600/30 to-blue-400/10 border border-blue-500/20 flex items-center justify-center text-sm font-bold text-blue-300">
+
+                {getInitials(staffName)}
+
+              </div>
+
+              <div className="min-w-0">
+
+                <p className="text-sm font-semibold text-white truncate">
+                  {staffName}
+                </p>
+
+                <p className="text-[11px] text-gray-500 truncate">
+                  {getRoleName(staffRole)}
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="flex items-center gap-2 mt-4">
+
+              <Circle
+                size={8}
+                className="fill-emerald-400 text-emerald-400"
+              />
+
+              <span className="text-[11px] text-emerald-400">
+                Online
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* Navigation */}
+
+        <div className="px-4">
+
+          <p className="px-3 mb-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
+            Workspace
+          </p>
+
+          <nav className="space-y-1.5">
+
+            {menus.map((item) => {
+
               const Icon = item.icon;
+
+              const active =
+                location.pathname === item.path;
 
               return (
                 <Link
-                  key={index}
+                  key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
-                    location.pathname === item.path
-                      ? "bg-blue-600 text-white"
-                      : "hover:bg-gray-800"
-                  }`}
+                  onClick={() => setOpen(false)}
+                  className={`
+                    group flex items-center justify-between
+                    rounded-xl px-4 py-3
+                    transition-all duration-200
+                    ${
+                      active
+                        ? "bg-blue-600/10 border border-blue-500/20 text-blue-400"
+                        : "border border-transparent text-gray-400 hover:bg-white/[0.04] hover:text-white"
+                    }
+                  `}
                 >
-                  <Icon size={18} />
-                  {item.name}
+
+                  <div className="flex items-center gap-3">
+
+                    <Icon size={18} />
+
+                    <span className="text-sm font-medium">
+                      {item.name}
+                    </span>
+
+                  </div>
+
+                  {active && (
+                    <ChevronRight size={16} />
+                  )}
+
                 </Link>
               );
+
             })}
+
           </nav>
 
-          <button
-            onClick={logout}
-            className="mt-8 flex w-full items-center gap-3 rounded-xl bg-red-600 px-4 py-3 hover:bg-red-700"
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
         </div>
+
+
+        {/* Bottom */}
+
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+
+          <div className="border-t border-white/[0.07] pt-4">
+
+            <button
+              onClick={logout}
+              className="
+                group flex w-full items-center gap-3
+                rounded-xl px-4 py-3
+                text-gray-400
+                hover:bg-red-500/10
+                hover:text-red-400
+                transition
+              "
+            >
+
+              <LogOut
+                size={18}
+                className="group-hover:text-red-400"
+              />
+
+              <span className="text-sm font-medium">
+                Sign out
+              </span>
+
+            </button>
+
+          </div>
+
+        </div>
+
       </aside>
 
-      {/* Mobile Overlay */}
+
+      {/* ================= MOBILE OVERLAY ================= */}
+
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          className="
+            fixed inset-0 z-40
+            bg-black/70 backdrop-blur-sm
+            lg:hidden
+          "
         />
       )}
 
-      {/* Main */}
-      <div className="lg:ml-64">
-        {/* Navbar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-800 bg-gray-900 px-6">
-          <div className="flex items-center gap-3">
+
+      {/* ================= MAIN ================= */}
+
+      <div className="lg:ml-72 min-h-screen">
+
+        {/* Header */}
+
+        <header
+          className="
+            sticky top-0 z-30
+            h-20
+            border-b border-white/[0.07]
+            bg-[#05070D]/90
+            backdrop-blur-xl
+            flex items-center justify-between
+            px-5 sm:px-8
+          "
+        >
+
+          <div className="flex items-center gap-4">
+
+            {/* Mobile Menu */}
+
             <button
               onClick={() => setOpen(true)}
-              className="lg:hidden"
+              className="
+                lg:hidden
+                w-10 h-10
+                rounded-xl
+                border border-white/10
+                bg-white/[0.03]
+                flex items-center justify-center
+                text-gray-400
+                hover:text-white
+              "
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
 
-            <h1 className="text-lg font-semibold">
-              Upload Account Manegement
-            </h1>
+
+            <div>
+
+              <div className="flex items-center gap-2">
+
+                <h1 className="text-lg sm:text-xl font-semibold">
+                  {currentMenu?.name || "Staff Portal"}
+                </h1>
+
+              </div>
+
+              <div className="hidden sm:flex items-center gap-2 mt-1">
+
+                <span className="text-[11px] text-gray-600">
+                  Staff Portal
+                </span>
+
+                <ChevronRight
+                  size={12}
+                  className="text-gray-700"
+                />
+
+                <span className="text-[11px] text-gray-500">
+                  {currentMenu?.name || "Dashboard"}
+                </span>
+
+              </div>
+
+            </div>
+
           </div>
+
+
+          {/* Header Staff */}
 
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">
-              S
+
+            <div className="hidden sm:block text-right">
+
+              <p className="text-sm font-medium text-white">
+                {staffName}
+              </p>
+
+              <p className="text-[10px] text-gray-500">
+                {getRoleName(staffRole)}
+              </p>
+
             </div>
+
+            <div className="
+              w-10 h-10
+              rounded-xl
+              bg-gradient-to-br
+              from-blue-600/30
+              to-blue-400/10
+              border border-blue-500/20
+              flex items-center justify-center
+              text-sm font-bold
+              text-blue-300
+            ">
+              {getInitials(staffName)}
+            </div>
+
           </div>
+
         </header>
 
+
         {/* Page Content */}
-        <main className="p-6">
+
+        <main className="p-4 sm:p-6 lg:p-8">
+
           {children}
+
         </main>
+
       </div>
+
     </div>
   );
 };
