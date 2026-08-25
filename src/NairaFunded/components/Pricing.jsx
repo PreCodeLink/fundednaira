@@ -194,9 +194,14 @@ const Feature = ({ label, value }) => (
 
           <Feature
             label="Profit Target"
-            value={`${plan.target}%`}
+            value={`${plan.target}% ` }
           />
-
+          {
+            plan.type == 'Challenge' ? <Feature
+            label="Phases:"
+            value="1/2"
+          /> : ''
+          }
           <Feature
             label="Max Drawdown"
             value={`${plan.loss}%`}

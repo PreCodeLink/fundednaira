@@ -175,7 +175,7 @@ const Hero = () => {
                 </div>
 
                 <div className="text-center border-x border-white/10">
-                  <h4 className="font-bold text-lg">10%</h4>
+                  <h4 className="font-bold text-lg">20%</h4>
                   <p className="text-xs text-slate-400">Drawdown</p>
                 </div>
 
