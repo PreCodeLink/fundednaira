@@ -86,12 +86,52 @@ const PerformanceBar = ({ balance, equity }) => {
   );
 };
 
+// Inline banner rendered INSIDE the modal, so errors/success are always
+// visible even while the modal is open (the toast alone can be missed).
+const ModalMessage = ({ message, onDismiss }) => {
+  if (!message?.show) return null;
+
+  const isSuccess = message.type === "success";
+
+  return (
+    <div
+      className={`mb-5 flex items-start gap-3 rounded-xl border px-4 py-3 ${
+        isSuccess
+          ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
+          : "border-red-400/25 bg-red-400/10 text-red-200"
+      }`}
+    >
+      <div className="mt-0.5 shrink-0">
+        {isSuccess ? (
+          <CheckCircle2 size={18} className="text-emerald-300" />
+        ) : (
+          <AlertCircle size={18} className="text-red-300" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">
+          {isSuccess ? "Request Submitted" : "Request Failed"}
+        </p>
+        <p className="mt-0.5 text-xs text-[#93A0B4]">{message.text}</p>
+      </div>
+      <button
+        onClick={onDismiss}
+        className="shrink-0 text-[#5B6B82] transition hover:text-[#F3EFE6]"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  );
+};
+
 const AccountDetailsModal = ({
   isOpen,
   onClose,
   account,
   requestPhase,
   loadingRequest,
+  message,
+  onDismissMessage,
 }) => {
   if (!isOpen || !account) return null;
 
@@ -109,6 +149,16 @@ const AccountDetailsModal = ({
       : "";
 
   const statusKey = String(account.status).toLowerCase();
+   const requestStatus = String(
+  account.phase_request_status || ""
+).toLowerCase();
+
+const hasPendingRequest =
+  requestStatus === "pending" ||
+  requestStatus === "requested" ||
+  requestStatus === "processing";
+
+const requestedPhase = account.requested_phase || "";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
@@ -133,6 +183,9 @@ const AccountDetailsModal = ({
             </h2>
           </div>
         </div>
+
+        {/* Inline success/error message — always visible while modal is open */}
+        <ModalMessage message={message} onDismiss={onDismissMessage} />
 
         <div className="mb-6 grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
@@ -219,27 +272,50 @@ const AccountDetailsModal = ({
           </div>
         </div>
 
-        {canRequestPhase ? (
-          String(account.type).toLowerCase() === "challenge" ? (
-            <button
-              onClick={() => requestPhase(account, nextPhase)}
-              disabled={loadingRequest}
-              className="w-full rounded-lg bg-[#38BDF8]/15 py-3 font-medium text-[#38BDF8] ring-1 ring-inset ring-[#38BDF8]/30 transition-all duration-200 hover:bg-[#38BDF8]/25 hover:shadow-[0_0_24px_rgba(56,189,248,0.15)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-            >
-              {loadingRequest ? "Submitting..." : `Request Phase ${nextPhase}`}
-            </button>
-          ) : (
-            <div className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-center text-sm text-[#5B6B82]">
-              Phase requests are only available for Challenge accounts
-            </div>
-          )
-        ) : (
-          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-[#5B6B82]">
-            {currentPhase === "funded"
-              ? "This account is already funded."
-              : "Only active accounts can request the next phase."}
-          </div>
-        )}
+        {/* PHASE REQUEST */}
+{hasPendingRequest ? (
+  <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-4">
+    <div className="flex items-center gap-3">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-400/10 text-amber-300">
+        <Activity size={17} />
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold text-amber-300">
+          Phase Request Pending
+        </p>
+
+        <p className="mt-0.5 text-xs text-[#93A0B4]">
+          {requestedPhase
+            ? `Your request to move to Phase ${requestedPhase} is currently under review by our team.`
+            : "Your phase request is currently under review by our team."}
+        </p>
+      </div>
+    </div>
+  </div>
+) : canRequestPhase ? (
+  String(account.type).toLowerCase() === "challenge" ? (
+    <button
+      onClick={() => requestPhase(account, nextPhase)}
+      disabled={loadingRequest}
+      className="w-full rounded-lg bg-[#38BDF8]/15 py-3 font-medium text-[#38BDF8] ring-1 ring-inset ring-[#38BDF8]/30 transition-all duration-200 hover:bg-[#38BDF8]/25 hover:shadow-[0_0_24px_rgba(56,189,248,0.15)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+    >
+      {loadingRequest
+        ? "Submitting Request..."
+        : `Request Phase ${nextPhase}`}
+    </button>
+  ) : (
+    <div className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-center text-sm text-[#5B6B82]">
+      Phase requests are only available for Challenge accounts.
+    </div>
+  )
+) : (
+  <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-[#5B6B82]">
+    {currentPhase === "funded"
+      ? "This account has already been funded."
+      : "Only active accounts are eligible to request the next phase."}
+  </div>
+)}
       </div>
     </div>
   );
@@ -262,9 +338,14 @@ const MyAccounts = () => {
 
   const showMessage = (type, text) => {
     setMessage({ show: true, type, text });
+
     setTimeout(() => {
       setMessage({ show: false, type: "", text: "" });
-    }, 3000);
+    }, 10000);
+  };
+
+  const dismissMessage = () => {
+    setMessage({ show: false, type: "", text: "" });
   };
 
   const formatMoney = (value) => {
@@ -315,7 +396,10 @@ const MyAccounts = () => {
       }
     } catch (error) {
       console.error("fetchAccounts error:", error);
-      showMessage("error", "Server error while loading accounts");
+      showMessage(
+        "error",
+        "We couldn't load your accounts right now. Please refresh the page or try again shortly."
+      );
     } finally {
       setLoadingAccounts(false);
     }
@@ -326,6 +410,7 @@ const MyAccounts = () => {
   }, []);
 
   const handleViewDetails = (acc) => {
+    dismissMessage();
     setSelectedAccount(acc);
     setOpenModal(true);
   };
@@ -333,24 +418,36 @@ const MyAccounts = () => {
   const requestPhase = async (account, requestedPhase) => {
     const userId = getUserId();
     if (!userId) {
-      showMessage("error", "User not logged in");
+      showMessage(
+        "error",
+        "Your session appears to have expired. Please log in again to continue."
+      );
       return;
     }
 
     const currentPhase = account?.phase || "";
 
     if (!account?.id) {
-      showMessage("error", "Missing account id");
+      showMessage(
+        "error",
+        "We couldn't identify this account. Please refresh the page and try again."
+      );
       return;
     }
 
     if (!currentPhase) {
-      showMessage("error", "Missing current phase");
+      showMessage(
+        "error",
+        "This account's current phase could not be determined. Please refresh the page and try again."
+      );
       return;
     }
 
     if (!requestedPhase) {
-      showMessage("error", "Missing requested phase");
+      showMessage(
+        "error",
+        "We couldn't determine the next phase for this account. Please refresh the page and try again."
+      );
       return;
     }
 
@@ -379,16 +476,28 @@ const MyAccounts = () => {
       const data = JSON.parse(text);
 
       if (data.success) {
-        showMessage("success", data.message || "Phase request submitted");
-        setOpenModal(false);
-        setSelectedAccount(null);
-        fetchAccounts();
+        showMessage(
+          "success",
+          data.message ||
+            `Your request to move to Phase ${requestedPhase} has been submitted successfully. Our team will review it shortly.`
+        );
+
+        // Keep the modal open so the user actually sees the confirmation,
+        // then refresh the account data behind it.
+        await fetchAccounts();
       } else {
-        showMessage("error", data.message || "Failed to submit request");
+        showMessage(
+          "error",
+          data.message ||
+            "We couldn't submit your phase request at this time. Please try again, or contact support if the issue continues."
+        );
       }
     } catch (error) {
       console.error(error);
-      showMessage("error", "Server error");
+      showMessage(
+        "error",
+        "Something went wrong while processing your request. Please check your connection and try again."
+      );
     } finally {
       setLoadingRequest(false);
     }
@@ -417,17 +526,19 @@ const MyAccounts = () => {
         <div className="relative z-10 mx-auto w-full flex-1 md:ml-72 space-y-6 p-4 text-[#F3EFE6] md:max-w-4xl md:p-6">
           <TopSection />
 
-          {/* TOAST */}
-          {message.show && (
-            <div className="fixed right-5 top-5 z-[100]">
+          {/* TOAST — only relevant when the modal is closed; while the modal
+              is open, the message is shown inline inside it instead so it
+              can never be missed behind the overlay. */}
+          {message.show && !openModal && (
+            <div className="fixed right-4 top-20 z-[9999] w-[calc(100%-2rem)] max-w-[420px] md:right-6 md:top-24">
               <div
-                className={`flex min-w-[300px] max-w-[420px] items-start gap-3 rounded-2xl border px-4 py-4 backdrop-blur-xl ${
+                className={`flex w-full items-start gap-3 rounded-2xl border px-4 py-4 shadow-2xl backdrop-blur-xl ${
                   message.type === "success"
                     ? "border-emerald-400/30 bg-[#0B0F19]/95 text-emerald-200"
                     : "border-red-400/30 bg-[#0B0F19]/95 text-red-200"
                 }`}
               >
-                <div className="mt-0.5">
+                <div className="mt-0.5 shrink-0">
                   {message.type === "success" ? (
                     <CheckCircle2 size={20} className="text-emerald-300" />
                   ) : (
@@ -435,18 +546,19 @@ const MyAccounts = () => {
                   )}
                 </div>
 
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <h4 className="mb-1 font-semibold">
                     {message.type === "success" ? "Success" : "Error"}
                   </h4>
-                  <p className="text-sm text-[#93A0B4]">{message.text}</p>
+
+                  <p className="break-words text-sm text-[#93A0B4]">
+                    {message.text}
+                  </p>
                 </div>
 
                 <button
-                  onClick={() =>
-                    setMessage({ show: false, type: "", text: "" })
-                  }
-                  className="text-[#5B6B82] transition hover:text-[#F3EFE6]"
+                  onClick={dismissMessage}
+                  className="shrink-0 text-[#5B6B82] transition hover:text-[#F3EFE6]"
                 >
                   <X size={18} />
                 </button>
@@ -481,8 +593,19 @@ const MyAccounts = () => {
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {accounts.map((acc) => {
-                  const statusKey = String(acc.status).toLowerCase();
+               {accounts.map((acc) => {
+  const statusKey = String(acc.status).toLowerCase();
+
+  const requestStatus = String(
+    acc.phase_request_status || ""
+  ).toLowerCase();
+
+  const hasPendingRequest =
+    requestStatus === "pending" ||
+    requestStatus === "requested" ||
+    requestStatus === "processing";
+
+  const requestedPhase = acc.requested_phase || "";
                   return (
                     <div
                       key={acc.id}
@@ -553,7 +676,26 @@ const MyAccounts = () => {
                       >
                         {acc.status}
                       </span>
+  {hasPendingRequest && (
+  <div className="relative mt-3 flex items-center gap-2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2">
+    <Activity
+      size={14}
+      className="shrink-0 text-amber-300"
+    />
 
+    <div className="min-w-0">
+      <p className="text-xs font-semibold text-amber-300">
+        Phase Request Pending
+      </p>
+
+      <p className="mt-0.5 text-[0.65rem] text-[#93A0B4]">
+        {requestedPhase
+          ? `Waiting for Phase ${requestedPhase} review`
+          : "Waiting for review"}
+      </p>
+    </div>
+  </div>
+)}
                       <button
                         onClick={() => handleViewDetails(acc)}
                         className="relative mt-5 w-full rounded-lg bg-[#38BDF8]/15 py-2 text-sm font-medium text-[#38BDF8] ring-1 ring-inset ring-[#38BDF8]/30 transition hover:bg-[#38BDF8]/25"
@@ -577,10 +719,15 @@ const MyAccounts = () => {
 
       <AccountDetailsModal
         isOpen={openModal}
-        onClose={() => setOpenModal(false)}
+        onClose={() => {
+          setOpenModal(false);
+          dismissMessage();
+        }}
         account={selectedAccount}
         requestPhase={requestPhase}
         loadingRequest={loadingRequest}
+        message={message}
+        onDismissMessage={dismissMessage}
       />
     </Layout>
   );
