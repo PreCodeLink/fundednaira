@@ -192,6 +192,14 @@ const submitBreach = async () => {
                     <span className="text-gray-400">Current Phase:</span>{" "}
                     <span className="text-green-400">{ accountDetails.type === "Challenge" ? accountDetails.phase : accountDetails.type }</span>
                   </p>
+                  {accountDetails.is_upgraded && (
+  <p>
+    <span className="text-gray-400">Account:</span>{" "}
+    <span className="text-blue-400 font-semibold">
+      Upgraded ✓
+    </span>
+  </p>
+)}
                 </div>
               ) : (
                 <p className="text-red-400 text-sm">Failed to load account</p>
