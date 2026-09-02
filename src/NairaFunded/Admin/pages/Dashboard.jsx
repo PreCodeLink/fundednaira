@@ -121,7 +121,7 @@ const AdminDashboard = () => {
           type: "payments",
         },
         {
-          title: "Payout This Month",
+          title: "Payout This Month -20%",
           value: formatMoney(s.total_payout_this_month),
           icon: TrendingUp,
           type: "payout",

@@ -94,7 +94,7 @@ const Rules = () => {
 
     {
       title: "Profit Split",
-      value: "100% Trader",
+      value: "80% Trader",
     },
 
     {
@@ -231,7 +231,7 @@ const Rules = () => {
             ["Maximum Drawdown", "20%"],
             ["Daily Drawdown", "None"],
             ["Minimum Trading Days", "No Minimum"],
-            ["Profit Split", "100%"],
+            ["Profit Split", "80%"],
             ["Payout Time", "Within 5 Minutes"],
           ].map(([title, value]) => (
 
@@ -620,7 +620,7 @@ const Rules = () => {
         },
         {
           title: "Profit Split",
-          value: "100%",
+          value: "80%",
           icon: "💰",
           color: "yellow",
         },
@@ -677,7 +677,7 @@ const Rules = () => {
         </p>
 
         <h2 className="mt-5 text-5xl font-black">
-          100%
+          80%
         </h2>
 
         <p className="text-2xl mt-2">

@@ -49,6 +49,8 @@ import Payouts from "./NairaFunded/Staff/Pages/Payout.jsx";
 import StaffManageReferrals from "./NairaFunded/Staff/Pages/ManageReferrals.jsx";
 import MyAccounts from "./NairaFunded/Dashboard/pages/MyAccounts.jsx";
 import UpgardeAccount from "./NairaFunded/Admin/pages/UpgardeAccount.jsx";
+import DailyPayout from "./NairaFunded/Admin/pages/DailyPayout.jsx";
+import DailyReferrals from "./NairaFunded/Admin/pages/DailyReferrals.jsx";
 
 function App() {
   return (
@@ -111,8 +113,10 @@ function App() {
           <Route path="/auth/admin/feedback" element={<AdminFeedBack />} />
           <Route path="/auth/admin/accounts" element={<AdminAccountPlans />} />
           <Route path="/auth/admin/payouts" element={<AdminPayout />} />
+          <Route path="/auth/admin/payouts-daily" element={<DailyPayout />} />
           <Route path="/auth/admin/phase" element={<PhaseRequest />} />
           <Route path="/auth/admin/referrals" element={<ManageReferrals />} />
+          <Route path="/auth/admin/daily-referrals" element={<DailyReferrals />} />
           <Route path="/auth/admin/upgrade-account" element={<UpgardeAccount />} />
           <Route path="/auth/admin/upload-acc" element={<UplaodAccount />} />
           <Route path="/auth/admin/referral-claims" element={<ReffaralClaims />}

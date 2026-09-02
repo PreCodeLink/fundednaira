@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  CalendarDays,
 } from "lucide-react";
 
 const Accounts = () => {
@@ -24,6 +25,7 @@ const Accounts = () => {
   const [filter, setFilter] = useState("All");
   const [sizeFilter, setSizeFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
 
   const [currentPage, setCurrentPage] =
     useState(1);
@@ -36,8 +38,26 @@ const Accounts = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] =
     useState(false);
-
+ 
   const accountsPerPage = 10;
+  const getNigeriaDate = (createdAt) => {
+  if (!createdAt) return "";
+
+  const date = new Date(
+    String(createdAt).replace(" ", "T") + "Z"
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+};
 
   const [message, setMessage] = useState({
     show: false,
@@ -365,41 +385,65 @@ const Accounts = () => {
   ========================= */
 
   const filteredAccounts = useMemo(() => {
-    return accounts.filter((acc) => {
-      const matchesStatus =
-        filter === "All" ||
-        String(acc.status || "")
-          .toLowerCase() ===
-          filter.toLowerCase();
 
-      const matchesSearch =
-        !search ||
-        String(acc.user || "")
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        String(acc.email || "")
-          .toLowerCase()
-          .includes(search.toLowerCase());
+  return accounts.filter((acc) => {
 
-      const matchesSize =
-        sizeFilter === "All" ||
-        String(acc.size).replace(
-          /[^0-9]/g,
-          ""
-        ) === sizeFilter;
+    const matchesStatus =
+      filter === "All" ||
+      String(acc.status || "")
+        .toLowerCase() ===
+        filter.toLowerCase();
 
-      return (
-        matchesStatus &&
-        matchesSearch &&
-        matchesSize
-      );
-    });
-  }, [
-    accounts,
-    filter,
-    search,
-    sizeFilter,
-  ]);
+
+    const searchValue =
+      search.toLowerCase().trim();
+
+
+    const matchesSearch =
+      !searchValue ||
+      String(acc.user || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      String(acc.email || "")
+        .toLowerCase()
+        .includes(searchValue);
+
+
+    const matchesSize =
+      sizeFilter === "All" ||
+      String(acc.size)
+        .replace(/[^0-9]/g, "") ===
+        sizeFilter;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DATE FILTER
+    |--------------------------------------------------------------------------
+    */
+
+    const matchesDate =
+      !dateFilter ||
+      getNigeriaDate(acc.created_at) ===
+        dateFilter;
+
+
+    return (
+      matchesStatus &&
+      matchesSearch &&
+      matchesSize &&
+      matchesDate
+    );
+
+  });
+
+}, [
+  accounts,
+  filter,
+  search,
+  sizeFilter,
+  dateFilter,
+]);
 
   /* =========================
      STATISTICS
@@ -490,6 +534,7 @@ const Accounts = () => {
         {/* ================= HEADER ================= */}
 
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
+          
 
           <div>
 
@@ -582,124 +627,140 @@ const Accounts = () => {
 
         <div className="bg-[#0B0F19] border border-white/[0.07] rounded-2xl p-4 mb-5">
 
-          <div className="flex flex-col lg:flex-row gap-3">
+  <div className="flex flex-col lg:flex-row gap-3">
 
-            {/* SEARCH */}
+    {/* SEARCH */}
 
-            <div className="relative flex-1">
+    <div className="relative flex-1">
 
-              <Search
-                size={17}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"
-              />
+      <Search
+        size={17}
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"
+      />
 
-              <input
-                type="text"
-                placeholder="Search by user or email..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(
-                    e.target.value
-                  );
-                  setCurrentPage(1);
-                }}
-                className="w-full h-11 pl-11 pr-4 rounded-xl bg-[#070A11] border border-white/10 text-sm text-white placeholder:text-gray-600 outline-none focus:border-blue-500/50 transition"
-              />
+      <input
+        type="text"
+        placeholder="Search by user or email..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="w-full h-11 pl-11 pr-4 rounded-xl bg-[#070A11] border border-white/10 text-sm text-white placeholder:text-gray-600 outline-none focus:border-blue-500/50 transition"
+      />
 
-            </div>
+    </div>
 
 
-            {/* SIZE */}
+    {/* DATE */}
 
-            <div className="relative">
+    <div className="relative">
 
-              <Filter
-                size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none"
-              />
+      <CalendarDays
+        size={15}
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none"
+      />
 
-              <select
-                value={sizeFilter}
-                onChange={(e) => {
-                  setSizeFilter(
-                    e.target.value
-                  );
-                  setCurrentPage(1);
-                }}
-                className="h-11 pl-9 pr-8 rounded-xl bg-[#070A11] border border-white/10 text-sm text-gray-300 outline-none focus:border-blue-500/50"
-              >
+      <input
+        type="date"
+        value={dateFilter}
+        onChange={(e) => {
+          setDateFilter(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="h-11 pl-9 pr-3 rounded-xl bg-[#070A11] border border-white/10 text-sm text-gray-300 outline-none focus:border-blue-500/50 transition"
+      />
 
-                <option value="All">
-                  All Sizes
-                </option>
-
-                <option value="50000">
-                  50K
-                </option>
-
-                <option value="100000">
-                  100K
-                </option>
-
-                <option value="200000">
-                  200K
-                </option>
-
-                <option value="300000">
-                  300K
-                </option>
-
-                <option value="400000">
-                  400K
-                </option>
-
-                <option value="600000">
-                  600K
-                </option>
-
-                <option value="800000">
-                  800K
-                </option>
-
-              </select>
-
-            </div>
+    </div>
 
 
-            {/* STATUS */}
+    {/* SIZE */}
 
-            <select
-              value={filter}
-              onChange={(e) => {
-                setFilter(
-                  e.target.value
-                );
-                setCurrentPage(1);
-              }}
-              className="h-11 px-4 rounded-xl bg-[#070A11] border border-white/10 text-sm text-gray-300 outline-none focus:border-blue-500/50"
-            >
+    <div className="relative">
 
-              <option value="All">
-                All Status
-              </option>
+      <Filter
+        size={15}
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none"
+      />
 
-              <option value="Active">
-                Active
-              </option>
+      <select
+        value={sizeFilter}
+        onChange={(e) => {
+          setSizeFilter(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="h-11 pl-9 pr-8 rounded-xl bg-[#070A11] border border-white/10 text-sm text-gray-300 outline-none focus:border-blue-500/50"
+      >
 
-              <option value="Pending">
-                Pending
-              </option>
+        <option value="All">
+          All Sizes
+        </option>
 
-              <option value="Failed">
-                Failed
-              </option>
+        <option value="50000">
+          50K
+        </option>
 
-            </select>
+        <option value="100000">
+          100K
+        </option>
 
-          </div>
+        <option value="200000">
+          200K
+        </option>
 
-        </div>
+        <option value="300000">
+          300K
+        </option>
+
+        <option value="400000">
+          400K
+        </option>
+
+        <option value="600000">
+          600K
+        </option>
+
+        <option value="800000">
+          800K
+        </option>
+
+      </select>
+
+    </div>
+
+
+    {/* STATUS */}
+
+    <select
+      value={filter}
+      onChange={(e) => {
+        setFilter(e.target.value);
+        setCurrentPage(1);
+      }}
+      className="h-11 px-4 rounded-xl bg-[#070A11] border border-white/10 text-sm text-gray-300 outline-none focus:border-blue-500/50"
+    >
+
+      <option value="All">
+        All Status
+      </option>
+
+      <option value="Active">
+        Active
+      </option>
+
+      <option value="Pending">
+        Pending
+      </option>
+
+      <option value="Failed">
+        Failed
+      </option>
+
+    </select>
+
+  </div>
+
+</div>
 
 
         {/* ================= TABLE ================= */}

@@ -162,10 +162,14 @@ const AdminLayout = ({ children }) => {
               label="Payouts"
               onClick={closeSidebar}
             />
-
+  <NavItem
+              to="/auth/admin/payouts-daily"
+              icon={ShoppingCart}
+              label=" Daily Payouts"
+              onClick={closeSidebar}
+            />
           </NavSection>
-
-
+          
           <NavSection title="Trading">
 
             <NavItem
@@ -184,6 +188,12 @@ const AdminLayout = ({ children }) => {
               to="/auth/admin/referrals"
               icon={Users}
               label="Manage Referrals"
+              onClick={closeSidebar}
+            />
+            <NavItem
+              to="/auth/admin/daily-referrals"
+              icon={Users}
+              label="Daily Referrals"
               onClick={closeSidebar}
             />
 

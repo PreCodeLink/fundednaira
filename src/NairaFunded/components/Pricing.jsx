@@ -209,7 +209,7 @@ const Feature = ({ label, value }) => (
 
           <Feature
             label="Profit Split"
-            value="100%"
+            value="80%"
           />
 
           <Feature
@@ -329,7 +329,7 @@ const Feature = ({ label, value }) => (
         {[
           "Up To ₦800,000 Capital",
           "Fast Naira Payouts",
-          "100% Profit Split",
+          "80% Profit Split",
           "Instant Funding",
           "24/7 Support",
         ].map((item) => (

@@ -6,7 +6,7 @@ const Hero = () => {
   const stats = [
     { value: "₦50M+", label: "Paid out" },
     { value: "10K+", label: "Traders" },
-    { value: "100%", label: "Profit split" },
+    { value: "80%", label: "Profit split" },
     { value: "24/7", label: "Support" },
   ];
 
@@ -48,7 +48,7 @@ const Hero = () => {
 
             <p className="mt-8 text-lg text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
               Trade with FundedNaira capital, receive payouts in naira,
-              keep up to 100% of profits, and scale your trading journey
+              keep up to 80% of profits, and scale your trading journey
               without risking personal capital.
             </p>
 
@@ -180,7 +180,7 @@ const Hero = () => {
                 </div>
 
                 <div className="text-center">
-                  <h4 className="font-bold text-lg">100%</h4>
+                  <h4 className="font-bold text-lg">80%</h4>
                   <p className="text-xs text-slate-400">Profit split</p>
                 </div>
 

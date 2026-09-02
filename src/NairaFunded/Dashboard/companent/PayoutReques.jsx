@@ -174,7 +174,7 @@ const PayoutModal = ({ isOpen, onClose, paymentDetails, onSuccess }) => {
       if (result.success) {
         setType("success");
 
-        setMessage(result.message || "Payout request submitted successfully");
+        setMessage(result.message || "Payout request submitted successfully ");
 
         setAmount("");
         setSelectedAccount("");
