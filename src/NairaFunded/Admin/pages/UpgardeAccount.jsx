@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "../Layout";
+import { useNavigate } from "react-router-dom";
 
 import {
   AlertCircle,
@@ -18,6 +19,8 @@ import {
 } from "lucide-react";
 
 const UpgradeAccount = () => {
+  const navigate = useNavigate();
+
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -39,6 +42,36 @@ const UpgradeAccount = () => {
     type: "",
     text: "",
   });
+
+  /* =========================
+     API
+  ========================= */
+
+  const API_BASE = "https://api.fundednaira.net/api/admin";
+
+  /* =========================
+     AUTH HEADERS
+  ========================= */
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  /* =========================
+     HANDLE UNAUTHORIZED
+  ========================= */
+
+  const handleUnauthorized = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/auth/admin", { replace: true });
+  };
 
   /* =========================
      TOAST
@@ -89,12 +122,28 @@ const UpgradeAccount = () => {
   ========================= */
 
   const fetchRequests = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      handleUnauthorized();
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch(
-        "https://api.fundednaira.net/api/admin/get-upgrade-requests.php"
+        `${API_BASE}/get-upgrade-requests.php`,
+        {
+          method: "GET",
+          headers: getAuthHeaders(),
+        }
       );
+
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
 
       const text = await res.text();
 
@@ -288,16 +337,21 @@ const UpgradeAccount = () => {
       return;
     }
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      handleUnauthorized();
+      return;
+    }
+
     try {
       setActionLoading(true);
 
       const res = await fetch(
-        "https://api.fundednaira.net/api/admin/approve-upgrade-request.php",
+        `${API_BASE}/approve-upgrade-request.php`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             request_id: selectedRequest.id,
             new_login: newLogin.trim(),
@@ -306,6 +360,11 @@ const UpgradeAccount = () => {
         }
       );
 
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
+
       const text = await res.text();
 
       let data;
@@ -313,7 +372,9 @@ const UpgradeAccount = () => {
       try {
         data = JSON.parse(text);
       } catch {
-        throw new Error(text || "Invalid server response.");
+        throw new Error(
+          text || "Invalid server response."
+        );
       }
 
       if (data.success) {
@@ -324,6 +385,8 @@ const UpgradeAccount = () => {
 
         setViewModal(false);
         setSelectedRequest(null);
+        setNewLogin("");
+        setNewPassword("");
 
         await fetchRequests();
       } else {
@@ -357,21 +420,31 @@ const UpgradeAccount = () => {
 
     if (!confirmed) return;
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      handleUnauthorized();
+      return;
+    }
+
     try {
       setActionLoading(true);
 
       const res = await fetch(
-        "https://api.fundednaira.net/api/admin/reject-upgrade-request.php",
+        `${API_BASE}/reject-upgrade-request.php`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             id: selectedRequest.id,
           }),
         }
       );
+
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
 
       const text = await res.text();
 
@@ -380,7 +453,9 @@ const UpgradeAccount = () => {
       try {
         data = JSON.parse(text);
       } catch {
-        throw new Error(text || "Invalid server response.");
+        throw new Error(
+          text || "Invalid server response."
+        );
       }
 
       if (data.success) {
@@ -414,6 +489,7 @@ const UpgradeAccount = () => {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-[#020617] text-white">
+
         {/* =========================
             TOAST
         ========================= */}
@@ -488,7 +564,6 @@ const UpgradeAccount = () => {
                 size={17}
                 className={loading ? "animate-spin" : ""}
               />
-
               Refresh
             </button>
           </div>
@@ -842,6 +917,7 @@ const UpgradeAccount = () => {
         {viewModal && selectedRequest && (
           <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
             <div className="w-full max-w-4xl overflow-hidden rounded-3xl border border-gray-800 bg-[#0B1120] shadow-2xl">
+
               {/* Modal Header */}
 
               <div className="flex items-center justify-between border-b border-gray-800 px-6 py-5 lg:px-8">
@@ -880,16 +956,19 @@ const UpgradeAccount = () => {
 
                 <button
                   onClick={closeViewModal}
-                  className="rounded-xl p-2 text-gray-500 transition hover:bg-gray-800 hover:text-white"
+                  disabled={actionLoading}
+                  className="rounded-xl p-2 text-gray-500 transition hover:bg-gray-800 hover:text-white disabled:opacity-40"
                 >
                   <X size={21} />
                 </button>
               </div>
 
               <div className="max-h-[78vh] overflow-y-auto p-6 lg:p-8">
+
                 {/* USER + ACCOUNT */}
 
                 <div className="grid gap-4 lg:grid-cols-2">
+
                   {/* User */}
 
                   <div className="rounded-2xl border border-gray-800 bg-gray-900/40 p-5">

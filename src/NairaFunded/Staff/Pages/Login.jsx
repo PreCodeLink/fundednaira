@@ -106,6 +106,9 @@ const StaffLogin = () => {
         case "pr":
           navigate("/staff/dashboard/prw");
           break;
+        case "ps":
+          navigate("/staff/dashboard/ps");
+          break;
 
         default:
           localStorage.removeItem("staff_token");

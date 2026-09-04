@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../Layout";
 import {
   Plus,
@@ -12,7 +13,6 @@ import {
   ChevronRight,
   Target,
   TrendingDown,
-  Percent,
 } from "lucide-react";
 
 import AddPlanModal from "../components/AddPlanModal";
@@ -22,25 +22,17 @@ const API_BASE =
   "https://api.fundednaira.net/api/admin";
 
 const AccountPlans = () => {
+  const navigate = useNavigate();
+
   const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editPlan, setEditPlan] = useState(null);
 
-  const [refreshing, setRefreshing] =
-    useState(false);
-
-  const [showModal, setShowModal] =
-    useState(false);
-
-  const [showEditModal, setShowEditModal] =
-    useState(false);
-
-  const [editPlan, setEditPlan] =
-    useState(null);
-
-  const [currentPage, setCurrentPage] =
-    useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const plansPerPage = 10;
 
@@ -58,6 +50,30 @@ const AccountPlans = () => {
     type: "",
     text: "",
   });
+
+  /* =========================
+     AUTH
+  ========================= */
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      return null;
+    }
+
+    return {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+  };
+
+  const handleUnauthorized = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/auth/admin");
+  };
 
   /* =========================
      MESSAGE
@@ -134,9 +150,7 @@ const AccountPlans = () => {
      FETCH PLANS
   ========================= */
 
-  const fetchPlans = async (
-    isRefresh = false
-  ) => {
+  const fetchPlans = async (isRefresh = false) => {
     try {
       if (isRefresh) {
         setRefreshing(true);
@@ -144,9 +158,25 @@ const AccountPlans = () => {
         setLoading(true);
       }
 
+      const headers = getAuthHeaders();
+
+      if (!headers) {
+        handleUnauthorized();
+        return;
+      }
+
       const res = await fetch(
-        `${API_BASE}/get-plans.php`
+        `${API_BASE}/get-plans.php`,
+        {
+          method: "GET",
+          headers,
+        }
       );
+
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
 
       const text = await res.text();
 
@@ -166,8 +196,15 @@ const AccountPlans = () => {
         );
       }
 
+      if (data.success === false) {
+        throw new Error(
+          data.message || "Failed to fetch plans"
+        );
+      }
+
       /*
        * Supports:
+       *
        * [...]
        *
        * {
@@ -183,13 +220,9 @@ const AccountPlans = () => {
 
       if (Array.isArray(data)) {
         setPlans(data);
-      } else if (
-        Array.isArray(data.plans)
-      ) {
+      } else if (Array.isArray(data.plans)) {
         setPlans(data.plans);
-      } else if (
-        Array.isArray(data.data)
-      ) {
+      } else if (Array.isArray(data.data)) {
         setPlans(data.data);
       } else {
         setPlans([]);
@@ -245,21 +278,38 @@ const AccountPlans = () => {
     }
 
     try {
+      const headers = getAuthHeaders();
+
+      if (!headers) {
+        handleUnauthorized();
+        return;
+      }
+
       const res = await fetch(
         `${API_BASE}/add-plan.php`,
         {
           method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
+          headers,
           body: JSON.stringify(newPlan),
         }
       );
 
-      const data = await res.json();
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
+
+      const text = await res.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(
+          "Invalid response from server"
+        );
+      }
 
       console.log(
         "ADD PLAN RESPONSE:",
@@ -293,11 +343,15 @@ const AccountPlans = () => {
         );
       }
     } catch (error) {
-      console.error(error);
+      console.error(
+        "ADD PLAN ERROR:",
+        error
+      );
 
       showMessage(
         "error",
-        "Server error"
+        error.message ||
+          "Server error"
       );
     }
   };
@@ -326,23 +380,38 @@ const AccountPlans = () => {
     }
 
     try {
+      const headers = getAuthHeaders();
+
+      if (!headers) {
+        handleUnauthorized();
+        return;
+      }
+
       const res = await fetch(
         `${API_BASE}/update-plan.php`,
         {
           method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify(
-            editPlan
-          ),
+          headers,
+          body: JSON.stringify(editPlan),
         }
       );
 
-      const data = await res.json();
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
+
+      const text = await res.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(
+          "Invalid response from server"
+        );
+      }
 
       console.log(
         "UPDATE PLAN RESPONSE:",
@@ -368,11 +437,15 @@ const AccountPlans = () => {
         );
       }
     } catch (error) {
-      console.error(error);
+      console.error(
+        "UPDATE PLAN ERROR:",
+        error
+      );
 
       showMessage(
         "error",
-        "Server error"
+        error.message ||
+          "Server error"
       );
     }
   };
@@ -382,24 +455,50 @@ const AccountPlans = () => {
   ========================= */
 
   const deletePlan = async (id) => {
+    if (!id) {
+      showMessage(
+        "error",
+        "Invalid plan ID"
+      );
+
+      return;
+    }
+
     try {
+      const headers = getAuthHeaders();
+
+      if (!headers) {
+        handleUnauthorized();
+        return;
+      }
+
       const res = await fetch(
         `${API_BASE}/delete-plan.php`,
         {
           method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
+          headers,
           body: JSON.stringify({
             id,
           }),
         }
       );
 
-      const data = await res.json();
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
+
+      const text = await res.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(
+          "Invalid response from server"
+        );
+      }
 
       console.log(
         "DELETE PLAN RESPONSE:",
@@ -425,11 +524,15 @@ const AccountPlans = () => {
         );
       }
     } catch (error) {
-      console.error(error);
+      console.error(
+        "DELETE PLAN ERROR:",
+        error
+      );
 
       showMessage(
         "error",
-        "Server error"
+        error.message ||
+          "Server error"
       );
     }
   };
@@ -482,11 +585,10 @@ const AccountPlans = () => {
   const indexOfFirst =
     indexOfLast - plansPerPage;
 
-  const currentPlans =
-    plans.slice(
-      indexOfFirst,
-      indexOfLast
-    );
+  const currentPlans = plans.slice(
+    indexOfFirst,
+    indexOfLast
+  );
 
   useEffect(() => {
     if (
@@ -535,7 +637,6 @@ const AccountPlans = () => {
 
           </div>
 
-
           <div className="flex gap-3">
 
             <button
@@ -561,7 +662,6 @@ const AccountPlans = () => {
 
             </button>
 
-
             <button
               onClick={() =>
                 setShowModal(true)
@@ -578,7 +678,6 @@ const AccountPlans = () => {
           </div>
 
         </div>
-
 
         {/* ================= STATISTICS ================= */}
 
@@ -605,9 +704,7 @@ const AccountPlans = () => {
             iconClass="text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
           />
 
-
         </div>
-
 
         {/* ================= TABLE ================= */}
 
@@ -641,7 +738,6 @@ const AccountPlans = () => {
             </div>
 
           </div>
-
 
           <div className="overflow-x-auto">
 
@@ -682,7 +778,6 @@ const AccountPlans = () => {
                 </tr>
 
               </thead>
-
 
               <tbody>
 
@@ -751,7 +846,6 @@ const AccountPlans = () => {
 
                         </td>
 
-
                         {/* PRICE */}
 
                         <td className="px-4 py-4">
@@ -763,7 +857,6 @@ const AccountPlans = () => {
                           </span>
 
                         </td>
-
 
                         {/* TYPE */}
 
@@ -787,7 +880,6 @@ const AccountPlans = () => {
 
                         </td>
 
-
                         {/* LOSS */}
 
                         <td className="px-4 py-4">
@@ -799,7 +891,6 @@ const AccountPlans = () => {
                           </span>
 
                         </td>
-
 
                         {/* TARGET */}
 
@@ -813,7 +904,6 @@ const AccountPlans = () => {
 
                         </td>
 
-
                         {/* SPLIT */}
 
                         <td className="px-4 py-4">
@@ -826,20 +916,14 @@ const AccountPlans = () => {
 
                         </td>
 
-
                         {/* ACTION */}
 
                         <td className="px-6 py-4 text-right">
 
                           <button
                             onClick={() => {
-                              setEditPlan(
-                                plan
-                              );
-
-                              setShowEditModal(
-                                true
-                              );
+                              setEditPlan(plan);
+                              setShowEditModal(true);
                             }}
                             className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20 transition text-xs font-medium"
                           >
@@ -898,7 +982,6 @@ const AccountPlans = () => {
 
           </div>
 
-
           {/* ================= PAGINATION ================= */}
 
           {totalPages > 1 && (
@@ -930,7 +1013,6 @@ const AccountPlans = () => {
 
               </p>
 
-
               <div className="flex items-center gap-2">
 
                 <button
@@ -954,7 +1036,6 @@ const AccountPlans = () => {
                   />
 
                 </button>
-
 
                 {Array.from(
                   {
@@ -1011,7 +1092,6 @@ const AccountPlans = () => {
                   }
                 )}
 
-
                 <button
                   onClick={() =>
                     setCurrentPage(
@@ -1043,7 +1123,6 @@ const AccountPlans = () => {
 
         </div>
 
-
         {/* ================= MODALS ================= */}
 
         <AddPlanModal
@@ -1062,7 +1141,6 @@ const AccountPlans = () => {
           updatePlan={updatePlan}
           deletePlan={deletePlan}
         />
-
 
         {/* ================= TOAST ================= */}
 
@@ -1101,7 +1179,6 @@ const AccountPlans = () => {
 
               </div>
 
-
               <div className="flex-1">
 
                 <h4 className="font-semibold mb-1">
@@ -1116,7 +1193,6 @@ const AccountPlans = () => {
                 </p>
 
               </div>
-
 
               <button
                 onClick={closeMessage}
@@ -1137,7 +1213,6 @@ const AccountPlans = () => {
     </AdminLayout>
   );
 };
-
 
 /* =========================
    STAT CARD

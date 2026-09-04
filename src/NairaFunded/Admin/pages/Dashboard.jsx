@@ -82,9 +82,32 @@ const AdminDashboard = () => {
         return;
       }
 
-      const res = await fetch(
-        "https://api.fundednaira.net/api/admin/dashboard.php"
-      );
+      const token = localStorage.getItem("token");
+
+if (!token) {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  navigate("/admin");
+  return;
+}
+
+const res = await fetch(
+  "https://api.fundednaira.net/api/admin/dashboard.php",
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+if (res.status === 401 || res.status === 403) {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  navigate("/admin");
+  return;
+}
 
       const data = await res.json();
 

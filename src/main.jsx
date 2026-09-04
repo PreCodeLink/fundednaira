@@ -51,6 +51,10 @@ import MyAccounts from "./NairaFunded/Dashboard/pages/MyAccounts.jsx";
 import UpgardeAccount from "./NairaFunded/Admin/pages/UpgardeAccount.jsx";
 import DailyPayout from "./NairaFunded/Admin/pages/DailyPayout.jsx";
 import DailyReferrals from "./NairaFunded/Admin/pages/DailyReferrals.jsx";
+import PendingDashboard from "./NairaFunded/Staff/Pages/DashboardPS.jsx";
+import StaffPurchasedAccount from "./NairaFunded/Staff/Pages/PurchasedAccount.jsx";
+import PendingPayouts from "./NairaFunded/Staff/Pages/Payout2.jsx";
+import StaffManagePendingsReferrals from "./NairaFunded/Staff/Pages/ManageReferrals2.jsx";
 
 function App() {
   return (
@@ -96,6 +100,10 @@ function App() {
   <Route path="/staff/phase2-requests" element={<PhaseRequests2 />} />
   <Route path="/staff/payout-requests" element={<Payouts />} />
   <Route path="/staff/referral-withdrawals" element={<StaffManageReferrals />} />
+  <Route path="/staff/dashboard/ps" element={<PendingDashboard />} /> 
+  <Route path="/staff/ppa" element={<StaffPurchasedAccount />} /> 
+  <Route path="/staff/ppt" element={<PendingPayouts />} /> 
+  <Route path="/staff/prwl" element={<StaffManagePendingsReferrals />} />
 </Route>
           
         {/* Admin login page - keep public if admin needs to login first */}

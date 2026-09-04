@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "../Layout";
 import UserToggleModal from "../components/UserModal";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Users,
@@ -31,66 +32,99 @@ const AdminUsers = () => {
   const [error, setError] = useState("");
 
   const usersPerPage = 10;
+  const navigate = useNavigate();
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return null;
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+};
 
   /* =========================
      FETCH USERS
   ========================= */
 
   const fetchUsers = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
-      setError("");
-
-      const query = new URLSearchParams({
-        search,
-        status: filter,
-      }).toString();
-
-      const res = await fetch(
-        `${API_BASE}/get-users.php?${query}`
-      );
-
-      const text = await res.text();
-
-      let data;
-
-      try {
-        data = JSON.parse(text);
-      } catch {
-        setError("Invalid server response");
-        setUsers([]);
-        return;
-      }
-
-      if (!data.success) {
-        setError(data.message || "Failed to fetch users");
-        setUsers([]);
-        return;
-      }
-
-      setUsers(
-        Array.isArray(data.users)
-          ? data.users
-          : []
-      );
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        "Unable to connect to the server."
-      );
-
-      setUsers([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+  try {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
     }
-  };
+
+    setError("");
+
+    const headers = getAuthHeaders();
+
+    if (!headers) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/admin");
+      return;
+    }
+
+    const query = new URLSearchParams({
+      search,
+      status: filter,
+    }).toString();
+
+    const res = await fetch(
+      `${API_BASE}/get-users.php?${query}`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
+
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/admin");
+      return;
+    }
+
+    const text = await res.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      setError("Invalid server response");
+      setUsers([]);
+      return;
+    }
+
+    if (!data.success) {
+      setError(data.message || "Failed to fetch users");
+      setUsers([]);
+      return;
+    }
+
+    setUsers(
+      Array.isArray(data.users)
+        ? data.users
+        : []
+    );
+
+  } catch (err) {
+    console.error(err);
+
+    setError("Unable to connect to the server.");
+    setUsers([]);
+
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
 
   useEffect(() => {
     fetchUsers();
@@ -169,128 +203,169 @@ const AdminUsers = () => {
      STATUS UPDATE
   ========================= */
 
-  const handleStatusChange = async (
-    userId,
-    status
-  ) => {
-    try {
-      const res = await fetch(
-        `${API_BASE}/update-user-status.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            status,
-          }),
-        }
-      );
+  const handleStatusChange = async (userId, status) => {
+  try {
+    setError("");
+    setMessage("");
 
-      const text = await res.text();
+    const headers = getAuthHeaders();
 
-      let data;
-
-      try {
-        data = JSON.parse(text);
-      } catch {
-        setError(
-          "Invalid server response"
-        );
-        return;
-      }
-
-      if (!data.success) {
-        setError(
-          data.message ||
-            "Failed to update status"
-        );
-
-        return;
-      }
-
-      setMessage(
-        data.message ||
-          "User status updated successfully"
-      );
-
-      setSelectedUser(null);
-
-      fetchUsers();
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        "Server error. Please try again."
-      );
+    if (!headers) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/admin");
+      return;
     }
-  };
 
-  /* =========================
-     DELETE USER
-  ========================= */
-
-  const handleDelete = async (userId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this user?"
+    const res = await fetch(
+      `${API_BASE}/update-user-status.php`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          user_id: userId,
+          status: status,
+        }),
+      }
     );
 
-    if (!confirmed) return;
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/admin");
+      return;
+    }
+
+    const text = await res.text();
+
+    let data;
 
     try {
-      const res = await fetch(
-        `${API_BASE}/delete-user.php`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            user_id: userId,
-          }),
-        }
-      );
-
-      const text = await res.text();
-
-      let data;
-
-      try {
-        data = JSON.parse(text);
-      } catch {
-        setError(
-          "Invalid server response"
-        );
-        return;
-      }
-
-      if (!data.success) {
-        setError(
-          data.message ||
-            "Failed to delete user"
-        );
-
-        return;
-      }
-
-      setMessage(
-        data.message ||
-          "User deleted successfully"
-      );
-
-      fetchUsers();
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        "Server error. Please try again."
-      );
+      data = JSON.parse(text);
+    } catch {
+      setError("Invalid server response");
+      return;
     }
-  };
+
+    if (!res.ok || !data.success) {
+      setError(
+        data.message ||
+        "Failed to update status"
+      );
+      return;
+    }
+
+    setMessage(
+      data.message ||
+      "User status updated successfully"
+    );
+
+    setSelectedUser(null);
+
+    await fetchUsers();
+
+  } catch (err) {
+    console.error(err);
+
+    setError(
+      "Server error. Please try again."
+    );
+  }
+};
+
+  /* =========================
+     SUSPEND USER
+  ========================= */
+
+const handleSuspend = async (userId) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to suspend this user?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setError("");
+    setMessage("");
+
+    const headers = getAuthHeaders();
+
+    if (!headers) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/admin");
+      return;
+    }
+
+    const res = await fetch(
+      `${API_BASE}/suspend-user.php`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          user_id: userId,
+        }),
+      }
+    );
+
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/admin");
+      return;
+    }
+
+    const text = await res.text();
+
+    console.log("Suspend response:", text);
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      setError(
+        `Server returned invalid JSON:\n${text}`
+      );
+      return;
+    }
+
+    if (!res.ok || !data.success) {
+      setError(
+        data.message ||
+        "Failed to suspend user."
+      );
+      return;
+    }
+
+    setMessage(
+      data.message ||
+      "User suspended successfully."
+    );
+
+    setUsers((prev) =>
+      prev.map((user) =>
+        Number(user.id) === Number(userId)
+          ? {
+              ...user,
+              status: "suspended",
+            }
+          : user
+      )
+    );
+
+  } catch (err) {
+    console.error(
+      "SUSPEND USER ERROR:",
+      err
+    );
+
+    setError(
+      err.message ||
+      "Server error."
+    );
+  }
+};
 
   /* =========================
      STATUS STYLE
@@ -736,14 +811,14 @@ const AdminUsers = () => {
 
                               <button
                                 onClick={() =>
-                                  handleDelete(
+                                  handleSuspend(
                                     user.id
                                   )
                                 }
                                 className="flex items-center justify-center w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition"
                               >
 
-                                <Trash2
+                                <UserX
                                   size={15}
                                 />
 
