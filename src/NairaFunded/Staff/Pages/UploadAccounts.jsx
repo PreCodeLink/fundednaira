@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
   CheckCircle2,
@@ -31,6 +32,7 @@ const ACCOUNT_SIZES = [
 ];
 
 const StaffUploadAccount = () => {
+   const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -140,46 +142,70 @@ const StaffUploadAccount = () => {
   // Fetch Accounts
   // -----------------------------
 
-  const fetchAccounts = async () => {
-    setLoading(true);
+ const fetchAccounts = async () => {
+  setLoading(true);
+
+  try {
+    const token = localStorage.getItem("staff_token");
+
+    if (!token) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const res = await fetch(
+      `${API_BASE}/Staff/get-trading-accounts.php`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // Token invalid/expired/not authorized
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const text = await res.text();
+
+    let data;
 
     try {
-      const res = await fetch(
-        `${API_BASE}/admin/get-trading-accounts.php`
-      );
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Invalid server response");
+    }
 
-      const text = await res.text();
-
-      let data;
-
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("Invalid server response");
-      }
-
-      if (Array.isArray(data)) {
-        setAccounts(data);
-      } else if (data.success) {
-        setAccounts(data.accounts || []);
-      } else {
-        setAccounts([]);
-        showMessage(
-          "error",
-          data.message || "Failed to load trading accounts."
-        );
-      }
-    } catch (error) {
-      console.error(error);
+    if (Array.isArray(data)) {
+      setAccounts(data);
+    } else if (data.success) {
+      setAccounts(data.accounts || []);
+    } else {
+      setAccounts([]);
 
       showMessage(
         "error",
-        "Unable to connect to the server."
+        data.message || "Failed to load trading accounts."
       );
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error(error);
+
+    showMessage(
+      "error",
+      "Unable to connect to the server."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchAccounts();
@@ -208,135 +234,169 @@ const StaffUploadAccount = () => {
   // -----------------------------
 
   const handleAddAccount = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (
-      !formData.login ||
-      !formData.password ||
-      !formData.server ||
-      !formData.size
-    ) {
-      showMessage("error", "Please complete all fields.");
+  if (
+    !formData.login ||
+    !formData.password ||
+    !formData.server ||
+    !formData.size
+  ) {
+    showMessage("error", "Please complete all fields.");
+    return;
+  }
+
+  setSubmitting(true);
+
+  try {
+    const token = localStorage.getItem("staff_token");
+
+    if (!token) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+      navigate("/auth/staff", { replace: true });
       return;
     }
 
-    setSubmitting(true);
+    const res = await fetch(
+      `${API_BASE}/Staff/add-trading-account.php`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      }
+    );
+
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const text = await res.text();
+
+    let data;
 
     try {
-      const res = await fetch(
-        `${API_BASE}/admin/add-trading-account.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Invalid server response");
+    }
+
+    if (data.success) {
+      showMessage(
+        "success",
+        data.message || "Trading account added successfully."
       );
 
-      const text = await res.text();
+      setFormData({
+        login: "",
+        password: "",
+        server: "",
+        size: "",
+      });
 
-      let data;
+      setShowPassword(false);
+      setOpenModal(false);
 
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("Invalid server response");
-      }
-
-      if (data.success) {
-        showMessage(
-          "success",
-          data.message || "Trading account added successfully."
-        );
-
-        setFormData({
-          login: "",
-          password: "",
-          server: "",
-          size: "",
-        });
-
-        setShowPassword(false);
-        setOpenModal(false);
-
-        fetchAccounts();
-      } else {
-        showMessage(
-          "error",
-          data.message || "Failed to add account."
-        );
-      }
-    } catch (error) {
-      console.error(error);
-
+      fetchAccounts();
+    } else {
       showMessage(
         "error",
-        "Unable to connect to the server."
+        data.message || "Failed to add account."
       );
-    } finally {
-      setSubmitting(false);
     }
-  };
+  } catch (error) {
+    console.error(error);
+
+    showMessage(
+      "error",
+      "Unable to connect to the server."
+    );
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   // -----------------------------
   // Edit Account
   // -----------------------------
 
-  const handleEditAccount = async (e) => {
-    e.preventDefault();
+ const handleEditAccount = async (e) => {
+  e.preventDefault();
 
-    setSubmitting(true);
+  setSubmitting(true);
+
+  try {
+    const token = localStorage.getItem("staff_token");
+
+    if (!token) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const res = await fetch(
+      `${API_BASE}/Staff/edit-trading-account.php`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editData),
+      }
+    );
+
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const text = await res.text();
+
+    let data;
 
     try {
-      const res = await fetch(
-        `${API_BASE}/admin/edit-trading-account.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editData),
-        }
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Invalid server response");
+    }
+
+    if (data.success) {
+      showMessage(
+        "success",
+        data.message || "Account updated successfully."
       );
 
-      const text = await res.text();
+      setEditModal(false);
+      setShowEditPassword(false);
 
-      let data;
-
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("Invalid server response");
-      }
-
-      if (data.success) {
-        showMessage(
-          "success",
-          data.message || "Account updated successfully."
-        );
-
-        setEditModal(false);
-        setShowEditPassword(false);
-
-        fetchAccounts();
-      } else {
-        showMessage(
-          "error",
-          data.message || "Failed to update account."
-        );
-      }
-    } catch (error) {
-      console.error(error);
-
+      fetchAccounts();
+    } else {
       showMessage(
         "error",
-        "Unable to connect to the server."
+        data.message || "Failed to update account."
       );
-    } finally {
-      setSubmitting(false);
     }
-  };
+  } catch (error) {
+    console.error(error);
+
+    showMessage(
+      "error",
+      "Unable to connect to the server."
+    );
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   // -----------------------------
   // Filtering

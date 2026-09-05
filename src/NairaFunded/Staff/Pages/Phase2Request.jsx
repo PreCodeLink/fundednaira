@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import PhaseModal from "../Components/PhaseModal";
 import MPLayout from "../Components/Layout2";
@@ -71,9 +72,7 @@ const StatCard = ({ title, value, icon: Icon, iconClass }) => {
           </h3>
         </div>
 
-        <div
-          className={`rounded-xl p-3 ${iconClass}`}
-        >
+        <div className={`rounded-xl p-3 ${iconClass}`}>
           <Icon size={22} />
         </div>
       </div>
@@ -82,6 +81,8 @@ const StatCard = ({ title, value, icon: Icon, iconClass }) => {
 };
 
 const PhaseRequests2 = () => {
+  const navigate = useNavigate();
+
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
@@ -95,6 +96,27 @@ const PhaseRequests2 = () => {
 
   const perPage = 10;
 
+  /*
+  |--------------------------------------------------------------------------
+  | Authentication Failure
+  |--------------------------------------------------------------------------
+  */
+
+  const handleAuthFailure = () => {
+    localStorage.removeItem("staff_token");
+    localStorage.removeItem("staff");
+
+    setSelectedRequest(null);
+
+    navigate("/auth/staff", { replace: true });
+  };
+
+  /*
+  |--------------------------------------------------------------------------
+  | Fetch Phase 2 Requests
+  |--------------------------------------------------------------------------
+  */
+
   const fetchRequests = async (isRefresh = false) => {
     try {
       if (isRefresh) {
@@ -103,14 +125,75 @@ const PhaseRequests2 = () => {
         setLoading(true);
       }
 
+      const token = localStorage.getItem("staff_token");
+
+      /*
+      |--------------------------------------------------------------------------
+      | No Token
+      |--------------------------------------------------------------------------
+      */
+
+      if (!token) {
+        handleAuthFailure();
+        return;
+      }
+
       const res = await fetch(
-        "https://api.fundednaira.net/api/admin/get-phase-requests.php"
+        "https://api.fundednaira.net/api/Staff/get-phase-requests.php",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      const data = await res.json();
+      /*
+      |--------------------------------------------------------------------------
+      | Authentication Check
+      |--------------------------------------------------------------------------
+      */
+
+      if (res.status === 401 || res.status === 403) {
+        handleAuthFailure();
+        return;
+      }
+
+      /*
+      |--------------------------------------------------------------------------
+      | Read Response
+      |--------------------------------------------------------------------------
+      */
+
+      const text = await res.text();
+
+      console.log("PHASE 2 REQUESTS RAW:", text);
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error("Invalid JSON response:", text);
+        throw new Error("Invalid server response");
+      }
+
+      /*
+      |--------------------------------------------------------------------------
+      | Filter Phase 2
+      |--------------------------------------------------------------------------
+      */
 
       if (Array.isArray(data)) {
         const phaseRequests = data.filter(
+          (item) =>
+            String(item.requested_phase || "").toLowerCase() ===
+            "2"
+        );
+
+        setRequests(phaseRequests);
+      } else if (Array.isArray(data.requests)) {
+        const phaseRequests = data.requests.filter(
           (item) =>
             String(item.requested_phase || "").toLowerCase() ===
             "2"
@@ -134,6 +217,12 @@ const PhaseRequests2 = () => {
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Search + Status Filter
+  |--------------------------------------------------------------------------
+  */
 
   const filteredRequests = useMemo(() => {
     const keyword = search.toLowerCase().trim();
@@ -166,9 +255,21 @@ const PhaseRequests2 = () => {
     });
   }, [requests, search, statusFilter]);
 
+  /*
+  |--------------------------------------------------------------------------
+  | Reset Pagination
+  |--------------------------------------------------------------------------
+  */
+
   useEffect(() => {
     setCurrentPage(1);
   }, [search, statusFilter]);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Handle Modal Update
+  |--------------------------------------------------------------------------
+  */
 
   const handleUpdated = (id, status, note) => {
     const updatedRequests = requests.map((item) =>
@@ -184,6 +285,12 @@ const PhaseRequests2 = () => {
     setRequests(updatedRequests);
     setSelectedRequest(null);
   };
+
+  /*
+  |--------------------------------------------------------------------------
+  | Statistics
+  |--------------------------------------------------------------------------
+  */
 
   const totalRequests = requests.length;
 
@@ -202,6 +309,12 @@ const PhaseRequests2 = () => {
       String(item.status || "").toLowerCase() === "rejected"
   ).length;
 
+  /*
+  |--------------------------------------------------------------------------
+  | Pagination
+  |--------------------------------------------------------------------------
+  */
+
   const totalPages = Math.ceil(
     filteredRequests.length / perPage
   );
@@ -213,6 +326,12 @@ const PhaseRequests2 = () => {
     indexOfFirst,
     indexOfLast
   );
+
+  /*
+  |--------------------------------------------------------------------------
+  | Date Formatting
+  |--------------------------------------------------------------------------
+  */
 
   const formatDate = (date) => {
     if (!date) return "—";
@@ -236,6 +355,7 @@ const PhaseRequests2 = () => {
         <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
 
           {/* Header */}
+
           <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2">
@@ -275,6 +395,7 @@ const PhaseRequests2 = () => {
           </div>
 
           {/* Statistics */}
+
           <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               title="Total Requests"
@@ -306,9 +427,11 @@ const PhaseRequests2 = () => {
           </div>
 
           {/* Main Card */}
+
           <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900">
 
             {/* Toolbar */}
+
             <div className="border-b border-gray-800 p-4 md:p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
@@ -329,6 +452,7 @@ const PhaseRequests2 = () => {
                 <div className="flex flex-col gap-3 sm:flex-row">
 
                   {/* Search */}
+
                   <div className="relative w-full sm:w-72">
                     <Search
                       size={17}
@@ -347,6 +471,7 @@ const PhaseRequests2 = () => {
                   </div>
 
                   {/* Status */}
+
                   <select
                     value={statusFilter}
                     onChange={(e) =>
@@ -379,10 +504,12 @@ const PhaseRequests2 = () => {
             </div>
 
             {/* Table */}
+
             <div className="overflow-x-auto">
               <table className="w-full min-w-[950px]">
                 <thead>
                   <tr className="border-b border-gray-800 bg-gray-950/50 text-left">
+
                     <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
                       Trader
                     </th>
@@ -458,6 +585,7 @@ const PhaseRequests2 = () => {
                         className="border-b border-gray-800/70 transition hover:bg-gray-800/30"
                       >
                         {/* Trader */}
+
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600/10 text-sm font-bold text-blue-400">
@@ -481,11 +609,13 @@ const PhaseRequests2 = () => {
                         </td>
 
                         {/* Email */}
+
                         <td className="px-6 py-4 text-sm text-gray-400">
                           {item.email || "—"}
                         </td>
 
                         {/* Current Phase */}
+
                         <td className="px-6 py-4">
                           <span className="inline-flex rounded-lg bg-gray-800 px-3 py-1.5 text-xs font-medium text-gray-300">
                             Phase {item.current_phase || "—"}
@@ -493,6 +623,7 @@ const PhaseRequests2 = () => {
                         </td>
 
                         {/* Requested Phase */}
+
                         <td className="px-6 py-4">
                           <span className="inline-flex rounded-lg bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-400">
                             Phase {item.requested_phase || "—"}
@@ -500,6 +631,7 @@ const PhaseRequests2 = () => {
                         </td>
 
                         {/* Status */}
+
                         <td className="px-6 py-4">
                           <StatusBadge
                             status={item.status}
@@ -507,11 +639,13 @@ const PhaseRequests2 = () => {
                         </td>
 
                         {/* Date */}
+
                         <td className="px-6 py-4 text-sm text-gray-400">
                           {formatDate(item.created_at)}
                         </td>
 
                         {/* Action */}
+
                         <td className="px-6 py-4 text-right">
                           <button
                             onClick={() =>
@@ -553,6 +687,7 @@ const PhaseRequests2 = () => {
             </div>
 
             {/* Pagination */}
+
             {!loading && totalPages > 0 && (
               <div className="flex flex-col gap-4 border-t border-gray-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
 
@@ -575,6 +710,7 @@ const PhaseRequests2 = () => {
                 </p>
 
                 <div className="flex items-center gap-2">
+
                   <button
                     onClick={() =>
                       setCurrentPage((p) =>
@@ -651,6 +787,7 @@ const PhaseRequests2 = () => {
                     Next
                     <ChevronRight size={16} />
                   </button>
+
                 </div>
               </div>
             )}
@@ -658,6 +795,7 @@ const PhaseRequests2 = () => {
         </div>
 
         {/* Modal */}
+
         {selectedRequest && (
           <PhaseModal
             data={selectedRequest}

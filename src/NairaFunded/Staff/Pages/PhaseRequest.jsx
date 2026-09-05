@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Eye,
   Search,
@@ -15,6 +16,7 @@ import PhaseModal from "../Components/PhaseModal";
 import MPLayout from "../Components/Layout2";
 
 const StatusBadge = ({ status }) => {
+  const navigate = useNavigate();
   const value = String(status || "").toLowerCase();
 
   const config = {
@@ -108,39 +110,75 @@ const PhaseRequests = () => {
      FETCH REQUESTS
   ========================= */
 
-  const fetchRequests = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
-      const res = await fetch(
-        "https://api.fundednaira.net/api/admin/get-phase-requests.php"
-      );
-
-      const data = await res.json();
-
-      if (Array.isArray(data)) {
-        setRequests(data);
-      } else {
-        setRequests([]);
-      }
-
-      setCurrentPage(1);
-    } catch (error) {
-      console.error(
-        "fetchRequests error:",
-        error
-      );
-
-      setRequests([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+ const fetchRequests = async (isRefresh = false) => {
+  try {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
     }
-  };
+
+    const token = localStorage.getItem("staff_token");
+
+    // No staff token
+    if (!token) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const res = await fetch(
+      "https://api.fundednaira.net/api/Staff/get-phase-requests.php",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // Invalid / expired token
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const text = await res.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Invalid server response");
+    }
+
+    if (Array.isArray(data)) {
+      setRequests(data);
+    } else if (data.success && Array.isArray(data.requests)) {
+      setRequests(data.requests);
+    } else {
+      setRequests([]);
+      console.error(
+        data.message || "Failed to load phase requests."
+      );
+    }
+
+    setCurrentPage(1);
+  } catch (error) {
+    console.error("fetchRequests error:", error);
+
+    setRequests([]);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
 
   useEffect(() => {
     fetchRequests();

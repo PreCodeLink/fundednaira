@@ -10,8 +10,13 @@ import {
   Layers3,
 } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 import PhaseModal from "../components/PhaseModal";
 import AdminLayout from "../Layout";
+
+const API =
+  "https://api.fundednaira.net/api/admin/get-phase-requests.php";
 
 const StatusBadge = ({ status }) => {
   const value = String(status || "").toLowerCase();
@@ -83,6 +88,8 @@ const StatCard = ({ title, value, icon: Icon, description }) => {
 };
 
 const PhaseRequests = () => {
+  const navigate = useNavigate();
+
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
@@ -96,6 +103,31 @@ const PhaseRequests = () => {
 
   const perPage = 10;
 
+  // =========================
+  // AUTH
+  // =========================
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  const handleUnauthorized = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/auth/admin", {
+      replace: true,
+    });
+  };
+
+  // =========================
+  // FETCH REQUESTS
+  // =========================
+
   const fetchRequests = async (isRefresh = false) => {
     try {
       if (isRefresh) {
@@ -104,25 +136,55 @@ const PhaseRequests = () => {
         setLoading(true);
       }
 
-      const res = await fetch(
-        "https://api.fundednaira.net/api/admin/get-phase-requests.php"
-      );
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        handleUnauthorized();
+        return;
+      }
+
+      const res = await fetch(API, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+
+      // Token expired / invalid
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
 
       if (!res.ok) {
-        throw new Error("Failed to fetch phase requests.");
+        throw new Error(
+          "Failed to fetch phase requests."
+        );
       }
 
       const data = await res.json();
 
       if (Array.isArray(data)) {
         setRequests(data);
+      } else if (
+        data &&
+        Array.isArray(data.requests)
+      ) {
+        setRequests(data.requests);
+      } else if (
+        data &&
+        Array.isArray(data.data)
+      ) {
+        setRequests(data.data);
       } else {
         setRequests([]);
       }
 
       setCurrentPage(1);
     } catch (error) {
-      console.error("fetchRequests error:", error);
+      console.error(
+        "fetchRequests error:",
+        error
+      );
+
       setRequests([]);
     } finally {
       setLoading(false);
@@ -133,6 +195,10 @@ const PhaseRequests = () => {
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  // =========================
+  // FILTER
+  // =========================
 
   const filteredRequests = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -172,6 +238,10 @@ const PhaseRequests = () => {
     setCurrentPage(1);
   }, [search, statusFilter]);
 
+  // =========================
+  // PAGINATION
+  // =========================
+
   const totalPages = Math.ceil(
     filteredRequests.length / perPage
   );
@@ -184,20 +254,31 @@ const PhaseRequests = () => {
     indexOfLast
   );
 
+  // =========================
+  // STATS
+  // =========================
+
   const pendingCount = requests.filter(
     (item) =>
-      String(item.status).toLowerCase() === "pending"
+      String(item.status || "").toLowerCase() ===
+      "pending"
   ).length;
 
   const approvedCount = requests.filter(
     (item) =>
-      String(item.status).toLowerCase() === "approved"
+      String(item.status || "").toLowerCase() ===
+      "approved"
   ).length;
 
   const rejectedCount = requests.filter(
     (item) =>
-      String(item.status).toLowerCase() === "rejected"
+      String(item.status || "").toLowerCase() ===
+      "rejected"
   ).length;
+
+  // =========================
+  // UPDATED
+  // =========================
 
   const handleUpdated = (id, status, note) => {
     const updatedRequests = requests.map((item) =>
@@ -213,6 +294,10 @@ const PhaseRequests = () => {
     setRequests(updatedRequests);
     setSelectedRequest(null);
   };
+
+  // =========================
+  // PAGE NUMBERS
+  // =========================
 
   const getPageNumbers = () => {
     if (totalPages <= 5) {
@@ -276,10 +361,14 @@ const PhaseRequests = () => {
           >
             <RefreshCw
               size={17}
-              className={refreshing ? "animate-spin" : ""}
+              className={
+                refreshing ? "animate-spin" : ""
+              }
             />
 
-            {refreshing ? "Refreshing..." : "Refresh"}
+            {refreshing
+              ? "Refreshing..."
+              : "Refresh"}
           </button>
         </div>
 
@@ -342,11 +431,25 @@ const PhaseRequests = () => {
               }
               className="rounded-xl border border-gray-800 bg-gray-950 px-5 py-3 text-sm text-gray-200 outline-none transition focus:border-blue-500"
             >
-              <option value="All">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-              <option value="Suspended">Suspended</option>
+              <option value="All">
+                All Status
+              </option>
+
+              <option value="Pending">
+                Pending
+              </option>
+
+              <option value="Approved">
+                Approved
+              </option>
+
+              <option value="Rejected">
+                Rejected
+              </option>
+
+              <option value="Suspended">
+                Suspended
+              </option>
             </select>
 
           </div>
@@ -513,30 +616,31 @@ const PhaseRequests = () => {
         </div>
 
         {/* Results information */}
-        {!loading && filteredRequests.length > 0 && (
-          <div className="mt-5 flex flex-col gap-4 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+        {!loading &&
+          filteredRequests.length > 0 && (
+            <div className="mt-5 flex flex-col gap-4 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
 
-            <p>
-              Showing{" "}
-              <span className="font-medium text-gray-300">
-                {indexOfFirst + 1}
-              </span>{" "}
-              to{" "}
-              <span className="font-medium text-gray-300">
-                {Math.min(
-                  indexOfLast,
-                  filteredRequests.length
-                )}
-              </span>{" "}
-              of{" "}
-              <span className="font-medium text-gray-300">
-                {filteredRequests.length}
-              </span>{" "}
-              requests
-            </p>
+              <p>
+                Showing{" "}
+                <span className="font-medium text-gray-300">
+                  {indexOfFirst + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-medium text-gray-300">
+                  {Math.min(
+                    indexOfLast,
+                    filteredRequests.length
+                  )}
+                </span>{" "}
+                of{" "}
+                <span className="font-medium text-gray-300">
+                  {filteredRequests.length}
+                </span>{" "}
+                requests
+              </p>
 
-          </div>
-        )}
+            </div>
+          )}
 
         {/* Pagination */}
         {totalPages > 1 && (
@@ -573,10 +677,15 @@ const PhaseRequests = () => {
             <button
               onClick={() =>
                 setCurrentPage((p) =>
-                  Math.min(p + 1, totalPages)
+                  Math.min(
+                    p + 1,
+                    totalPages
+                  )
                 )
               }
-              disabled={currentPage === totalPages}
+              disabled={
+                currentPage === totalPages
+              }
               className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-2.5 text-sm font-medium text-gray-300 transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next

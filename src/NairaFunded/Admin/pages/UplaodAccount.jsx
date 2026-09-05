@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../Layout";
 import {
   AlertCircle,
@@ -45,6 +46,7 @@ const EMPTY_EDIT = {
 };
 
 const UploadAccount = () => {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -131,58 +133,101 @@ const UploadAccount = () => {
 
     return "border-gray-700 bg-gray-800 text-gray-400";
   };
+  // =========================
+// AUTH HELPERS
+// =========================
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
+const handleUnauthorized = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  navigate("/auth/admin", {
+    replace: true,
+  });
+};
 
   /* =========================
      FETCH ACCOUNTS
   ========================= */
 
-  const fetchAccounts = async () => {
-    setLoading(true);
+ const fetchAccounts = async () => {
+  setLoading(true);
+
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      handleUnauthorized();
+      return;
+    }
+
+    const res = await fetch(
+      `${API}/get-trading-accounts.php`,
+      {
+        method: "GET",
+        cache: "no-store",
+        headers: getAuthHeaders(),
+      }
+    );
+
+    if (res.status === 401 || res.status === 403) {
+      handleUnauthorized();
+      return;
+    }
+
+    const text = await res.text();
+
+    console.log("Trading accounts response:", text);
+
+    let data;
 
     try {
-      const res = await fetch(
-        `${API}/get-trading-accounts.php`,
-        {
-          cache: "no-store",
-        }
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(
+        "Invalid JSON response from server"
       );
+    }
 
-      const text = await res.text();
-
-      console.log("Trading accounts response:", text);
-
-      let data;
-
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("Invalid JSON response from server");
-      }
-
-      if (Array.isArray(data)) {
-        setAccounts(data);
-      } else if (data.success) {
-        setAccounts(Array.isArray(data.accounts) ? data.accounts : []);
-      } else {
-        setAccounts([]);
-        showMessage(
-          "error",
-          data.message || "Failed to load trading accounts"
-        );
-      }
-    } catch (error) {
-      console.error("Fetch accounts error:", error);
-
+    if (Array.isArray(data)) {
+      setAccounts(data);
+    } else if (data.success) {
+      setAccounts(
+        Array.isArray(data.accounts)
+          ? data.accounts
+          : []
+      );
+    } else {
       setAccounts([]);
 
       showMessage(
         "error",
-        error.message || "Unable to connect to server"
+        data.message ||
+          "Failed to load trading accounts"
       );
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error("Fetch accounts error:", error);
+
+    setAccounts([]);
+
+    showMessage(
+      "error",
+      error.message ||
+        "Unable to connect to server"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchAccounts();
@@ -307,15 +352,21 @@ const UploadAccount = () => {
 
     try {
       const res = await fetch(
-        `${API}/add-trading-account.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+  `${API}/add-trading-account.php`,
+  {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(formData),
+  }
+);
+
+if (res.status === 401 || res.status === 403) {
+  handleUnauthorized();
+  return;
+}
 
       const text = await res.text();
 
@@ -371,49 +422,64 @@ const UploadAccount = () => {
       return;
     }
 
-    try {
-      const res = await fetch(
-        `${API}/edit-trading-account.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editData),
-        }
-      );
+   try {
+  const token = localStorage.getItem("token");
 
-      const text = await res.text();
+  if (!token) {
+    handleUnauthorized();
+    return;
+  }
 
-      console.log("Edit account response:", text);
-
-      const data = JSON.parse(text);
-
-      if (!data.success) {
-        showMessage(
-          "error",
-          data.message || "Failed to update account"
-        );
-        return;
-      }
-
-      showMessage(
-        "success",
-        data.message || "Trading account updated successfully"
-      );
-
-      setEditModal(false);
-      setEditData(EMPTY_EDIT);
-
-      await fetchAccounts();
-    } catch (error) {
-      console.error(error);
-
-      showMessage(
-        "error",
-        "Server error. Please try again."
-      );
+  const res = await fetch(
+    `${API}/edit-trading-account.php`,
+    {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(editData),
     }
+  );
+
+  if (res.status === 401 || res.status === 403) {
+    handleUnauthorized();
+    return;
+  }
+
+  const text = await res.text();
+
+  console.log("Edit account response:", text);
+
+  const data = JSON.parse(text);
+
+  if (!data.success) {
+    showMessage(
+      "error",
+      data.message ||
+        "Failed to update account"
+    );
+    return;
+  }
+
+  showMessage(
+    "success",
+    data.message ||
+      "Trading account updated successfully"
+  );
+
+  setEditModal(false);
+  setEditData(EMPTY_EDIT);
+
+  await fetchAccounts();
+} catch (error) {
+  console.error(error);
+
+  showMessage(
+    "error",
+    "Server error. Please try again."
+  );
+}
   };
 
   /* =========================

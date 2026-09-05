@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../Layout";
 
 import {
@@ -13,6 +14,8 @@ import {
 } from "lucide-react";
 
 const Payments = () => {
+  const navigate = useNavigate();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +24,30 @@ const Payments = () => {
   const [statusFilter, setStatusFilter] = useState("All");
 
   const perPage = 10;
+
+  const API = "https://api.fundednaira.net/api/admin";
+
+  // =========================
+  // AUTH HEADERS
+  // =========================
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  // =========================
+  // HANDLE UNAUTHORIZED
+  // =========================
+  const handleUnauthorized = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/auth/admin", { replace: true });
+  };
 
   // =========================
   // FORMAT MONEY
@@ -54,6 +81,9 @@ const Payments = () => {
     return status || "Unknown";
   };
 
+  // =========================
+  // STATUS CLASS
+  // =========================
   const getStatusClass = (status) => {
     const s = String(status || "").toLowerCase();
 
@@ -80,8 +110,20 @@ const Payments = () => {
       setLoading(true);
 
       const res = await fetch(
-        "https://api.fundednaira.net/api/admin/get-payments.php"
+        `${API}/get-payments.php`,
+        {
+          method: "GET",
+          headers: getAuthHeaders(),
+        }
       );
+
+      // =========================
+      // SECURITY CHECK
+      // =========================
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
 
       const text = await res.text();
 
@@ -124,9 +166,14 @@ const Payments = () => {
 
       if (status === "success") {
         successful++;
-        totalRevenue += Number(
-          String(payment.amount || 0).replace(/[^0-9.-]/g, "")
-        ) || 0;
+
+        totalRevenue +=
+          Number(
+            String(payment.amount || 0).replace(
+              /[^0-9.-]/g,
+              ""
+            )
+          ) || 0;
       }
 
       if (status === "pending") {
@@ -253,6 +300,7 @@ const Payments = () => {
 
           <div>
             <div className="flex items-center gap-3">
+
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
                 <CreditCard size={22} />
               </div>
@@ -266,6 +314,7 @@ const Payments = () => {
                   Monitor and manage all payment transactions.
                 </p>
               </div>
+
             </div>
           </div>
 
@@ -374,9 +423,7 @@ const Payments = () => {
                 </p>
 
                 <h3 className="mt-2 text-xl font-bold text-white">
-                  {formatMoney(
-                    statistics.totalRevenue
-                  )}
+                  {formatMoney(statistics.totalRevenue)}
                 </h3>
               </div>
 
@@ -386,6 +433,7 @@ const Payments = () => {
 
             </div>
           </div>
+
         </div>
 
         {/* =========================
@@ -619,9 +667,7 @@ const Payments = () => {
                       <td className="px-4 py-5">
 
                         <span className="font-semibold text-white">
-                          {formatMoney(
-                            payment.amount
-                          )}
+                          {formatMoney(payment.amount)}
                         </span>
 
                       </td>
@@ -655,21 +701,17 @@ const Payments = () => {
 
                           {String(
                             payment.status || ""
-                          ).toLowerCase() ===
-                          "success" ? (
+                          ).toLowerCase() === "success" ? (
                             <CheckCircle2 size={13} />
                           ) : String(
                               payment.status || ""
-                            ).toLowerCase() ===
-                            "pending" ? (
+                            ).toLowerCase() === "pending" ? (
                             <Clock3 size={13} />
                           ) : (
                             <XCircle size={13} />
                           )}
 
-                          {formatStatus(
-                            payment.status
-                          )}
+                          {formatStatus(payment.status)}
 
                         </span>
 
@@ -746,6 +788,7 @@ const Payments = () => {
                 className="flex items-center gap-1 rounded-xl border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-300 transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ChevronLeft size={16} />
+
                 <span className="hidden sm:inline">
                   Previous
                 </span>
@@ -787,6 +830,7 @@ const Payments = () => {
                 <span className="hidden sm:inline">
                   Next
                 </span>
+
                 <ChevronRight size={16} />
               </button>
 

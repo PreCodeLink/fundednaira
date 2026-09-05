@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FileText,
   Clock3,
@@ -11,6 +12,7 @@ import {
 import MPLayout from "../Components/Layout2";
 
 const MPDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     total_requests: 0,
     pending_requests: 0,
@@ -21,35 +23,73 @@ const MPDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchDashboard = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
-      const res = await fetch(
-        "https://api.fundednaira.net/api/Staff/mp_dashboard.php"
-      );
-
-      const data = await res.json();
-
-      if (data.success) {
-        setStats({
-          total_requests: Number(data.total_requests || 0),
-          pending_requests: Number(data.pending_requests || 0),
-          approved_requests: Number(data.approved_requests || 0),
-          rejected_requests: Number(data.rejected_requests || 0),
-        });
-      }
-    } catch (err) {
-      console.log("Dashboard error:", err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+ const fetchDashboard = async (isRefresh = false) => {
+  try {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
     }
-  };
+
+    const token = localStorage.getItem("staff_token");
+
+    // No token
+    if (!token) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const res = await fetch(
+      "https://api.fundednaira.net/api/Staff/mp_dashboard.php",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // Token invalid / expired / forbidden
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
+
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const text = await res.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Invalid server response");
+    }
+
+    if (data.success) {
+      setStats({
+        total_requests: Number(data.total_requests || 0),
+        pending_requests: Number(data.pending_requests || 0),
+        approved_requests: Number(data.approved_requests || 0),
+        rejected_requests: Number(data.rejected_requests || 0),
+      });
+    } else {
+      console.error(
+        data.message || "Failed to load dashboard"
+      );
+    }
+  } catch (err) {
+    console.error("Dashboard error:", err);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
 
   useEffect(() => {
     fetchDashboard();

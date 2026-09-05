@@ -37,57 +37,77 @@ const StaffDashboard = () => {
     "Staff";
 
   const fetchDashboard = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
+  try {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
+    const token = localStorage.getItem("staff_token");
+
+    // No staff token
+    if (!token) {
+      localStorage.removeItem("staff");
+      navigate("/auth/staff", { replace: true });
+      return;
+    }
+
+    const res = await fetch(
+      "https://api.fundednaira.net/api/Staff/dashboard.php",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
+    );
 
-      const token = localStorage.getItem("staff_token");
+    // Token expired / invalid
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("staff_token");
+      localStorage.removeItem("staff");
 
-      const res = await fetch(
-        "https://api.fundednaira.net/api/Staff/dashboard.php",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await res.json();
-
-      if (!data.success) {
-        console.error(
-          data.message || "Failed to load dashboard"
-        );
-        return;
-      }
-
-      setStats({
-        uploaded_this_month:
-          data.uploaded_this_month || 0,
-
-        available_accounts:
-          data.available_accounts || 0,
-
-        given_accounts:
-          data.given_accounts || 0,
-
-        total_accounts:
-          data.total_accounts || 0,
+      navigate("/auth/staff", {
+        replace: true,
       });
 
-    } catch (error) {
-      console.error(
-        "Dashboard error:",
-        error
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      return;
     }
-  };
+
+    const data = await res.json();
+
+    if (!data.success) {
+      console.error(
+        data.message || "Failed to load dashboard"
+      );
+      return;
+    }
+
+    setStats({
+      uploaded_this_month:
+        data.uploaded_this_month || 0,
+
+      available_accounts:
+        data.available_accounts || 0,
+
+      given_accounts:
+        data.given_accounts || 0,
+
+      total_accounts:
+        data.total_accounts || 0,
+    });
+
+  } catch (error) {
+    console.error(
+      "Dashboard error:",
+      error
+    );
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
 
   useEffect(() => {
     fetchDashboard();

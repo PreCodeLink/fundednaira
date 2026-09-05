@@ -5,6 +5,7 @@ import React, {
 } from "react";
 
 import AdminLayout from "../Layout";
+import { useNavigate } from "react-router-dom";
 
 import {
   Search,
@@ -20,12 +21,11 @@ import {
 } from "lucide-react";
 
 const DailyPayouts = () => {
+  const navigate = useNavigate();
+
   const [payouts, setPayouts] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [search, setSearch] = useState("");
-
   const [currentPage, setCurrentPage] = useState(1);
 
   const [selectedPayout, setSelectedPayout] =
@@ -40,6 +40,34 @@ const DailyPayouts = () => {
   const [today, setToday] = useState("");
 
   const perPage = 10;
+
+  const API =
+    "https://api.fundednaira.net/api/admin";
+
+  /* =====================================================
+     AUTH HEADERS
+  ====================================================== */
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  /* =====================================================
+     HANDLE UNAUTHORIZED
+  ====================================================== */
+
+  const handleUnauthorized = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/auth/admin", {
+      replace: true,
+    });
+  };
 
   /* =====================================================
      FORMAT MONEY
@@ -74,9 +102,28 @@ const DailyPayouts = () => {
     try {
       setLoading(true);
 
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        handleUnauthorized();
+        return;
+      }
+
       const res = await fetch(
-        "https://api.fundednaira.net/api/admin/get-daily-payouts.php"
+        `${API}/get-daily-payouts.php`,
+        {
+          method: "GET",
+          headers: getAuthHeaders(),
+        }
       );
+
+      if (
+        res.status === 401 ||
+        res.status === 403
+      ) {
+        handleUnauthorized();
+        return;
+      }
 
       const data = await res.json();
 
@@ -112,6 +159,12 @@ const DailyPayouts = () => {
       );
 
       setPayouts([]);
+
+      setSummary({
+        count: 0,
+        requested_total: 0,
+        received_total: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -126,7 +179,9 @@ const DailyPayouts = () => {
   ====================================================== */
 
   const filteredPayouts = useMemo(() => {
-    const query = search.toLowerCase().trim();
+    const query = search
+      .toLowerCase()
+      .trim();
 
     if (!query) {
       return payouts;
@@ -233,9 +288,7 @@ const DailyPayouts = () => {
     <AdminLayout>
       <div className="min-h-screen bg-gray-950 p-4 text-white sm:p-6 lg:p-8">
 
-        {/* =====================================================
-            HEADER
-        ====================================================== */}
+        {/* HEADER */}
 
         <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
@@ -277,9 +330,7 @@ const DailyPayouts = () => {
           </button>
         </div>
 
-        {/* =====================================================
-            DATE
-        ====================================================== */}
+        {/* DATE */}
 
         <div className="mb-6 flex items-center gap-3 rounded-2xl border border-gray-800 bg-gray-900 px-5 py-4">
 
@@ -301,12 +352,9 @@ const DailyPayouts = () => {
           <span className="ml-auto hidden rounded-lg bg-blue-500/10 px-3 py-1.5 text-xs text-blue-400 sm:block">
             Africa/Lagos
           </span>
-
         </div>
 
-        {/* =====================================================
-            SUMMARY CARDS
-        ====================================================== */}
+        {/* SUMMARY CARDS */}
 
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
@@ -339,7 +387,6 @@ const DailyPayouts = () => {
               </div>
 
             </div>
-
           </div>
 
           {/* COUNT */}
@@ -371,7 +418,6 @@ const DailyPayouts = () => {
               </div>
 
             </div>
-
           </div>
 
           {/* REQUESTED TOTAL */}
@@ -403,14 +449,10 @@ const DailyPayouts = () => {
               </div>
 
             </div>
-
           </div>
-
         </div>
 
-        {/* =====================================================
-            SEARCH
-        ====================================================== */}
+        {/* SEARCH */}
 
         <div className="mb-5">
 
@@ -432,12 +474,9 @@ const DailyPayouts = () => {
             />
 
           </div>
-
         </div>
 
-        {/* =====================================================
-            TABLE
-        ====================================================== */}
+        {/* TABLE */}
 
         <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 shadow-xl">
 
@@ -468,7 +507,6 @@ const DailyPayouts = () => {
               </span>
 
             </div>
-
           </div>
 
           <div className="overflow-x-auto">
@@ -508,13 +546,13 @@ const DailyPayouts = () => {
                   </th>
 
                 </tr>
-
               </thead>
 
               <tbody>
 
                 {loading ? (
                   <tr>
+
                     <td
                       colSpan="7"
                       className="px-5 py-16 text-center"
@@ -532,7 +570,6 @@ const DailyPayouts = () => {
                         </p>
 
                       </div>
-
                     </td>
                   </tr>
                 ) : currentData.length > 0 ? (
@@ -581,7 +618,6 @@ const DailyPayouts = () => {
                               </div>
 
                             </div>
-
                           </td>
 
                           {/* BANK */}
@@ -601,7 +637,6 @@ const DailyPayouts = () => {
                               </p>
 
                             </div>
-
                           </td>
 
                           {/* REQUESTED */}
@@ -665,11 +700,9 @@ const DailyPayouts = () => {
                               }
                               className="inline-flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs font-medium text-blue-400 transition hover:bg-blue-500/20"
                             >
-
                               <Eye size={15} />
 
                               View
-
                             </button>
 
                           </td>
@@ -691,9 +724,11 @@ const DailyPayouts = () => {
                       <div className="flex flex-col items-center">
 
                         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-800 text-gray-500">
+
                           <WalletCards
                             size={25}
                           />
+
                         </div>
 
                         <h3 className="font-medium text-gray-300">
@@ -705,24 +740,16 @@ const DailyPayouts = () => {
                         </p>
 
                       </div>
-
                     </td>
-
                   </tr>
-
                 )}
 
               </tbody>
-
             </table>
-
           </div>
-
         </div>
 
-        {/* =====================================================
-            PAGINATION
-        ====================================================== */}
+        {/* PAGINATION */}
 
         {totalPages > 0 && (
 
@@ -751,11 +778,9 @@ const DailyPayouts = () => {
                 }
                 className="inline-flex items-center gap-1 rounded-xl border border-gray-800 bg-gray-900 px-4 py-2 text-sm text-gray-400 transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
-
                 <ChevronLeft size={16} />
 
                 Prev
-
               </button>
 
               <div className="hidden items-center gap-1 sm:flex">
@@ -776,13 +801,11 @@ const DailyPayouts = () => {
                     ) {
                       pageNumber =
                         i + 1;
-
                     } else if (
                       currentPage <= 3
                     ) {
                       pageNumber =
                         i + 1;
-
                     } else if (
                       currentPage >=
                       totalPages - 2
@@ -791,7 +814,6 @@ const DailyPayouts = () => {
                         totalPages -
                         4 +
                         i;
-
                     } else {
                       pageNumber =
                         currentPage -
@@ -838,24 +860,18 @@ const DailyPayouts = () => {
                 }
                 className="inline-flex items-center gap-1 rounded-xl border border-gray-800 bg-gray-900 px-4 py-2 text-sm text-gray-400 transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
-
                 Next
 
                 <ChevronRight
                   size={16}
                 />
-
               </button>
 
             </div>
-
           </div>
-
         )}
 
-        {/* =====================================================
-            PAYOUT DETAILS MODAL
-        ====================================================== */}
+        {/* PAYOUT DETAILS MODAL */}
 
         {selectedPayout && (
           <div
@@ -945,9 +961,7 @@ const DailyPayouts = () => {
                       </p>
 
                     </div>
-
                   </div>
-
                 </div>
 
                 {/* ACCOUNT DETAILS */}
@@ -1012,9 +1026,7 @@ const DailyPayouts = () => {
                       />
 
                     </div>
-
                   </div>
-
                 </div>
 
                 {/* BANK DETAILS */}
@@ -1055,9 +1067,7 @@ const DailyPayouts = () => {
                       />
 
                     </div>
-
                   </div>
-
                 </div>
 
                 {/* PAYOUT INFORMATION */}
@@ -1101,11 +1111,8 @@ const DailyPayouts = () => {
                         "N/A"
                       }
                     />
-
                   </div>
-
                 </div>
-
               </div>
 
               {/* FOOTER */}
@@ -1122,12 +1129,9 @@ const DailyPayouts = () => {
                 </button>
 
               </div>
-
             </div>
-
           </div>
         )}
-
       </div>
     </AdminLayout>
   );

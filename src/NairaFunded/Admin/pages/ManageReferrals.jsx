@@ -13,6 +13,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../Layout";
 
 const API_BASE =
@@ -29,6 +30,10 @@ const formatMoney = (value) => {
 
   return `₦${number.toLocaleString()}`;
 };
+
+/* =====================================================
+   STATUS BADGE
+===================================================== */
 
 const StatusBadge = ({ status }) => {
   const value = String(status || "").toLowerCase();
@@ -59,6 +64,10 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+/* =====================================================
+   STAT CARD
+===================================================== */
+
 const StatCard = ({
   title,
   value,
@@ -70,7 +79,9 @@ const StatCard = ({
     <div className="rounded-2xl border border-gray-800 bg-gray-900/80 p-5 transition hover:border-gray-700">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-gray-400">{title}</p>
+          <p className="text-sm text-gray-400">
+            {title}
+          </p>
 
           <h3 className="mt-2 text-2xl font-bold text-white">
             {value}
@@ -91,7 +102,13 @@ const StatCard = ({
   );
 };
 
+/* =====================================================
+   MANAGE REFERRALS
+===================================================== */
+
 const ManageReferrals = () => {
+  const navigate = useNavigate();
+
   const [withdrawals, setWithdrawals] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -104,11 +121,42 @@ const ManageReferrals = () => {
   const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilter, setStatusFilter] =
+    useState("All");
 
   const [page, setPage] = useState(1);
 
   const limit = 10;
+
+  /* =====================================================
+     AUTH HEADERS
+  ====================================================== */
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  /* =====================================================
+     HANDLE UNAUTHORIZED
+  ====================================================== */
+
+  const handleUnauthorized = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/auth/admin", {
+      replace: true,
+    });
+  };
+
+  /* =====================================================
+     FETCH WITHDRAWALS
+  ====================================================== */
 
   const fetchWithdrawals = async (
     isRefresh = false
@@ -122,14 +170,30 @@ const ManageReferrals = () => {
 
       setError("");
 
+      const token =
+        localStorage.getItem("token");
+
+      if (!token) {
+        handleUnauthorized();
+        return;
+      }
+
       const res = await fetch(
-        `${API_BASE}/referral-withdrawals.php`
+        `${API_BASE}/referral-withdrawals.php`,
+        {
+          method: "GET",
+          headers: getAuthHeaders(),
+        }
       );
 
-      if (!res.ok) {
-        throw new Error(
-          "Failed to fetch withdrawal requests."
-        );
+      /* AUTH FAILED */
+
+      if (
+        res.status === 401 ||
+        res.status === 403
+      ) {
+        handleUnauthorized();
+        return;
       }
 
       const text = await res.text();
@@ -139,7 +203,11 @@ const ManageReferrals = () => {
       try {
         data = JSON.parse(text);
       } catch {
-        console.error("Invalid response:", text);
+        console.error(
+          "Invalid response:",
+          text
+        );
+
         throw new Error(
           "Invalid server response."
         );
@@ -152,7 +220,12 @@ const ManageReferrals = () => {
         );
       }
 
-      setWithdrawals(data.withdrawals || []);
+      setWithdrawals(
+        Array.isArray(data.withdrawals)
+          ? data.withdrawals
+          : []
+      );
+
       setPage(1);
     } catch (err) {
       console.error(
@@ -174,9 +247,17 @@ const ManageReferrals = () => {
     fetchWithdrawals();
   }, []);
 
+  /* =====================================================
+     RESET PAGE
+  ====================================================== */
+
   useEffect(() => {
     setPage(1);
   }, [search, statusFilter]);
+
+  /* =====================================================
+     FILTER
+  ====================================================== */
 
   const filteredWithdrawals = useMemo(() => {
     const keyword = search
@@ -218,17 +299,23 @@ const ManageReferrals = () => {
     statusFilter,
   ]);
 
-  const pendingCount = withdrawals.filter(
-    (item) =>
-      String(item.status).toLowerCase() ===
-      "pending"
-  ).length;
+  /* =====================================================
+     STATS
+  ====================================================== */
 
-  const paidCount = withdrawals.filter(
-    (item) =>
-      String(item.status).toLowerCase() ===
-      "paid"
-  ).length;
+  const pendingCount =
+    withdrawals.filter(
+      (item) =>
+        String(item.status).toLowerCase() ===
+        "pending"
+    ).length;
+
+  const paidCount =
+    withdrawals.filter(
+      (item) =>
+        String(item.status).toLowerCase() ===
+        "paid"
+    ).length;
 
   const cancelledCount =
     withdrawals.filter(
@@ -237,17 +324,22 @@ const ManageReferrals = () => {
         "cancelled"
     ).length;
 
-  const pendingAmount = withdrawals
-    .filter(
-      (item) =>
-        String(item.status).toLowerCase() ===
-        "pending"
-    )
-    .reduce(
-      (total, item) =>
-        total + Number(item.amount || 0),
-      0
-    );
+  const pendingAmount =
+    withdrawals
+      .filter(
+        (item) =>
+          String(item.status).toLowerCase() ===
+          "pending"
+      )
+      .reduce(
+        (total, item) =>
+          total + Number(item.amount || 0),
+        0
+      );
+
+  /* =====================================================
+     PAGINATION
+  ====================================================== */
 
   const totalPages = Math.ceil(
     filteredWithdrawals.length / limit
@@ -257,7 +349,14 @@ const ManageReferrals = () => {
   const end = start + limit;
 
   const paginated =
-    filteredWithdrawals.slice(start, end);
+    filteredWithdrawals.slice(
+      start,
+      end
+    );
+
+  /* =====================================================
+     HANDLE ACTION
+  ====================================================== */
 
   const handleAction = async (
     id,
@@ -267,13 +366,19 @@ const ManageReferrals = () => {
       setError("");
       setMessage("");
 
+      const token =
+        localStorage.getItem("token");
+
+      if (!token) {
+        handleUnauthorized();
+        return;
+      }
+
       const res = await fetch(
         `${API_BASE}/update-referral-withdrawal.php`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             id,
             status,
@@ -281,7 +386,32 @@ const ManageReferrals = () => {
         }
       );
 
-      const data = await res.json();
+      /* AUTH FAILED */
+
+      if (
+        res.status === 401 ||
+        res.status === 403
+      ) {
+        handleUnauthorized();
+        return;
+      }
+
+      const text = await res.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error(
+          "Invalid update response:",
+          text
+        );
+
+        throw new Error(
+          "Invalid server response."
+        );
+      }
 
       if (!data.success) {
         throw new Error(
@@ -298,7 +428,10 @@ const ManageReferrals = () => {
       setWithdrawals((prev) =>
         prev.map((item) =>
           item.id === id
-            ? { ...item, status }
+            ? {
+                ...item,
+                status,
+              }
             : item
         )
       );
@@ -318,16 +451,28 @@ const ManageReferrals = () => {
     }
   };
 
+  /* =====================================================
+     OPEN MODAL
+  ====================================================== */
+
   const openModal = (item) => {
     setSelected(item);
     setShowModal(true);
     setError("");
   };
 
+  /* =====================================================
+     CLOSE MODAL
+  ====================================================== */
+
   const closeModal = () => {
     setSelected(null);
     setShowModal(false);
   };
+
+  /* =====================================================
+     PAGE NUMBERS
+  ====================================================== */
 
   const getPageNumbers = () => {
     if (totalPages <= 5) {
@@ -365,6 +510,7 @@ const ManageReferrals = () => {
       <div className="min-h-screen bg-gray-950 p-6 text-white md:p-8">
 
         {/* Header */}
+
         <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
           <div>
@@ -411,6 +557,7 @@ const ManageReferrals = () => {
         </div>
 
         {/* Stats */}
+
         <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
           <StatCard
@@ -450,6 +597,7 @@ const ManageReferrals = () => {
         </div>
 
         {/* Alerts */}
+
         {(message || error) && (
           <div
             className={`mb-6 flex items-start gap-3 rounded-2xl border p-4 ${
@@ -489,6 +637,7 @@ const ManageReferrals = () => {
         )}
 
         {/* Search and filters */}
+
         <div className="mb-6 rounded-2xl border border-gray-800 bg-gray-900/80 p-4">
 
           <div className="flex flex-col gap-3 lg:flex-row">
@@ -544,6 +693,7 @@ const ManageReferrals = () => {
         </div>
 
         {/* Table */}
+
         <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 shadow-xl">
 
           <div className="overflow-x-auto">
@@ -737,6 +887,7 @@ const ManageReferrals = () => {
         </div>
 
         {/* Results + pagination */}
+
         {!loading &&
           filteredWithdrawals.length >
             0 && (
@@ -826,12 +977,14 @@ const ManageReferrals = () => {
           )}
 
         {/* Modal */}
+
         {showModal && selected && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
 
             <div className="w-full max-w-xl overflow-hidden rounded-3xl border border-gray-800 bg-[#0F172A] shadow-2xl">
 
               {/* Modal Header */}
+
               <div className="flex items-center justify-between border-b border-gray-800 px-6 py-5">
 
                 <div>
@@ -854,9 +1007,11 @@ const ManageReferrals = () => {
               </div>
 
               {/* Modal Body */}
+
               <div className="max-h-[70vh] overflow-y-auto p-6">
 
                 {/* Amount */}
+
                 <div className="mb-6 rounded-2xl border border-yellow-500/10 bg-yellow-500/5 p-5">
 
                   <p className="text-xs uppercase tracking-wider text-gray-500">
@@ -949,6 +1104,7 @@ const ManageReferrals = () => {
                 </div>
 
                 {/* Actions */}
+
                 {String(
                   selected.status
                 ).toLowerCase() ===

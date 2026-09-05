@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../Layout";
 import PayoutModal from "../components/PayOutModal";
 
@@ -15,6 +16,8 @@ import {
 } from "lucide-react";
 
 const Payouts = () => {
+  const navigate = useNavigate();
+
   const [selected, setSelected] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -26,10 +29,33 @@ const Payouts = () => {
 
   const perPage = 10;
 
-  /* =========================
-     FORMAT MONEY
-  ========================= */
+  const API = "https://api.fundednaira.net/api/admin";
 
+  // =========================
+  // AUTH HEADERS
+  // =========================
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  // =========================
+  // HANDLE UNAUTHORIZED
+  // =========================
+  const handleUnauthorized = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/auth/admin", { replace: true });
+  };
+
+  // =========================
+  // FORMAT MONEY
+  // =========================
   const formatMoney = (value) => {
     if (
       value === null ||
@@ -40,7 +66,7 @@ const Payouts = () => {
     }
 
     const number = Number(
-      String(value).replace(/[^0-9.]/g, "")
+      String(value).replace(/[^0-9.-]/g, "")
     );
 
     if (Number.isNaN(number)) {
@@ -50,10 +76,9 @@ const Payouts = () => {
     return `₦${number.toLocaleString("en-NG")}`;
   };
 
-  /* =========================
-     STATUS
-  ========================= */
-
+  // =========================
+  // STATUS
+  // =========================
   const getStatusStyle = (status) => {
     const value = String(status || "").toLowerCase();
 
@@ -98,17 +123,28 @@ const Payouts = () => {
     };
   };
 
-  /* =========================
-     FETCH PAYOUTS
-  ========================= */
-
+  // =========================
+  // FETCH PAYOUTS
+  // =========================
   const fetchPayouts = async () => {
     try {
       setLoading(true);
 
       const res = await fetch(
-        "https://api.fundednaira.net/api/admin/get-payout-requests.php"
+        `${API}/get-payout-requests.php`,
+        {
+          method: "GET",
+          headers: getAuthHeaders(),
+        }
       );
+
+      // =========================
+      // SECURITY CHECK
+      // =========================
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
 
       const data = await res.json();
 
@@ -117,6 +153,8 @@ const Payouts = () => {
       } else {
         setPayouts([]);
       }
+
+      setCurrentPage(1);
     } catch (error) {
       console.error("fetchPayouts error:", error);
       setPayouts([]);
@@ -129,10 +167,9 @@ const Payouts = () => {
     fetchPayouts();
   }, []);
 
-  /* =========================
-     FILTER
-  ========================= */
-
+  // =========================
+  // FILTER
+  // =========================
   const filteredPayouts = useMemo(() => {
     const query = search.toLowerCase().trim();
 
@@ -166,10 +203,9 @@ const Payouts = () => {
     });
   }, [payouts, search, statusFilter]);
 
-  /* =========================
-     PAGINATION
-  ========================= */
-
+  // =========================
+  // PAGINATION
+  // =========================
   const totalPages = Math.ceil(
     filteredPayouts.length / perPage
   );
@@ -191,10 +227,9 @@ const Payouts = () => {
     }
   }, [totalPages, currentPage]);
 
-  /* =========================
-     SUMMARY
-  ========================= */
-
+  // =========================
+  // SUMMARY
+  // =========================
   const totalPayouts = payouts.length;
 
   const pendingPayouts = payouts.filter(
@@ -222,7 +257,7 @@ const Payouts = () => {
     .reduce((total, p) => {
       const amount = Number(
         String(p.amount || 0).replace(
-          /[^0-9.]/g,
+          /[^0-9.-]/g,
           ""
         )
       );
@@ -230,10 +265,9 @@ const Payouts = () => {
       return total + (Number.isNaN(amount) ? 0 : amount);
     }, 0);
 
-  /* =========================
-     UPDATE PAYOUT
-  ========================= */
-
+  // =========================
+  // UPDATE PAYOUT
+  // =========================
   const updatePayout = (id, updates) => {
     const updated = payouts.map((p) =>
       p.id === id
@@ -245,10 +279,9 @@ const Payouts = () => {
     setSelected(null);
   };
 
-  /* =========================
-     OPEN PAYOUT
-  ========================= */
-
+  // =========================
+  // OPEN PAYOUT
+  // =========================
   const openPayout = (payout) => {
     setSelected(payout);
   };
@@ -265,6 +298,7 @@ const Payouts = () => {
 
           <div>
             <div className="mb-2 flex items-center gap-3">
+
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-400 ring-1 ring-blue-500/20">
                 <WalletCards size={22} />
               </div>
@@ -272,6 +306,7 @@ const Payouts = () => {
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                 Payout Requests
               </h1>
+
             </div>
 
             <p className="text-sm text-gray-400">
@@ -294,6 +329,7 @@ const Payouts = () => {
 
             Refresh
           </button>
+
         </div>
 
         {/* =====================================
@@ -305,7 +341,9 @@ const Payouts = () => {
           {/* Total */}
 
           <div className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-sm">
+
             <div className="flex items-start justify-between">
+
               <div>
                 <p className="text-sm text-gray-400">
                   Total Requests
@@ -319,13 +357,17 @@ const Payouts = () => {
               <div className="rounded-xl bg-blue-500/10 p-3 text-blue-400">
                 <WalletCards size={20} />
               </div>
+
             </div>
+
           </div>
 
           {/* Pending */}
 
           <div className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-sm">
+
             <div className="flex items-start justify-between">
+
               <div>
                 <p className="text-sm text-gray-400">
                   Pending
@@ -339,13 +381,17 @@ const Payouts = () => {
               <div className="rounded-xl bg-amber-500/10 p-3 text-amber-400">
                 <Clock3 size={20} />
               </div>
+
             </div>
+
           </div>
 
           {/* Paid */}
 
           <div className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-sm">
+
             <div className="flex items-start justify-between">
+
               <div>
                 <p className="text-sm text-gray-400">
                   Paid Requests
@@ -359,13 +405,17 @@ const Payouts = () => {
               <div className="rounded-xl bg-emerald-500/10 p-3 text-emerald-400">
                 <CheckCircle2 size={20} />
               </div>
+
             </div>
+
           </div>
 
           {/* Amount */}
 
           <div className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-sm">
+
             <div className="flex items-start justify-between">
+
               <div>
                 <p className="text-sm text-gray-400">
                   Total Paid
@@ -379,8 +429,11 @@ const Payouts = () => {
               <div className="rounded-xl bg-purple-500/10 p-3 text-purple-400">
                 <WalletCards size={20} />
               </div>
+
             </div>
+
           </div>
+
         </div>
 
         {/* =====================================
@@ -406,6 +459,7 @@ const Payouts = () => {
               placeholder="Search user, email, bank, account number..."
               className="w-full rounded-xl border border-gray-800 bg-gray-900 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
             />
+
           </div>
 
           <select
@@ -432,6 +486,7 @@ const Payouts = () => {
               Rejected
             </option>
           </select>
+
         </div>
 
         {/* =====================================
@@ -441,6 +496,7 @@ const Payouts = () => {
         <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 shadow-xl">
 
           <div className="border-b border-gray-800 px-5 py-4">
+
             <div className="flex items-center justify-between">
 
               <div>
@@ -452,7 +508,7 @@ const Payouts = () => {
                   {filteredPayouts.length} request
                   {filteredPayouts.length !== 1
                     ? "s"
-                    : ""}
+                    : ""}{" "}
                   found
                 </p>
               </div>
@@ -461,7 +517,9 @@ const Payouts = () => {
                 Showing {currentData.length} of{" "}
                 {filteredPayouts.length}
               </span>
+
             </div>
+
           </div>
 
           <div className="overflow-x-auto">
@@ -503,11 +561,14 @@ const Payouts = () => {
               <tbody>
 
                 {loading ? (
+
                   <tr>
+
                     <td
                       colSpan="6"
                       className="px-5 py-16 text-center"
                     >
+
                       <div className="flex flex-col items-center justify-center">
 
                         <RefreshCw
@@ -520,8 +581,11 @@ const Payouts = () => {
                         </p>
 
                       </div>
+
                     </td>
+
                   </tr>
+
                 ) : currentData.length > 0 ? (
 
                   currentData.map((payout) => {
@@ -532,6 +596,7 @@ const Payouts = () => {
                       );
 
                     return (
+
                       <tr
                         key={payout.id}
                         className="border-b border-gray-800/80 transition hover:bg-gray-800/40"
@@ -546,8 +611,7 @@ const Payouts = () => {
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/10 text-sm font-bold uppercase text-blue-400">
                               {String(
                                 payout.user || "U"
-                              )
-                                .charAt(0)}
+                              ).charAt(0)}
                             </div>
 
                             <div className="min-w-0">
@@ -637,13 +701,13 @@ const Payouts = () => {
                             className="inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-600/10 px-4 py-2 text-sm font-medium text-blue-400 transition hover:bg-blue-600 hover:text-white"
                           >
                             <Eye size={16} />
-
                             View
                           </button>
 
                         </td>
 
                       </tr>
+
                     );
                   })
 
@@ -659,9 +723,7 @@ const Payouts = () => {
                       <div className="flex flex-col items-center">
 
                         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-800 text-gray-500">
-                          <WalletCards
-                            size={25}
-                          />
+                          <WalletCards size={25} />
                         </div>
 
                         <h3 className="font-medium text-gray-300">
@@ -678,6 +740,7 @@ const Payouts = () => {
                     </td>
 
                   </tr>
+
                 )}
 
               </tbody>
@@ -685,6 +748,7 @@ const Payouts = () => {
             </table>
 
           </div>
+
         </div>
 
         {/* =====================================
@@ -752,6 +816,7 @@ const Payouts = () => {
                     }
 
                     return (
+
                       <button
                         key={pageNumber}
                         onClick={() =>
@@ -768,6 +833,7 @@ const Payouts = () => {
                       >
                         {pageNumber}
                       </button>
+
                     );
                   }
                 )}
@@ -793,7 +859,9 @@ const Payouts = () => {
               </button>
 
             </div>
+
           </div>
+
         )}
 
         {/* =====================================

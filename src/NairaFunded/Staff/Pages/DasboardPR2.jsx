@@ -8,10 +8,13 @@ import {
   RefreshCw,
   Activity,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import MPLayout from "../Components/Layout2";
 
 const MPDashboard = () => {
+  const navigate = useNavigate();
+
   const [stats, setStats] = useState({
     total_requests: 0,
     pending_requests: 0,
@@ -22,6 +25,25 @@ const MPDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  /*
+  |--------------------------------------------------------------------------
+  | Authentication Failure
+  |--------------------------------------------------------------------------
+  */
+
+  const handleAuthFailure = () => {
+    localStorage.removeItem("staff_token");
+    localStorage.removeItem("staff");
+
+    navigate("/auth/staff", { replace: true });
+  };
+
+  /*
+  |--------------------------------------------------------------------------
+  | Fetch Dashboard
+  |--------------------------------------------------------------------------
+  */
+
   const fetchDashboard = async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
@@ -30,11 +52,64 @@ const MPDashboard = () => {
     }
 
     try {
+      const token = localStorage.getItem("staff_token");
+
+      /*
+      |--------------------------------------------------------------------------
+      | No Token
+      |--------------------------------------------------------------------------
+      */
+
+      if (!token) {
+        handleAuthFailure();
+        return;
+      }
+
       const res = await fetch(
-        "https://api.fundednaira.net/api/Staff/mp2_dashboard.php"
+        "https://api.fundednaira.net/api/Staff/mp2_dashboard.php",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      const data = await res.json();
+      /*
+      |--------------------------------------------------------------------------
+      | Authentication Check
+      |--------------------------------------------------------------------------
+      */
+
+      if (res.status === 401 || res.status === 403) {
+        handleAuthFailure();
+        return;
+      }
+
+      /*
+      |--------------------------------------------------------------------------
+      | Read Response
+      |--------------------------------------------------------------------------
+      */
+
+      const text = await res.text();
+
+      console.log("MP2 DASHBOARD RAW:", text);
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error("Invalid JSON response:", text);
+        throw new Error("Invalid server response");
+      }
+
+      /*
+      |--------------------------------------------------------------------------
+      | API Response
+      |--------------------------------------------------------------------------
+      */
 
       if (data.success) {
         setStats({
@@ -43,9 +118,13 @@ const MPDashboard = () => {
           approved_requests: data.approved_requests || 0,
           rejected_requests: data.rejected_requests || 0,
         });
+      } else {
+        console.error(
+          data.message || "Failed to load dashboard"
+        );
       }
     } catch (err) {
-      console.log(err);
+      console.error("MP2 Dashboard error:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -100,6 +179,7 @@ const MPDashboard = () => {
       <div className="mx-auto max-w-7xl">
 
         {/* ================= HEADER ================= */}
+
         <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
           <div>
@@ -153,6 +233,7 @@ const MPDashboard = () => {
         </div>
 
         {/* ================= STATS ================= */}
+
         {loading ? (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
 
@@ -209,6 +290,7 @@ const MPDashboard = () => {
                 >
 
                   {/* Background glow */}
+
                   <div
                     className={`
                       pointer-events-none
@@ -268,6 +350,7 @@ const MPDashboard = () => {
         )}
 
         {/* ================= MANAGEMENT CARD ================= */}
+
         <div className="mt-8">
 
           <div
@@ -282,6 +365,7 @@ const MPDashboard = () => {
           >
 
             {/* Decorative background */}
+
             <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-blue-600/5 blur-3xl" />
 
             <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
@@ -310,8 +394,7 @@ const MPDashboard = () => {
 
               <button
                 onClick={() =>
-                  (window.location.href =
-                    "/staff/phase-requests")
+                  navigate("/staff/phase-requests")
                 }
                 className="
                   inline-flex
@@ -342,6 +425,7 @@ const MPDashboard = () => {
         </div>
 
         {/* ================= SUMMARY ================= */}
+
         {!loading && (
           <div className="mt-5 grid gap-5 md:grid-cols-2">
 

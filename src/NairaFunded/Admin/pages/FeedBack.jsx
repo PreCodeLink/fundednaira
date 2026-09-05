@@ -10,10 +10,16 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../Layout";
 import FeedbackModal from "../components/FeedbackModal";
 
+const API =
+  "https://api.fundednaira.net/api/admin/get-feedbacks.php";
+
 const Feedback = () => {
+  const navigate = useNavigate();
+
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +31,27 @@ const Feedback = () => {
   const perPage = 10;
 
   // =========================
+  // AUTH HELPERS
+  // =========================
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  const handleUnauthorized = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/auth/admin", {
+      replace: true,
+    });
+  };
+
+  // =========================
   // FETCH FEEDBACK
   // =========================
 
@@ -32,9 +59,26 @@ const Feedback = () => {
     try {
       setLoading(true);
 
-      const res = await fetch(
-        "https://api.fundednaira.net/api/admin/get-feedbacks.php"
-      );
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        handleUnauthorized();
+        return;
+      }
+
+      const res = await fetch(API, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+
+      // =========================
+      // AUTH FAILURE
+      // =========================
+
+      if (res.status === 401 || res.status === 403) {
+        handleUnauthorized();
+        return;
+      }
 
       const text = await res.text();
 
@@ -280,6 +324,7 @@ const Feedback = () => {
 
           <div>
             <div className="flex items-center gap-3">
+
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-400">
                 <MessageSquare size={24} />
               </div>
@@ -293,6 +338,7 @@ const Feedback = () => {
                   Review feedback and understand your users.
                 </p>
               </div>
+
             </div>
           </div>
 
@@ -308,6 +354,7 @@ const Feedback = () => {
 
             Refresh
           </button>
+
         </div>
 
         {/* ================= STAT CARDS ================= */}
@@ -317,6 +364,7 @@ const Feedback = () => {
           {/* TOTAL */}
 
           <div className="rounded-2xl border border-gray-800 bg-gray-900/80 p-5">
+
             <div className="flex items-center justify-between">
 
               <div>
@@ -336,12 +384,15 @@ const Feedback = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
                 <MessageSquare size={22} />
               </div>
+
             </div>
+
           </div>
 
           {/* RATING */}
 
           <div className="rounded-2xl border border-gray-800 bg-gray-900/80 p-5">
+
             <div className="flex items-center justify-between">
 
               <div>
@@ -350,6 +401,7 @@ const Feedback = () => {
                 </p>
 
                 <div className="mt-2 flex items-center gap-2">
+
                   <h3 className="text-3xl font-bold">
                     {averageRating}
                   </h3>
@@ -358,6 +410,7 @@ const Feedback = () => {
                     size={20}
                     className="fill-yellow-400 text-yellow-400"
                   />
+
                 </div>
 
                 <p className="mt-1 text-xs text-gray-500">
@@ -368,12 +421,15 @@ const Feedback = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-500/10 text-yellow-400">
                 <Star size={22} />
               </div>
+
             </div>
+
           </div>
 
           {/* POSITIVE */}
 
           <div className="rounded-2xl border border-gray-800 bg-gray-900/80 p-5">
+
             <div className="flex items-center justify-between">
 
               <div>
@@ -393,8 +449,11 @@ const Feedback = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 text-green-400">
                 <Users size={22} />
               </div>
+
             </div>
+
           </div>
+
         </div>
 
         {/* ================= FILTER BAR ================= */}
@@ -406,6 +465,7 @@ const Feedback = () => {
             {/* SEARCH */}
 
             <div className="relative flex-1">
+
               <Search
                 size={18}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
@@ -433,6 +493,7 @@ const Feedback = () => {
                   <X size={17} />
                 </button>
               )}
+
             </div>
 
             {/* TYPE */}
@@ -462,9 +523,11 @@ const Feedback = () => {
                 Clear
               </button>
             )}
+
           </div>
 
           <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+
             <span>
               Showing {filteredFeedbacks.length} feedback
               {filteredFeedbacks.length !== 1 ? "s" : ""}
@@ -478,7 +541,9 @@ const Feedback = () => {
                 </span>
               </span>
             )}
+
           </div>
+
         </div>
 
         {/* ================= TABLE ================= */}
@@ -490,6 +555,7 @@ const Feedback = () => {
             <table className="w-full min-w-[1050px] text-sm">
 
               <thead className="border-b border-gray-800 bg-gray-950/60">
+
                 <tr className="text-left text-xs uppercase tracking-wider text-gray-500">
 
                   <th className="px-5 py-4">
@@ -517,6 +583,7 @@ const Feedback = () => {
                   </th>
 
                 </tr>
+
               </thead>
 
               <tbody>
@@ -669,6 +736,7 @@ const Feedback = () => {
                 ) : (
 
                   <tr>
+
                     <td
                       colSpan="6"
                       className="px-5 py-16 text-center"
@@ -688,6 +756,7 @@ const Feedback = () => {
                       </p>
 
                     </td>
+
                   </tr>
 
                 )}
@@ -697,6 +766,7 @@ const Feedback = () => {
             </table>
 
           </div>
+
         </div>
 
         {/* ================= PAGINATION ================= */}
@@ -756,6 +826,7 @@ const Feedback = () => {
               </button>
 
             </div>
+
           </div>
         )}
 
