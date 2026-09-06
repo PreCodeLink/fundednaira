@@ -78,7 +78,7 @@ const AdminDashboard = () => {
       const user = JSON.parse(localStorage.getItem("user"));
 
       if (!user || user.role !== "admin") {
-        navigate("/admin");
+        navigate("/auth/admin");
         return;
       }
 
@@ -87,7 +87,7 @@ const AdminDashboard = () => {
 if (!token) {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  navigate("/admin");
+  navigate("/auth/admin");
   return;
 }
 
@@ -105,7 +105,7 @@ if (res.status === 401 || res.status === 403) {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
 
-  navigate("/admin");
+  navigate("/auth/admin");
   return;
 }
 

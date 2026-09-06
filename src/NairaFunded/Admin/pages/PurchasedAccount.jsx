@@ -53,7 +53,7 @@ const getAuthHeaders = () => {
 const handleUnauthorized = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  navigate("/admin");
+  navigate("/auth/admin");
 };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] =

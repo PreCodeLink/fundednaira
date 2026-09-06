@@ -27,7 +27,7 @@ const AdminLayout = ({ children }) => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/admin");
+    navigate("/auth/admin");
   };
 
   const closeSidebar = () => {

@@ -13,12 +13,12 @@ const AdminProtectedRoute = () => {
 
   // ❌ Not logged in
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth/admin" replace />;
   }
 
   // ❌ Not admin
   if (String(user.role).toLowerCase() !== "admin") {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth/admin" replace />;
   }
 
   // ✅ Admin allowed

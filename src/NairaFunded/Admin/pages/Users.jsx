@@ -66,7 +66,7 @@ const getAuthHeaders = () => {
     if (!headers) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      navigate("/admin");
+      navigate("/auth/admin");
       return;
     }
 
@@ -86,7 +86,7 @@ const getAuthHeaders = () => {
     if (res.status === 401 || res.status === 403) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      navigate("/admin");
+      navigate("/auth/admin");
       return;
     }
 
@@ -213,7 +213,7 @@ const getAuthHeaders = () => {
     if (!headers) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      navigate("/admin");
+      navigate("/auth/admin");
       return;
     }
 
@@ -232,7 +232,7 @@ const getAuthHeaders = () => {
     if (res.status === 401 || res.status === 403) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      navigate("/admin");
+      navigate("/auth/admin");
       return;
     }
 
@@ -293,7 +293,7 @@ const handleSuspend = async (userId) => {
     if (!headers) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      navigate("/admin");
+      navigate("/auth/admin");
       return;
     }
 
@@ -311,7 +311,7 @@ const handleSuspend = async (userId) => {
     if (res.status === 401 || res.status === 403) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      navigate("/admin");
+      navigate("/auth/admin");
       return;
     }
 
